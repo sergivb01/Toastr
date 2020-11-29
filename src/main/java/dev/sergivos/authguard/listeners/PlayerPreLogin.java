@@ -66,8 +66,10 @@ public class PlayerPreLogin {
     @Subscribe
     public void onPostLogin(PostLoginEvent event) {
         Player player = event.getPlayer();
+        if(player.isOnlineMode()) return;
+
         instance.getProxy().getScheduler().buildTask(instance, () -> {
-            if(player == null || !player.isActive()) return;
+            if(!player.isActive()) return;
 
             player.disconnect(Component.text("You're in a cracked account. Kicked for security reasons").color(NamedTextColor.RED));
         }).delay(3, TimeUnit.SECONDS).schedule();
