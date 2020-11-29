@@ -6,6 +6,8 @@ import dev.sergivos.authguard.resolver.Resolver;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.Response;
 
+import java.util.UUID;
+
 public class AshconResolver extends Resolver {
     private static final String ASHCON_URL = "https://api.ashcon.app/mojang/v2/user/";
 
@@ -15,9 +17,14 @@ public class AshconResolver extends Resolver {
     }
 
     @Override
-    public Resolver.Result check(String username) throws Exception {
-        ListenableFuture<Response> res = httpClient.prepareGet(ASHCON_URL + username).execute();
+    public Resolver.Result check(String rawUsername) throws Exception {
+        ListenableFuture<Response> res = httpClient.prepareGet(ASHCON_URL + rawUsername).execute();
         Response response = res.get();
+
+        if(response.getStatusCode() == 404) {
+            // TODO: should check lowercase stuff to prevent stealing accounts with same nickname but different lowerCase/upperCase
+            return fromOffline(rawUsername);
+        }
 
         if(response.getStatusCode() != 200) {
             throw new Exception("Invalid status code from Ashcon " + response.getStatusCode());
@@ -25,7 +32,15 @@ public class AshconResolver extends Resolver {
 
         JsonObject data = JsonParser.parseString(response.getResponseBody()).getAsJsonObject();
 
-        return new Result(data.get("username").getAsString().equals(username), getSource());
+        String username = data.get("username").getAsString();
+        String rawUUID = data.get("uuid").getAsString();
+        UUID playerUUID = UUID.fromString(rawUUID);
+        boolean isSpoofed = !username.equals(rawUsername);
+
+        Result result = new Result(username, playerUUID, true, isSpoofed, getSource());
+        instance.getLogger().info("[" + getSource() + "] " + result.toString());
+
+        return result;
     }
 
 }
