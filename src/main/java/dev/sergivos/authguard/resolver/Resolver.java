@@ -2,6 +2,7 @@ package dev.sergivos.authguard.resolver;
 
 import com.velocitypowered.api.util.UuidUtils;
 import dev.sergivos.authguard.AuthGuard;
+import dev.sergivos.authguard.resolver.impl.IResolver;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
@@ -13,6 +14,7 @@ import static org.asynchttpclient.Dsl.asyncHttpClient;
 import static org.asynchttpclient.Dsl.config;
 
 public abstract class Resolver implements IResolver {
+    protected static AuthGuard instance = AuthGuard.getInstance();
     protected AsyncHttpClient httpClient = asyncHttpClient(config()
             .setMaxConnections(500)
             .setMaxConnectionsPerHost(100)
@@ -21,9 +23,8 @@ public abstract class Resolver implements IResolver {
             .setReadTimeout(750)
             .setConnectTimeout(1500)
             .setRequestTimeout(1500)
-            .setUserAgent("AuthGuard / 1.0")
+            .setUserAgent("AuthGuard / v1.0")
     );
-    protected static AuthGuard instance = AuthGuard.getInstance();
 
     protected Result fromOffline(String rawUsername){
         return new Result(rawUsername, UuidUtils.generateOfflinePlayerUuid(rawUsername), false, false, getSource());
