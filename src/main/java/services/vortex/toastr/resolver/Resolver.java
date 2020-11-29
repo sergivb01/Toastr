@@ -1,12 +1,12 @@
-package dev.sergivos.authguard.resolver;
+package services.vortex.toastr.resolver;
 
 import com.velocitypowered.api.util.UuidUtils;
-import dev.sergivos.authguard.AuthGuard;
-import dev.sergivos.authguard.resolver.impl.IResolver;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 import org.asynchttpclient.AsyncHttpClient;
+import services.vortex.toastr.ToastrPlugin;
+import services.vortex.toastr.resolver.impl.IResolver;
 
 import java.util.UUID;
 
@@ -14,7 +14,7 @@ import static org.asynchttpclient.Dsl.asyncHttpClient;
 import static org.asynchttpclient.Dsl.config;
 
 public abstract class Resolver implements IResolver {
-    protected static AuthGuard instance = AuthGuard.getInstance();
+    protected static ToastrPlugin instance = ToastrPlugin.getInstance();
     protected AsyncHttpClient httpClient = asyncHttpClient(config()
             .setMaxConnections(500)
             .setMaxConnectionsPerHost(100)
@@ -23,10 +23,10 @@ public abstract class Resolver implements IResolver {
             .setReadTimeout(750)
             .setConnectTimeout(1500)
             .setRequestTimeout(1500)
-            .setUserAgent("AuthGuard / v1.0")
+            .setUserAgent("Toastr / v1.0")
     );
 
-    protected Result fromOffline(String rawUsername){
+    protected Result fromOffline(String rawUsername) {
         return new Result(rawUsername, UuidUtils.generateOfflinePlayerUuid(rawUsername), false, false, getSource());
     }
 

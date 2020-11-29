@@ -1,16 +1,16 @@
-package dev.sergivos.authguard.resolver.impl;
+package services.vortex.toastr.resolver.impl;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.velocitypowered.api.util.UuidUtils;
-import dev.sergivos.authguard.resolver.Resolver;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.Response;
+import services.vortex.toastr.resolver.Resolver;
 
 import java.util.UUID;
 
 public class MineToolsResolver extends Resolver {
-    private static String MINETOOLS_URL = "https://api.minetools.eu/uuid/";
+    private static final String MINETOOLS_URL = "https://api.minetools.eu/uuid/";
 
     @Override
     public String getSource() {

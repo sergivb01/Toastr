@@ -1,4 +1,4 @@
-package dev.sergivos.authguard.listeners;
+package services.vortex.toastr.listeners;
 
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
@@ -9,15 +9,15 @@ import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.proxy.Player;
-import dev.sergivos.authguard.AuthGuard;
-import dev.sergivos.authguard.resolver.Resolver;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import services.vortex.toastr.ToastrPlugin;
+import services.vortex.toastr.resolver.Resolver;
 
 import java.util.concurrent.TimeUnit;
 
 public class PlayerPreLogin {
-    private final AuthGuard instance = AuthGuard.getInstance();
+    private final ToastrPlugin instance = ToastrPlugin.getInstance();
 
     @Subscribe
     public void onPlayerPreLogin(PreLoginEvent event) {

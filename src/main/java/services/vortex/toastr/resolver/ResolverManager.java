@@ -1,13 +1,13 @@
-package dev.sergivos.authguard.resolver;
+package services.vortex.toastr.resolver;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheStats;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import dev.sergivos.authguard.AuthGuard;
-import dev.sergivos.authguard.resolver.impl.AshconResolver;
-import dev.sergivos.authguard.resolver.impl.MineToolsResolver;
 import lombok.AllArgsConstructor;
+import services.vortex.toastr.ToastrPlugin;
+import services.vortex.toastr.resolver.impl.AshconResolver;
+import services.vortex.toastr.resolver.impl.MineToolsResolver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,13 +18,13 @@ import java.util.concurrent.TimeUnit;
 
 public class ResolverManager {
     protected static final ThreadPoolExecutor executor = new ThreadPoolExecutor(4, Integer.MAX_VALUE, 30L, TimeUnit.SECONDS,
-            new SynchronousQueue<>(), new ThreadFactoryBuilder().setNameFormat("AuthGuard Authenticator - %1$d")
+            new SynchronousQueue<>(), new ThreadFactoryBuilder().setNameFormat("Toastr Authenticator - %1$d")
             .build());
     private final Cache<String, Resolver.Result> responseCache = CacheBuilder.newBuilder()
             .expireAfterWrite(30, TimeUnit.SECONDS)
             .recordStats()
             .maximumSize(150)
-            .removalListener((removed) -> AuthGuard.getInstance().getLogger().info("[CACHE] Removing " + removed.getKey() + " from cache (" + removed.getCause() + ")"))
+            .removalListener((removed) -> ToastrPlugin.getInstance().getLogger().info("[CACHE] Removing " + removed.getKey() + " from cache (" + removed.getCause() + ")"))
             .build();
     private final Resolver[] resolvers = new Resolver[]{
             new AshconResolver(),
@@ -36,7 +36,7 @@ public class ResolverManager {
 
         Resolver.Result cachedValue = responseCache.getIfPresent(username);
         if(cachedValue != null) {
-            AuthGuard.getInstance().getLogger().info("[CACHE] [" + cachedValue.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (cachedValue.isPremium() ? "premium" : "cracked"));
+            ToastrPlugin.getInstance().getLogger().info("[CACHE] [" + cachedValue.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (cachedValue.isPremium() ? "premium" : "cracked"));
             return cachedValue;
         }
 
@@ -48,7 +48,7 @@ public class ResolverManager {
         Resolver.Result result = executor.invokeAny(resolverTasks, 1500, TimeUnit.MILLISECONDS);
         responseCache.put(username, result);
 
-        AuthGuard.getInstance().getLogger().info("[" + result.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (result.isPremium() ? "premium" : "cracked"));
+        ToastrPlugin.getInstance().getLogger().info("[" + result.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (result.isPremium() ? "premium" : "cracked"));
 
         return result;
     }

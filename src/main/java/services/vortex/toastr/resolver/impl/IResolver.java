@@ -1,6 +1,6 @@
-package dev.sergivos.authguard.resolver.impl;
+package services.vortex.toastr.resolver.impl;
 
-import dev.sergivos.authguard.resolver.Resolver;
+import services.vortex.toastr.resolver.Resolver;
 
 public interface IResolver {
 
