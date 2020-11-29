@@ -10,7 +10,6 @@ import dev.sergivos.authguard.resolver.impl.MineToolsResolver;
 import lombok.AllArgsConstructor;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.SynchronousQueue;
@@ -25,13 +24,12 @@ public class ResolverManager {
             .expireAfterWrite(30, TimeUnit.SECONDS)
             .recordStats()
             .maximumSize(150)
-            .removalListener((removed) -> {
-                AuthGuard.getInstance().getLogger().info("[CACHE] Removing " + removed.getKey() + " from cache (" + removed.getCause() + ")");
-            }).build();
-    private final List<Resolver> resolvers = Arrays.asList(
+            .removalListener((removed) -> AuthGuard.getInstance().getLogger().info("[CACHE] Removing " + removed.getKey() + " from cache (" + removed.getCause() + ")"))
+            .build();
+    private final Resolver[] resolvers = new Resolver[]{
             new AshconResolver(),
             new MineToolsResolver()
-    );
+    };
 
     public Resolver.Result resolveUsername(String username) throws Exception {
         long start = System.currentTimeMillis();
