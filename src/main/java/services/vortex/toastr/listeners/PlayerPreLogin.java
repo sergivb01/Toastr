@@ -10,6 +10,7 @@ import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.resolver.Resolver;
@@ -66,6 +67,14 @@ public class PlayerPreLogin {
     @Subscribe
     public void onPostLogin(PostLoginEvent event) {
         Player player = event.getPlayer();
+
+        TextComponent header = Component.text("WaterMC Network")
+                .color(NamedTextColor.DARK_AQUA);
+        TextComponent footer = Component.text("Development Proxy")
+                .color(NamedTextColor.DARK_RED);
+
+        player.getTabList().setHeaderAndFooter(header, footer);
+
         if(player.isOnlineMode()) return;
 
         instance.getProxy().getScheduler().buildTask(instance, () -> {
