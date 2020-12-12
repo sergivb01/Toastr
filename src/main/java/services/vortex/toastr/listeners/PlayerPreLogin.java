@@ -73,7 +73,6 @@ public class PlayerPreLogin {
 
         /*
          * TODO:
-         *  * check if profile exists in cache -> load
          *  * load profile from SQL database. Update values
          *  * if it doesn't exist, create a new profile
          * */
