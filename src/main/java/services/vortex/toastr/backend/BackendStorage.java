@@ -1,28 +1,29 @@
 package services.vortex.toastr.backend;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import net.tascalate.concurrent.CompletableTask;
+import net.tascalate.concurrent.Promise;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.Profile;
 
 import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.Duration;
 import java.util.UUID;
-import java.util.concurrent.*;
-import java.util.function.Function;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class BackendStorage {
-    //    protected static final ThreadPoolExecutor executor = new ThreadPoolExecutor(4, Integer.MAX_VALUE, 30L, TimeUnit.SECONDS,
-//            new SynchronousQueue<>(), new ThreadFactoryBuilder().setNameFormat("Toastr Storage - %1$d")
-//            .setDaemon(true)
-//            .build());
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    protected static final ThreadPoolExecutor executor = new ThreadPoolExecutor(4, Integer.MAX_VALUE, 30L, TimeUnit.SECONDS,
+            new SynchronousQueue<>(), new ThreadFactoryBuilder().setNameFormat("Toastr Storage - %1$d")
+            .setDaemon(true)
+            .build());
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
     private final HikariDataSource hikari;
 
     public BackendStorage(BackendCredentials credentials) {
-//        executor.allowCoreThreadTimeOut(true);
+        executor.allowCoreThreadTimeOut(true);
 
         HikariConfig config = new HikariConfig();
         config.setPoolName("Toastr-Hikari");
@@ -48,40 +49,17 @@ public class BackendStorage {
         this.hikari = new HikariDataSource(config);
     }
 
-    public static <T> CompletableFuture<T> within(CompletableFuture<T> future, Duration duration) {
-        final CompletableFuture<T> timeout = failAfter(duration);
-        return future.applyToEither(timeout, Function.identity());
-    }
-
-    public static <T> CompletableFuture<T> failAfter(Duration duration) {
-        final CompletableFuture<T> promise = new CompletableFuture<>();
-        scheduler.schedule(() -> {
-            final TimeoutException ex = new TimeoutException("Timeout after " + duration);
-            return promise.completeExceptionally(ex);
-        }, duration.toMillis(), TimeUnit.MILLISECONDS);
-        return promise;
-    }
-
-    public CompletableFuture<Profile> getPlayerProfile(UUID playerUUID) {
-        CompletableFuture<Profile> res = new CompletableFuture<>();
-
-        instance.getProxy().getScheduler().buildTask(instance, () -> {
+    public Promise<Profile> getPlayerProfile(UUID playerUUID) {
+        return CompletableTask.submit(() -> {
             try(Connection connection = this.hikari.getConnection()) {
-
 /*          final PreparedStatement preparedStatement = connection.prepareStatement("");
             preparedStatement.setQueryTimeout(5);
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS Coins(UUID varchar(36), name VARCHAR(16), COINS int)");
  */
                 Thread.sleep(3000L);
-
-                res.complete(new Profile(playerUUID, "test123"));
-
-            } catch(SQLException | InterruptedException e) {
-                res.completeExceptionally(e);
+                return new Profile(playerUUID, "test123");
             }
-        }).schedule();
-
-        return within(res, Duration.ofSeconds(5));
+        }, executor).orTimeout(3500, TimeUnit.MILLISECONDS);
     }
 
 }
