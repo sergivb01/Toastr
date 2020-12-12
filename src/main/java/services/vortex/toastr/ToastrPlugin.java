@@ -9,6 +9,8 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.Getter;
 import org.slf4j.Logger;
+import services.vortex.toastr.backend.BackendCredentials;
+import services.vortex.toastr.backend.BackendStorage;
 import services.vortex.toastr.commands.StatsCommand;
 import services.vortex.toastr.listeners.PlayerPreLogin;
 import services.vortex.toastr.resolver.ResolverManager;
@@ -32,6 +34,7 @@ public class ToastrPlugin {
     private final Logger logger;
     private final Path dataDirector;
     private ResolverManager resolverManager;
+    private BackendStorage backendStorage;
 
     @Inject
     public ToastrPlugin(Logger logger, ProxyServer proxy, @DataDirectory Path dataDirector) {
@@ -45,6 +48,7 @@ public class ToastrPlugin {
         instance = this;
 
         resolverManager = new ResolverManager();
+        backendStorage = new BackendStorage(new BackendCredentials("XXX", 3306, "root", "XXX", "sergi_toastr"));
 
         CommandManager commandManager = proxy.getCommandManager();
         commandManager.register("authstats", new StatsCommand());

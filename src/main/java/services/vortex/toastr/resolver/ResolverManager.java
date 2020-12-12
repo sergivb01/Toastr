@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class ResolverManager {
     protected static final ThreadPoolExecutor executor = new ThreadPoolExecutor(4, Integer.MAX_VALUE, 30L, TimeUnit.SECONDS,
             new SynchronousQueue<>(), new ThreadFactoryBuilder().setNameFormat("Toastr Authenticator - %1$d")
+            .setDaemon(true)
             .build());
     private final Cache<String, Resolver.Result> responseCache = CacheBuilder.newBuilder()
             .expireAfterWrite(30, TimeUnit.SECONDS)

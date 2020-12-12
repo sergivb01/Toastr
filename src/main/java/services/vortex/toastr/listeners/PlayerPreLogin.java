@@ -2,6 +2,7 @@ package services.vortex.toastr.listeners;
 
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
+import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
@@ -13,6 +14,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
+import services.vortex.toastr.profile.Profile;
 import services.vortex.toastr.resolver.Resolver;
 
 import java.util.concurrent.TimeUnit;
@@ -35,7 +37,6 @@ public class PlayerPreLogin {
              *
              * Offload PreLoginEvent and load LoginEvent (loadProfile) and PostLoginEvent(update stuff)
              */
-
             if(result.isPremium()) {
                 event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
                 instance.getLogger().info(event.getUsername() + " has been forced into online mode!");
@@ -51,6 +52,20 @@ public class PlayerPreLogin {
 
     @Subscribe
     public void onLogin(LoginEvent event) {
+        Player player = event.getPlayer();
+
+        instance.getBackendStorage().getPlayerProfile(player.getUniqueId())
+                .whenComplete((profile, ex) -> {
+                    if(ex != null) {
+                        ex.printStackTrace();
+                        player.disconnect(Component.text("Error loading your profile!").color(NamedTextColor.RED));
+                        return;
+                    }
+
+                    player.sendMessage(Component.text("Your profile has been loaded!").color(NamedTextColor.DARK_AQUA)
+                            .append(Component.text(profile.toString())));
+                });
+
         /*
          * TODO: captcha system -> force users to click text on book with:
          * event.getPlayer().openBook();
@@ -62,6 +77,13 @@ public class PlayerPreLogin {
          *  * load profile from SQL database. Update values
          *  * if it doesn't exist, create a new profile
          * */
+    }
+
+    @Subscribe
+    public void onQuit(DisconnectEvent event) {
+        // TODO: use event.getLoginStatus()
+
+        Profile.getProfiles().remove(event.getPlayer().getUniqueId());
     }
 
     @Subscribe
