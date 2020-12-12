@@ -128,11 +128,5 @@
             <version>LATEST</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>net.tascalate</groupId>
-            <artifactId>net.tascalate.concurrent</artifactId>
-            <version>LATEST</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 </project>

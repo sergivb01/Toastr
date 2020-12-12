@@ -8,6 +8,7 @@ import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
+import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
@@ -31,12 +32,6 @@ public class PlayerPreLogin {
                 return;
             }
 
-            /*
-             * TODO: set profile->loggedIn = false.
-             *  We'll need to check if the user was previously cracked. (username exists but not with this UUID)
-             *
-             * Offload PreLoginEvent and load LoginEvent (loadProfile) and PostLoginEvent(update stuff)
-             */
             if(result.isPremium()) {
                 event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
                 instance.getLogger().info(event.getUsername() + " has been forced into online mode!");
@@ -54,7 +49,9 @@ public class PlayerPreLogin {
     public void onLogin(LoginEvent event) {
         Player player = event.getPlayer();
 
-        instance.getBackendStorage().getPlayerProfile(player.getUniqueId())
+        long start = System.currentTimeMillis();
+
+        instance.getBackendStorage().getProfile(player.getUniqueId())
                 .whenComplete((profile, ex) -> {
                     if(ex != null) {
                         ex.printStackTrace();
@@ -62,19 +59,38 @@ public class PlayerPreLogin {
                         return;
                     }
 
-                    player.sendMessage(Component.text("Your profile has been loaded!").color(NamedTextColor.DARK_AQUA)
-                            .append(Component.text(profile.toString())));
-                });
+                    if(profile == null) {
+                        profile = Profile.createProfile(player);
+                        // TODO: implement first login captcha
+                    }
+                    profile.setLastLogin(System.currentTimeMillis());
+                    profile.setLastIP(player.getRemoteAddress().getHostName());
+                    profile.setLoggedIn(player.isOnlineMode());
+
+                    long took = System.currentTimeMillis() - start;
+
+                    instance.getLogger().info("GetProfile for " + player.getUsername() + " took " + took + "ms");
+                    instance.getLogger().info(profile.toString());
+
+                    player.sendMessage(Component.text("Your profile has been loaded in " + took + "ms!").color(NamedTextColor.DARK_AQUA)
+                            .append(Component.text("\n\n" + profile.toString()).color(NamedTextColor.WHITE)));
+                    Profile.getProfiles().put(player.getUniqueId(), profile);
+
+                }).thenAccept((profile) -> instance.getBackendStorage().savePlayer(profile).whenComplete((saved, ex) -> {
+            if(ex != null) {
+                // TODO: add to queue and try again in few seconds/min or exponantial backoff. Remove from queue on logout if save was successful
+                ex.printStackTrace();
+                player.sendMessage(Component.text("Failed to save your profile after login. Will try in few minutes and on logout").color(NamedTextColor.RED));
+                return;
+            }
+
+            instance.getLogger().info("Saved " + player.getUsername() + " in " + (System.currentTimeMillis() - start) + "ms");
+        }));
+
 
         /*
-         * TODO: captcha system -> force users to click text on book with:
+         * TODO: captcha system -> force new users to click text on book with:
          * event.getPlayer().openBook();
-         * */
-
-        /*
-         * TODO:
-         *  * load profile from SQL database. Update values
-         *  * if it doesn't exist, create a new profile
          * */
     }
 
@@ -82,14 +98,28 @@ public class PlayerPreLogin {
     public void onQuit(DisconnectEvent event) {
         // TODO: use event.getLoginStatus()
 
-        Profile.getProfiles().remove(event.getPlayer().getUniqueId());
+        final long start = System.currentTimeMillis();
+        final Player player = event.getPlayer();
+
+        final Profile profile = Profile.getProfiles().get(player.getUniqueId());
+        instance.getBackendStorage().savePlayer(profile)
+                .whenComplete((updated, ex) -> {
+                    if(ex != null) {
+                        ex.printStackTrace();
+                        return;
+                    }
+
+                    instance.getLogger().info("Saved " + player.getUsername() + " in " + (System.currentTimeMillis() - start) + "ms");
+                });
+
+        Profile.getProfiles().remove(player.getUniqueId());
     }
 
     @Subscribe
     public void onPostLogin(PostLoginEvent event) {
         Player player = event.getPlayer();
 
-        TextComponent header = Component.text("WaterMC Network")
+        TextComponent header = Component.text("Vortex Services")
                 .color(NamedTextColor.DARK_AQUA);
         TextComponent footer = Component.text("Development Proxy")
                 .color(NamedTextColor.DARK_RED);
@@ -137,6 +167,21 @@ public class PlayerPreLogin {
     @Subscribe
     public void onChange(ServerPreConnectEvent event) {
         // TODO: prevent serverswitch if player is not logged in
+        if(event.getOriginalServer().getServerInfo().getName().toLowerCase().contains("lobby")) return;
+
+        Profile profile = Profile.getProfiles().get(event.getPlayer().getUniqueId());
+        if(!profile.isLoggedIn()) {
+            event.getPlayer().sendMessage(Component.text("You may not switch servers without logging in!").color(NamedTextColor.RED));
+            event.setResult(ServerPreConnectEvent.ServerResult.denied());
+        }
+    }
+
+    @Subscribe
+    public void onPostChange(ServerConnectedEvent event) {
+        if(event.getServer() == null) return;
+
+        // TODO: https://hasteb.in/hurokuhi.cs
+        Profile.getProfiles().get(event.getPlayer().getUniqueId()).setLastServer(event.getServer().getServerInfo().getName());
     }
 
 }
