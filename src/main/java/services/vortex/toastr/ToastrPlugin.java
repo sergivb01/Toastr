@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
@@ -29,6 +30,7 @@ import services.vortex.toastr.lobbby.LobbyManager;
 import services.vortex.toastr.resolver.ResolverManager;
 import services.vortex.toastr.utils.Config;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -107,6 +109,18 @@ public class ToastrPlugin {
     public void onProxyShutdown(ProxyShutdownEvent event) {
         backendStorage.shutdown();
         redisManager.shutdown();
+    }
+
+    @Subscribe
+    public void onProxyReload(ProxyReloadEvent event){
+        try {
+            config.reload();
+            lobbyManager.loadLobbies();
+
+            logger.info("reloaded config after proxy-reload");
+        } catch(FileNotFoundException e) {
+            instance.getLogger().error("Error trying to reload config after proxy-reload!", e);
+        }
     }
 
     /**
