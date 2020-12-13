@@ -22,14 +22,17 @@ public class AshconResolver extends Resolver {
         final Response response = httpClient.newCall(request).execute();
 
         if(response.code() == 404) {
+            response.body().close();
             return fromOffline(rawUsername);
         }
 
         if(response.code() != 200) {
+            response.body().close();
             throw new Exception("Invalid status code from Ashcon " + response.code());
         }
 
         final JsonObject data = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
+        response.body().close();
 
         String username = data.get("username").getAsString();
         String rawUUID = data.get("uuid").getAsString();

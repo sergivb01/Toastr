@@ -25,10 +25,13 @@ public class MineToolsResolver extends Resolver {
         final Response response = httpClient.newCall(request).execute();
 
         if(response.code() != 200) {
+            response.body().close();
             throw new Exception("Invalid status code from MineTools " + response.code());
         }
 
         final JsonObject data = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
+        response.body().close();
+
         if(data.get("id").isJsonNull()) {
             return fromOffline(rawUsername);
         }

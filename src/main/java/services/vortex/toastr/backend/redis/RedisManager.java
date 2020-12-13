@@ -1,6 +1,7 @@
 package services.vortex.toastr.backend.redis;
 
 import com.google.gson.JsonObject;
+import com.velocitypowered.api.scheduler.ScheduledTask;
 import lombok.Getter;
 import redis.clients.jedis.*;
 import services.vortex.toastr.ToastrPlugin;
@@ -27,6 +28,8 @@ public class RedisManager {
     public static final String CHANNEL_ALERT = "toastr-alert";
     public static final String CHANNEL_SENDTOALL = "toastr-sendtoall";
 
+    private final ScheduledTask updateTask, inconsistencyTask;
+
     public RedisManager() {
         JsonObject redisConfig = instance.getConfig().getObject().getAsJsonObject("redis");
 
@@ -47,11 +50,14 @@ public class RedisManager {
         subscribeThread.setDaemon(true);
         subscribeThread.start();
 
-        instance.getProxy().getScheduler().buildTask(instance, this::updatePlayerCounts).delay(1, TimeUnit.SECONDS).repeat(1, TimeUnit.SECONDS).schedule();
-        instance.getProxy().getScheduler().buildTask(instance, this::fixInconsistency).delay(5, TimeUnit.SECONDS).repeat(30, TimeUnit.SECONDS).schedule();
+        updateTask = instance.getProxy().getScheduler().buildTask(instance, this::updatePlayerCounts).delay(1, TimeUnit.SECONDS).repeat(1, TimeUnit.SECONDS).schedule();
+        inconsistencyTask = instance.getProxy().getScheduler().buildTask(instance, this::fixInconsistency).delay(5, TimeUnit.SECONDS).repeat(30, TimeUnit.SECONDS).schedule();
     }
 
     public void shutdown() {
+        updateTask.cancel();
+        inconsistencyTask.cancel();
+
         pool.close();
     }
 
