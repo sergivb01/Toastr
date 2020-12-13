@@ -19,7 +19,6 @@ public class RedisManager {
     private static final int RESOLVER_CACHE_TIME = 3600 * 6;
 
     private final PubSubListener psListener;
-    private final Thread subscribeThread;
 
     @Getter
     private final String proxyName;
@@ -42,8 +41,8 @@ public class RedisManager {
 
         psListener = new PubSubListener();
 
-        subscribeThread = new Thread(() -> {
-            try(Jedis jedis = getConnection()){
+        Thread subscribeThread = new Thread(() -> {
+            try(Jedis jedis = getConnection()) {
                 jedis.subscribe(psListener, RedisManager.CHANNEL_ALERT, RedisManager.CHANNEL_SENDTOALL);
             }
         }, "Toastr PubSub subscriber");

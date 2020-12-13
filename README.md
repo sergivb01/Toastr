@@ -19,8 +19,8 @@ Should probably make a good description
     * [ ] unregister other
     * [ ] changepass other
 
- * Essentials
-    * [ ] alert
+ * Essentials (with cross-proxy support!)
+    * [X] alert
     * [ ] send
-    * [ ] sendtoall
+    * [X] sendtoall
     * [ ] ping command: display proxy->player and proxy->server
