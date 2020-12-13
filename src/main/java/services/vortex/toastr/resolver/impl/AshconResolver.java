@@ -2,8 +2,8 @@ package services.vortex.toastr.resolver.impl;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.asynchttpclient.ListenableFuture;
-import org.asynchttpclient.Response;
+import okhttp3.Request;
+import okhttp3.Response;
 import services.vortex.toastr.resolver.Resolver;
 
 import java.util.UUID;
@@ -11,36 +11,33 @@ import java.util.UUID;
 public class AshconResolver extends Resolver {
     private static final String ASHCON_URL = "https://api.ashcon.app/mojang/v2/user/";
 
-    @Override
     public String getSource() {
         return "Ashcon";
     }
 
-    @Override
     public Resolver.Result check(String rawUsername) throws Exception {
-        ListenableFuture<Response> res = httpClient.prepareGet(ASHCON_URL + rawUsername).execute();
-        Response response = res.get();
+        Request request = new Request.Builder()
+                .url(ASHCON_URL + rawUsername)
+                .build();
+        final Response response = httpClient.newCall(request).execute();
 
-        if(response.getStatusCode() == 404) {
+        if(response.code() == 404) {
             // TODO: should check lowercase stuff to prevent stealing accounts with same nickname but different lowerCase/upperCase
             return fromOffline(rawUsername);
         }
 
-        if(response.getStatusCode() != 200) {
-            throw new Exception("Invalid status code from Ashcon " + response.getStatusCode());
+        if(response.code() != 200) {
+            throw new Exception("Invalid status code from Ashcon " + response.code());
         }
 
-        JsonObject data = JsonParser.parseString(response.getResponseBody()).getAsJsonObject();
+        final JsonObject data = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
 
         String username = data.get("username").getAsString();
         String rawUUID = data.get("uuid").getAsString();
         UUID playerUUID = UUID.fromString(rawUUID);
         boolean isSpoofed = !username.equals(rawUsername);
 
-        Result result = new Result(username, playerUUID, true, isSpoofed, getSource());
-        instance.getLogger().info("[" + getSource() + "] " + result.toString());
-
-        return result;
+        return new Result(username, playerUUID, true, isSpoofed, getSource());
     }
 
 }

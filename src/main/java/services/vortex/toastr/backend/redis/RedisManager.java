@@ -43,14 +43,14 @@ public class RedisManager {
 
         proxyName = instance.getConfig().getObject().get("proxy-name").getAsString();
 
-        instance.getProxy().getScheduler().buildTask(instance, this::updatePlayerCounts).repeat(1, TimeUnit.SECONDS).schedule();
+        instance.getProxy().getScheduler().buildTask(instance, this::updatePlayerCounts).delay(1, TimeUnit.SECONDS).repeat(1, TimeUnit.SECONDS).schedule();
     }
 
     public void shutdown() {
         pool.close();
     }
 
-    private void updatePlayerCounts(){
+    private void updatePlayerCounts() {
         int onlines = 0;
 
         try(Jedis jedis = getConnection()) {

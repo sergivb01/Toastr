@@ -4,27 +4,19 @@ import com.velocitypowered.api.util.UuidUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
-import org.asynchttpclient.AsyncHttpClient;
+import okhttp3.OkHttpClient;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.resolver.impl.IResolver;
 
 import java.util.UUID;
-
-import static org.asynchttpclient.Dsl.asyncHttpClient;
-import static org.asynchttpclient.Dsl.config;
+import java.util.concurrent.TimeUnit;
 
 public abstract class Resolver implements IResolver {
     protected static ToastrPlugin instance = ToastrPlugin.getInstance();
-    protected AsyncHttpClient httpClient = asyncHttpClient(config()
-            .setMaxConnections(500)
-            .setMaxConnectionsPerHost(100)
-            .setPooledConnectionIdleTimeout(100)
-            .setConnectionTtl(500)
-            .setReadTimeout(750)
-            .setConnectTimeout(1500)
-            .setRequestTimeout(1500)
-            .setUserAgent("Toastr / v1.0")
-    );
+    protected static OkHttpClient httpClient = new OkHttpClient.Builder()
+            .connectTimeout(1, TimeUnit.SECONDS)
+            .readTimeout(1, TimeUnit.SECONDS)
+            .build();
 
     protected Result fromOffline(String rawUsername) {
         return new Result(rawUsername, UuidUtils.generateOfflinePlayerUuid(rawUsername), false, false, getSource());

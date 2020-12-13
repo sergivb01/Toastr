@@ -123,9 +123,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.asynchttpclient</groupId>
-            <artifactId>async-http-client</artifactId>
-            <version>LATEST</version>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>3.4.2</version>
             <scope>compile</scope>
         </dependency>
 

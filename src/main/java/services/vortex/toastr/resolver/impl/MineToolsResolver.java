@@ -3,8 +3,8 @@ package services.vortex.toastr.resolver.impl;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.velocitypowered.api.util.UuidUtils;
-import org.asynchttpclient.ListenableFuture;
-import org.asynchttpclient.Response;
+import okhttp3.Request;
+import okhttp3.Response;
 import services.vortex.toastr.resolver.Resolver;
 
 import java.util.UUID;
@@ -19,23 +19,23 @@ public class MineToolsResolver extends Resolver {
 
     @Override
     public Resolver.Result check(String rawUsername) throws Exception {
-        ListenableFuture<Response> res = httpClient.prepareGet(MINETOOLS_URL + rawUsername).execute();
-        Response response = res.get();
+        Request request = new Request.Builder()
+                .url(MINETOOLS_URL + rawUsername)
+                .build();
+        final Response response = httpClient.newCall(request).execute();
 
-        if(response.getStatusCode() != 200) {
-            throw new Exception("Invalid status code from MineTools " + response.getStatusCode());
+        if(response.code() != 200) {
+            throw new Exception("Invalid status code from MineTools " + response.code());
         }
 
-        JsonObject data = JsonParser.parseString(response.getResponseBody()).getAsJsonObject();
-
+        final JsonObject data = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
         if(data.get("id").isJsonNull()) {
             // TODO: should check lowercase stuff to prevent stealing accounts with same nickname but different lowerCase/upperCase
             return fromOffline(rawUsername);
         }
 
         String username = data.get("name").getAsString();
-        String rawUUID = data.get("id").getAsString();
-        UUID playerUUID = UuidUtils.fromUndashed(rawUUID);
+        UUID playerUUID = UuidUtils.fromUndashed(data.get("id").getAsString());
         boolean isSpoofed = !username.equals(rawUsername);
 
         return new Result(username, playerUUID, true, isSpoofed, getSource());
