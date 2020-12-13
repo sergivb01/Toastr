@@ -1,8 +1,9 @@
-package services.vortex.toastr.backend;
+package services.vortex.toastr.backend.mysql;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import lombok.SneakyThrows;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.Profile;
 import services.vortex.toastr.utils.MyMonitorThread;
@@ -16,9 +17,9 @@ import java.util.UUID;
 import java.util.concurrent.*;
 
 public class BackendStorage {
+    private static final ToastrPlugin instance = ToastrPlugin.getInstance();
     private final ThreadPoolExecutor executor;
     private final MyMonitorThread monitor;
-    private static final ToastrPlugin instance = ToastrPlugin.getInstance();
     private final HikariDataSource hikari;
 
     public BackendStorage(BackendCredentials credentials) {
@@ -55,13 +56,36 @@ public class BackendStorage {
         this.hikari = new HikariDataSource(config);
     }
 
+    /**
+     * This method shutdowns the executor pool, monitor thread and HikariCP
+     */
+    @SneakyThrows
     public void shutdown() {
+        instance.getLogger().info(
+                String.format("[monitor] [%d/%d] Active: %d, Completed: %d, Task: %d, isShutdown: %s, isTerminated: %s",
+                        this.executor.getPoolSize(),
+                        this.executor.getCorePoolSize(),
+                        this.executor.getActiveCount(),
+                        this.executor.getCompletedTaskCount(),
+                        this.executor.getTaskCount(),
+                        this.executor.isShutdown(),
+                        this.executor.isTerminated()));
+        while(executor.getCompletedTaskCount() - executor.getTaskCount() > 0) {
+            Thread.sleep(250);
+            instance.getLogger().warn("sleeping...");
+        }
         executor.shutdown();
         monitor.shutdown();
 
         this.hikari.close();
     }
 
+    /**
+     * This method gets a player Profile from the database
+     *
+     * @param playerUUID The UUID from the player. Can be an offline UUID
+     * @return CompletableFuture<Profile> that can return a SQLException
+     */
     public CompletableFuture<Profile> getProfile(UUID playerUUID) {
         CompletableFuture<Profile> future = new CompletableFuture<>();
 
@@ -85,7 +109,6 @@ public class BackendStorage {
                         rs.getString("last_address"),
                         rs.getTimestamp("first_login"),
                         rs.getTimestamp("last_login"),
-                        rs.getString("last_login_at"),
                         rs.getString("password"),
                         rs.getString("salt"),
                         false
@@ -98,13 +121,19 @@ public class BackendStorage {
         return future;
     }
 
+    /**
+     * This method saves a player Profile to the database
+     *
+     * @param profile The profile that needs to be stored.
+     * @return CompletableFuture<Boolean> that can return a SQLException. Returns true if the player never played before
+     */
     public CompletableFuture<Boolean> savePlayer(final Profile profile) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
 
         executor.submit(() -> {
             try(Connection connection = this.hikari.getConnection()) {
 
-                try(final PreparedStatement query = connection.prepareStatement("INSERT IGNORE INTO playerdata VALUES (?, ?, ?, INET_ATON(?), INET_ATON(?), ?, ?, ?, ?, ?)")) {
+                try(final PreparedStatement query = connection.prepareStatement("INSERT IGNORE INTO playerdata VALUES (?, ?, ?, INET_ATON(?), INET_ATON(?), ?, ?, ?, ?)")) {
                     query.setString(1, profile.getUniqueId().toString());
                     query.setString(2, profile.getUsername());
                     query.setString(3, profile.getAccountType().toString());
@@ -112,9 +141,8 @@ public class BackendStorage {
                     query.setString(5, profile.getLastIP());
                     query.setTimestamp(6, profile.getFirstLogin());
                     query.setTimestamp(7, profile.getLastLogin());
-                    query.setString(8, profile.getLastServer());
-                    query.setString(9, profile.getPassword());
-                    query.setString(10, profile.getSalt());
+                    query.setString(8, profile.getPassword());
+                    query.setString(9, profile.getSalt());
 
                     query.setQueryTimeout(3);
 
@@ -128,14 +156,13 @@ public class BackendStorage {
                     query.setString(1, profile.getUsername());
                     query.setString(2, profile.getLastIP());
                     query.setTimestamp(3, profile.getLastLogin());
-                    query.setString(4, profile.getLastServer());
-                    query.setString(5, profile.getPassword());
-                    query.setString(6, profile.getSalt());
-                    query.setString(7, profile.getUniqueId().toString());
+                    query.setString(4, profile.getPassword());
+                    query.setString(5, profile.getSalt());
+                    query.setString(6, profile.getUniqueId().toString());
 
                     query.setQueryTimeout(3);
 
-                    future.complete(query.executeUpdate() == 1);
+                    future.complete(false);
                 }
 
             } catch(SQLException ex) {

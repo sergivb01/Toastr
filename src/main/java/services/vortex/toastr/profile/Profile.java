@@ -25,7 +25,7 @@ public class Profile {
 
     private Timestamp firstLogin;
     private Timestamp lastLogin;
-    private String lastServer;
+
     private String password;
     private String salt;
 
@@ -38,7 +38,6 @@ public class Profile {
         profile.firstIP = player.getRemoteAddress().getHostName();
         profile.lastIP = player.getRemoteAddress().getHostName();
         profile.firstLogin = Timestamp.from(Instant.now());
-        profile.lastServer = !player.getCurrentServer().isPresent() ? "unknown" : player.getCurrentServer().get().getServerInfo().getName();
 
         return profile;
     }

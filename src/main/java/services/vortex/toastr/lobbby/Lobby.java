@@ -5,13 +5,15 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-@RequiredArgsConstructor @Getter
+@RequiredArgsConstructor
+@Getter
 public class Lobby {
-    
+
     private final String name;
     private final boolean restricted;
     private final RegisteredServer server;
-    
-    @Setter private int maxPlayers = -1;
-    
+
+    @Setter
+    private int maxPlayers = -1;
+
 }

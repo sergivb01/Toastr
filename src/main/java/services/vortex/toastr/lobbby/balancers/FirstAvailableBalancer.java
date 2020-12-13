@@ -7,16 +7,16 @@ import services.vortex.toastr.lobbby.Lobby;
 import java.util.List;
 
 public class FirstAvailableBalancer implements Balancer {
-    
+
     @Override
     public Lobby getLobby(List<Lobby> lobbies) {
-        for (Lobby lobby : lobbies) {
+        for(Lobby lobby : lobbies) {
             int onlinePlayers = lobby.getServer().getPlayersConnected().size();
-            if (onlinePlayers < lobby.getMaxPlayers())
+            if(onlinePlayers < lobby.getMaxPlayers())
                 return lobby;
         }
-        
+
         return null;
     }
-    
+
 }

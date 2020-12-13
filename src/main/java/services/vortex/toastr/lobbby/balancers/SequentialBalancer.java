@@ -13,10 +13,10 @@ public class SequentialBalancer implements Balancer {
     @Override
     public Lobby getLobby(List<Lobby> lobbies) {
         lastServer++;
-        if (lastServer >= lobbies.size())
+        if(lastServer >= lobbies.size())
             lastServer = 0;
-        
+
         return lobbies.get(lastServer);
     }
-    
+
 }

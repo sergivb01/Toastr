@@ -18,8 +18,7 @@ public class ReloadCommand implements SimpleCommand {
 
             invocation.source().sendMessage(Component.text("Reloaded!").color(NamedTextColor.GREEN));
         } catch(FileNotFoundException e) {
-            instance.getLogger().error("Error trying to reload");
-            e.printStackTrace();
+            instance.getLogger().error("Error trying to reload config!", e);
             invocation.source().sendMessage(Component.text("Error reloading, check console!").color(NamedTextColor.RED));
         }
     }

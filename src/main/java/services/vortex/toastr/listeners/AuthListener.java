@@ -8,12 +8,9 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
-import com.velocitypowered.api.event.player.GameProfileRequestEvent;
-import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.Profile;
@@ -23,7 +20,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
-public class PlayerPreLogin {
+public class AuthListener {
     private final ToastrPlugin instance = ToastrPlugin.getInstance();
 
     @Subscribe
@@ -37,10 +34,8 @@ public class PlayerPreLogin {
 
             if(result.isPremium()) {
                 event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
-                instance.getLogger().info(event.getUsername() + " has been forced into online mode!");
             } else {
                 event.setResult(PreLoginEvent.PreLoginComponentResult.forceOfflineMode());
-                instance.getLogger().info(event.getUsername() + " has been forced into offline mode!");
             }
         } catch(Exception ex) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.text("error in backend")));
@@ -72,7 +67,6 @@ public class PlayerPreLogin {
                     long took = System.currentTimeMillis() - start;
 
                     instance.getLogger().info("GetProfile for " + player.getUsername() + " took " + took + "ms");
-                    instance.getLogger().info(profile.toString());
 
                     player.sendMessage(Component.text("Your profile has been loaded in " + took + "ms!").color(NamedTextColor.DARK_AQUA)
                             .append(Component.text("\n\n" + profile.toString()).color(NamedTextColor.WHITE)));
@@ -107,8 +101,7 @@ public class PlayerPreLogin {
         instance.getBackendStorage().savePlayer(profile)
                 .whenComplete((updated, ex) -> {
                     if(ex != null) {
-                        instance.getLogger().error("saving " + player.getUsername() + " profile");
-                        ex.printStackTrace();
+                        instance.getLogger().error("Saving " + player.getUsername() + " profile!", ex);
                         return;
                     }
 
@@ -121,13 +114,6 @@ public class PlayerPreLogin {
     @Subscribe
     public void onPostLogin(PostLoginEvent event) {
         Player player = event.getPlayer();
-
-        TextComponent header = Component.text("Vortex Services")
-                .color(NamedTextColor.DARK_AQUA);
-        TextComponent footer = Component.text("Development Proxy")
-                .color(NamedTextColor.DARK_RED);
-
-        player.getTabList().setHeaderAndFooter(header, footer);
 
         if(player.isOnlineMode()) return;
 
@@ -148,11 +134,6 @@ public class PlayerPreLogin {
          *  * if lastRemoteAddress != currentRemoteAddress -> add log
          *  * update lastRemoteAddress, lastLoggedIn, etc...
          * */
-    }
-
-    @Subscribe
-    public void onPostConnect(GameProfileRequestEvent event) {
-        // TODO: check for possible spoofing, or PostLoginEvent
     }
 
     @Subscribe
@@ -182,14 +163,6 @@ public class PlayerPreLogin {
             event.getPlayer().sendMessage(Component.text("You may not switch servers without logging in!").color(NamedTextColor.RED));
             event.setResult(ServerPreConnectEvent.ServerResult.denied());
         }
-    }
-
-    @Subscribe
-    public void onPostChange(ServerConnectedEvent event) {
-        if(event.getServer() == null) return;
-
-        // TODO: https://hasteb.in/hurokuhi.cs
-        Profile.getProfiles().get(event.getPlayer().getUniqueId()).setLastServer(event.getServer().getServerInfo().getName());
     }
 
 }

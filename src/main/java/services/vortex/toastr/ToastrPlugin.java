@@ -11,14 +11,18 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.Getter;
 import org.slf4j.Logger;
-import services.vortex.toastr.backend.BackendCredentials;
-import services.vortex.toastr.backend.BackendStorage;
-import services.vortex.toastr.commands.admin.ReloadCommand;
-import services.vortex.toastr.commands.admin.StatsCommand;
+import services.vortex.toastr.backend.mysql.BackendCredentials;
+import services.vortex.toastr.backend.mysql.BackendStorage;
+import services.vortex.toastr.backend.redis.CacheManager;
+import services.vortex.toastr.backend.redis.RedisManager;
+import services.vortex.toastr.commands.admin.*;
 import services.vortex.toastr.commands.auth.LoginCommand;
 import services.vortex.toastr.commands.auth.RegisterCommand;
 import services.vortex.toastr.commands.essentials.LobbyCommand;
-import services.vortex.toastr.listeners.PlayerPreLogin;
+import services.vortex.toastr.listeners.AuthListener;
+import services.vortex.toastr.listeners.LobbyListener;
+import services.vortex.toastr.listeners.PlayerListener;
+import services.vortex.toastr.listeners.PluginMessageListener;
 import services.vortex.toastr.lobbby.LobbyManager;
 import services.vortex.toastr.resolver.ResolverManager;
 import services.vortex.toastr.utils.Config;
@@ -46,6 +50,8 @@ public class ToastrPlugin {
     private ResolverManager resolverManager;
     private BackendStorage backendStorage;
     private LobbyManager lobbyManager;
+    private RedisManager redisManager;
+    private CacheManager cacheManager;
 
     @Inject
     public ToastrPlugin(Logger logger, ProxyServer proxy, @DataDirectory Path dataDirector) {
@@ -64,25 +70,39 @@ public class ToastrPlugin {
         lobbyManager = new LobbyManager();
         lobbyManager.loadLobbies();
 
+        redisManager = new RedisManager();
+        redisManager.enable();
+
+        cacheManager = new CacheManager();
+
         final JsonObject dbConfig = config.getObject().getAsJsonObject("database");
 
         backendStorage = new BackendStorage(new BackendCredentials(dbConfig.get("host").getAsString(), dbConfig.get("port").getAsInt(), dbConfig.get("username").getAsString(), dbConfig.get("password").getAsString(), dbConfig.get("database").getAsString()));
 
         CommandManager commandManager = proxy.getCommandManager();
+        commandManager.register("find", new FindCommand());
+        commandManager.unregister("glist");
+        commandManager.register("glist", new GListCommand());
+        commandManager.register("ip", new IPCommand());
+        commandManager.register("lastseen", new LastSeenCommand());
         commandManager.register("toastrl", new ReloadCommand());
-        commandManager.register("authstats", new StatsCommand());
+        commandManager.register("serverid", new ServerIDCommand());
 
         commandManager.register("login", new LoginCommand());
         commandManager.register("register", new RegisterCommand());
 
         commandManager.register("lobby", new LobbyCommand());
 
-        proxy.getEventManager().register(this, new PlayerPreLogin());
+        proxy.getEventManager().register(this, new AuthListener());
+        proxy.getEventManager().register(this, new LobbyListener());
+        proxy.getEventManager().register(this, new PlayerListener());
+        proxy.getEventManager().register(this, new PluginMessageListener());
     }
 
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent event) {
         backendStorage.shutdown();
+        redisManager.shutdown();
     }
 
     /**

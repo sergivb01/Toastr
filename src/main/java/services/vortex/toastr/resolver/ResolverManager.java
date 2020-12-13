@@ -1,8 +1,5 @@
 package services.vortex.toastr.resolver;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheStats;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.AllArgsConstructor;
 import services.vortex.toastr.ToastrPlugin;
@@ -21,12 +18,7 @@ public class ResolverManager {
             new SynchronousQueue<>(), new ThreadFactoryBuilder().setNameFormat("Toastr Authenticator - %1$d")
             .setDaemon(true)
             .build());
-    private final Cache<String, Resolver.Result> responseCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(30, TimeUnit.SECONDS)
-            .recordStats()
-            .maximumSize(150)
-            .removalListener((removed) -> ToastrPlugin.getInstance().getLogger().info("[CACHE] Removing " + removed.getKey() + " from cache (" + removed.getCause() + ")"))
-            .build();
+    private static final ToastrPlugin instance = ToastrPlugin.getInstance();
     private final Resolver[] resolvers = new Resolver[]{
             new AshconResolver(),
             new MineToolsResolver()
@@ -35,10 +27,10 @@ public class ResolverManager {
     public Resolver.Result resolveUsername(String username) throws Exception {
         long start = System.currentTimeMillis();
 
-        Resolver.Result cachedValue = responseCache.getIfPresent(username);
-        if(cachedValue != null) {
-            ToastrPlugin.getInstance().getLogger().info("[CACHE] [" + cachedValue.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (cachedValue.isPremium() ? "premium" : "cracked"));
-            return cachedValue;
+        Resolver.Result result = instance.getCacheManager().getPlayerResult(username);
+        if(result != null) {
+            instance.getLogger().info("[CACHE] [" + result.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (result.isPremium() ? "premium" : "cracked"));
+            return result;
         }
 
         List<ResolverTask> resolverTasks = new ArrayList<>();
@@ -46,16 +38,12 @@ public class ResolverManager {
             resolverTasks.add(new ResolverTask(resolver, username));
         }
 
-        Resolver.Result result = executor.invokeAny(resolverTasks, 1500, TimeUnit.MILLISECONDS);
-        responseCache.put(username, result);
+        result = executor.invokeAny(resolverTasks, 1500, TimeUnit.MILLISECONDS);
+        instance.getRedisManager().setPlayerResult(username, result);
 
-        ToastrPlugin.getInstance().getLogger().info("[" + result.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (result.isPremium() ? "premium" : "cracked"));
+        instance.getLogger().info("[" + result.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (result.isPremium() ? "premium" : "cracked"));
 
         return result;
-    }
-
-    public CacheStats getStats() {
-        return responseCache.stats();
     }
 
     @AllArgsConstructor

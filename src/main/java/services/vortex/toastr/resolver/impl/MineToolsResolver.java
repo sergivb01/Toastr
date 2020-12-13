@@ -38,10 +38,7 @@ public class MineToolsResolver extends Resolver {
         UUID playerUUID = UuidUtils.fromUndashed(rawUUID);
         boolean isSpoofed = !username.equals(rawUsername);
 
-        Result result = new Result(username, playerUUID, true, isSpoofed, getSource());
-        instance.getLogger().info("[" + getSource() + "] " + result.toString());
-
-        return result;
+        return new Result(username, playerUUID, true, isSpoofed, getSource());
     }
 
 }

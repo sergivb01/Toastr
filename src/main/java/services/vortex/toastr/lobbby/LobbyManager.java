@@ -43,7 +43,7 @@ public class LobbyManager {
 
             Optional<RegisteredServer> optionalServer = instance.getProxy().getServer(name);
             if(!optionalServer.isPresent()) {
-                instance.getLogger().info("Invalid server name: " + name);
+                instance.getLogger().warn("Invalid server name: " + name);
                 continue;
             }
 
@@ -110,7 +110,7 @@ public class LobbyManager {
             case "SEQUENTIAL":
                 return new SequentialBalancer();
             default:
-                instance.getLogger().warn("error trying to get balancer " + type + " is unknown, changing to LOWEST");
+                instance.getLogger().error("error trying to get balancer " + type + " is unknown, changing to LOWEST");
                 return new LowestBalancer();
         }
     }
