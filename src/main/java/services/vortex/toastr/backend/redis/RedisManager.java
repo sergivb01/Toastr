@@ -83,31 +83,29 @@ public class RedisManager {
     }
 
     private void fixInconsistency() {
-        try(Jedis jedis = getConnection()) {
+        long start = System.currentTimeMillis();
+        try(Jedis jedis = getConnection(); final Pipeline pipe = jedis.pipelined()) {
             final Set<String> stored = jedis.smembers("proxy:" + proxyName + ":onlines");
-
             int count = 0;
-            try(final Pipeline pip = jedis.pipelined()) {
 
-                for(String storedPlayer : stored) {
-                    UUID storedUUID;
-                    try {
-                        storedUUID = UUID.fromString(storedPlayer);
-                    } catch(IllegalArgumentException ignore) {
-                        continue;
-                    }
-
-                    if(!instance.getProxy().getPlayer(storedUUID).isPresent()) {
-                        instance.getLogger().warn("Removing " + storedPlayer + " because it's stored in redis but not online");
-                        pip.srem("proxy:" + proxyName + ":onlines", storedPlayer);
-                        count++;
-                    }
+            for(String storedPlayer : stored) {
+                UUID storedUUID;
+                try {
+                    storedUUID = UUID.fromString(storedPlayer);
+                } catch(IllegalArgumentException ignore) {
+                    continue;
                 }
-                pip.sync();
+
+                if(!instance.getProxy().getPlayer(storedUUID).isPresent()) {
+                    instance.getLogger().warn("Removing " + storedPlayer + " because it's stored in redis but not online");
+                    pipe.srem("proxy:" + proxyName + ":onlines", storedPlayer);
+                    count++;
+                }
             }
+            pipe.sync();
 
             if(count != 0)
-                instance.getLogger().warn("Removed " + count + " players due to inconsistency between in-game and redis");
+                instance.getLogger().warn("Removed " + count + " players due to inconsistency between in-game and redis in " + (System.currentTimeMillis() - start) + "ms");
         }
     }
 
