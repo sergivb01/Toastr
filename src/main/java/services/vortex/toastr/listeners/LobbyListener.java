@@ -17,7 +17,6 @@ public class LobbyListener {
 
     @Subscribe
     public void onInitialServerSelect(PlayerChooseInitialServerEvent event) {
-        // TODO: fix won't send to restricted because players don't have any permissions yet
         Lobby lobby = instance.getLobbyManager().getLobby(event.getPlayer());
         if(lobby == null) {
             event.getPlayer().disconnect(Component.text("No lobby available").color(NamedTextColor.RED));

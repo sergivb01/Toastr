@@ -61,7 +61,7 @@ public class AuthListener {
                         profile = Profile.createProfile(player);
                     }
                     profile.setLastLogin(Timestamp.from(Instant.now()));
-                    profile.setLastIP(player.getRemoteAddress().getHostName());
+                    profile.setLastIP(player.getRemoteAddress().getAddress().getHostAddress());
                     profile.setLoggedIn(player.isOnlineMode());
 
 
@@ -83,6 +83,7 @@ public class AuthListener {
             instance.getLogger().info("Saved " + player.getUsername() + " in " + (System.currentTimeMillis() - start) + "ms");
         }));
 
+        // TODO: check if player with different nameCase exists. If so, kick the player!
 
         /*
          * TODO: captcha system -> force new users to click text on book with:

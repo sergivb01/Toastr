@@ -22,7 +22,6 @@ public class AshconResolver extends Resolver {
         final Response response = httpClient.newCall(request).execute();
 
         if(response.code() == 404) {
-            // TODO: should check lowercase stuff to prevent stealing accounts with same nickname but different lowerCase/upperCase
             return fromOffline(rawUsername);
         }
 

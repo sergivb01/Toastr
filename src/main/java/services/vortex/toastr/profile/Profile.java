@@ -35,8 +35,8 @@ public class Profile {
         Profile profile = new Profile(player.getUniqueId(), player.getUsername());
 
         profile.accountType = player.isOnlineMode() ? AccountType.PREMIUM : AccountType.CRACKED;
-        profile.firstIP = player.getRemoteAddress().getHostName();
-        profile.lastIP = player.getRemoteAddress().getHostName();
+        profile.firstIP = player.getRemoteAddress().getAddress().getHostAddress();
+        profile.lastIP = player.getRemoteAddress().getAddress().getHostAddress();
         profile.firstLogin = Timestamp.from(Instant.now());
 
         return profile;

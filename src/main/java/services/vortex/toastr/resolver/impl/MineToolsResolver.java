@@ -30,7 +30,6 @@ public class MineToolsResolver extends Resolver {
 
         final JsonObject data = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
         if(data.get("id").isJsonNull()) {
-            // TODO: should check lowercase stuff to prevent stealing accounts with same nickname but different lowerCase/upperCase
             return fromOffline(rawUsername);
         }
 

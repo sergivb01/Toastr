@@ -10,7 +10,6 @@ Should probably make a good description
  * [ ] MOTD System (or use MiniMOTD/PistonMOTD)
  * [ ] AntiVPN
  * [ ] sub-servers managers: add/remove/edit servers
- * [ ] staffchat/report/request system. Link discord <-> ingame chat
  * [ ] Auto announcer
  
 # TODO Commands
@@ -23,4 +22,3 @@ Should probably make a good description
     * [X] alert
     * [ ] send
     * [X] sendtoall
-    * [ ] ping command: display proxy->player and proxy->server

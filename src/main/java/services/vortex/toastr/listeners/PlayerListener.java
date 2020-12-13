@@ -33,7 +33,7 @@ public class PlayerListener {
     @Subscribe
     public void onPlayerJoin(PostLoginEvent event) {
         Player player = event.getPlayer();
-        instance.getRedisManager().createPlayer(player.getUniqueId(), player.getUsername(), player.getRemoteAddress().getHostName());
+        instance.getRedisManager().createPlayer(player.getUniqueId(), player.getUsername(), player.getRemoteAddress().getAddress().getHostAddress());
     }
 
     @Subscribe

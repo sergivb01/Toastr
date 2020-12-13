@@ -2,10 +2,7 @@ package services.vortex.toastr.backend.redis;
 
 import com.google.gson.JsonObject;
 import lombok.Getter;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.JedisPubSub;
+import redis.clients.jedis.*;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.PlayerData;
 import services.vortex.toastr.resolver.Resolver;
@@ -39,8 +36,9 @@ public class RedisManager {
             pool = new JedisPool(new JedisPoolConfig(), redisConfig.get("host").getAsString(), redisConfig.get("port").getAsInt(), 2000, redisConfig.get("password").getAsString());
         }
 
-        psListener = new PubSubListener();
+        proxyName = instance.getConfig().getObject().get("proxy-name").getAsString();
 
+        psListener = new PubSubListener();
         Thread subscribeThread = new Thread(() -> {
             try(Jedis jedis = getConnection()) {
                 jedis.subscribe(psListener, RedisManager.CHANNEL_ALERT, RedisManager.CHANNEL_SENDTOALL);
@@ -49,9 +47,8 @@ public class RedisManager {
         subscribeThread.setDaemon(true);
         subscribeThread.start();
 
-        proxyName = instance.getConfig().getObject().get("proxy-name").getAsString();
-
         instance.getProxy().getScheduler().buildTask(instance, this::updatePlayerCounts).delay(1, TimeUnit.SECONDS).repeat(1, TimeUnit.SECONDS).schedule();
+        instance.getProxy().getScheduler().buildTask(instance, this::fixInconsistency).delay(5, TimeUnit.SECONDS).repeat(30, TimeUnit.SECONDS).schedule();
     }
 
     public void shutdown() {
@@ -66,6 +63,7 @@ public class RedisManager {
             for(String proxy : proxies.keySet()) {
                 if(System.currentTimeMillis() - Long.parseLong(proxies.get(proxy)) > TimeUnit.SECONDS.toMillis(15)) {
                     jedis.hdel("proxies", proxy);
+                    jedis.del(" proxy:" + proxy + ":onlines");
                     instance.getLogger().warn("No heartbeat from " + proxy + " in 15 seconds, removing proxy.");
                     continue;
                 }
@@ -84,6 +82,35 @@ public class RedisManager {
         onlinePlayers = onlines;
     }
 
+    private void fixInconsistency() {
+        try(Jedis jedis = getConnection()) {
+            final Set<String> stored = jedis.smembers("proxy:" + proxyName + ":onlines");
+
+            int count = 0;
+            try(final Pipeline pip = jedis.pipelined()) {
+
+                for(String storedPlayer : stored) {
+                    UUID storedUUID;
+                    try {
+                        storedUUID = UUID.fromString(storedPlayer);
+                    } catch(IllegalArgumentException ignore) {
+                        continue;
+                    }
+
+                    if(!instance.getProxy().getPlayer(storedUUID).isPresent()) {
+                        instance.getLogger().warn("Removing " + storedPlayer + " because it's stored in redis but not online");
+                        pip.srem("proxy:" + proxyName + ":onlines", storedPlayer);
+                        count++;
+                    }
+                }
+                pip.sync();
+            }
+
+            if(count != 0)
+                instance.getLogger().warn("Removed " + count + " players due to inconsistency between in-game and redis");
+        }
+    }
+
     /**
      * This method creates a new player and sets all the info
      *
@@ -98,10 +125,14 @@ public class RedisManager {
         data.put("proxy", proxyName);
 
         try(Jedis jedis = getConnection()) {
-            jedis.sadd("proxy:" + proxyName + ":onlines", player.toString());
-            jedis.hmset("player:" + player, data);
+            final Transaction tx = jedis.multi();
 
-            jedis.set("playeruuid:" + name.toLowerCase(), player.toString());
+            tx.sadd("proxy:" + proxyName + ":onlines", player.toString());
+            tx.hmset("player:" + player, data);
+
+            tx.set("playeruuid:" + name.toLowerCase(), player.toString());
+
+            tx.exec();
         }
     }
 
@@ -212,6 +243,7 @@ public class RedisManager {
      * @param server The server name
      * @return A list of the players in the server (UUID)
      */
+    // TODO: optimize this wtf?
     public Set<UUID> getOnlinePlayersInServer(String server) {
         Set<UUID> onlines = new HashSet<>();
 
