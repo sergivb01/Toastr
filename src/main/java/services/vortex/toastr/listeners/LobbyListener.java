@@ -4,6 +4,7 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.player.KickedFromServerEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import services.vortex.toastr.ToastrPlugin;
@@ -41,7 +42,9 @@ public class LobbyListener {
 
         Lobby lobby = instance.getLobbyManager().getLobby(event.getPlayer());
         if(lobby == null) {
-            event.setResult(KickedFromServerEvent.DisconnectPlayer.create(instance.getConfig().getMessage("kickNoLobbyAvailable")));
+            final TextComponent res = Component.text("No lobby available\n").color(NamedTextColor.RED);
+            event.getServerKickReason().ifPresent(res::append);
+            event.setResult(KickedFromServerEvent.DisconnectPlayer.create(res));
             return;
         }
 
