@@ -40,6 +40,8 @@
 	"header": "<dark_aqua>Vortex Services <dark_gray>┃ <reset>Currently connected to <aqua><bold><proxy> <reset>Proxy",
 	"footer": "<white>There are <bold><dark_aqua><players> <reset>online users in the Network <dark_gray>┃ <reset>Connected to <aqua><bold><server>",
 
+	"alert": "<dark_gray>[<dark_red>Alert<dark_gray>] <reset>",
+
 	"glist_global": "<dark_green>There are <players> online players on the network</dark_green>",
 	"glist_proxy": "<dark_green>There are <players> online players on the <proxy> proxy.</dark_green>",
 	"glist_per_server": "<yellow><bold> * <reset><dark_green><server><reset>: <players>",

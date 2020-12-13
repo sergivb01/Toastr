@@ -152,7 +152,7 @@ public class BackendStorage {
                     }
                 }
 
-                try(final PreparedStatement query = connection.prepareStatement("UPDATE playerdata SET player_name = ?, last_address = INET_ATON(?), last_login = ?, last_login_at = ?, password = ?, salt = ? WHERE uuid = ?")) {
+                try(final PreparedStatement query = connection.prepareStatement("UPDATE playerdata SET player_name = ?, last_address = INET_ATON(?), last_login = ?, password = ?, salt = ? WHERE uuid = ?")) {
                     query.setString(1, profile.getUsername());
                     query.setString(2, profile.getLastIP());
                     query.setTimestamp(3, profile.getLastLogin());

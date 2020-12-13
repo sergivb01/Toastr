@@ -2,6 +2,7 @@
 Should probably make a good description
 
 # TODO Features/commands
+ * [ ] migrate to pidgin
  * [ ] global /msg
  * [ ] stafflist
  * [ ] maintenance (proxy instance)

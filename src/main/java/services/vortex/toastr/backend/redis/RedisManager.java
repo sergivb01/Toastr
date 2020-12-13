@@ -15,22 +15,23 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class RedisManager {
-
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
     private static final int RESOLVER_CACHE_TIME = 3600 * 6;
-    private PubSubListener psListener;
+
+    private final PubSubListener psListener;
+    private final Thread subscribeThread;
 
     @Getter
-    private String proxyName;
+    private final String proxyName;
     @Getter
     private int onlinePlayers;
 
-    private JedisPool pool;
+    private final JedisPool pool;
 
-    /**
-     * This method enables the RedisManager
-     */
-    public void enable() {
+    public static final String CHANNEL_ALERT = "toastr-alert";
+    public static final String CHANNEL_SENDTOALL = "toastr-sendtoall";
+
+    public RedisManager() {
         JsonObject redisConfig = instance.getConfig().getObject().getAsJsonObject("redis");
 
         if(redisConfig.get("password").getAsString().isEmpty()) {
@@ -40,6 +41,14 @@ public class RedisManager {
         }
 
         psListener = new PubSubListener();
+
+        subscribeThread = new Thread(() -> {
+            try(Jedis jedis = getConnection()){
+                jedis.subscribe(psListener, RedisManager.CHANNEL_ALERT, RedisManager.CHANNEL_SENDTOALL);
+            }
+        }, "Toastr PubSub subscriber");
+        subscribeThread.setDaemon(true);
+        subscribeThread.start();
 
         proxyName = instance.getConfig().getObject().get("proxy-name").getAsString();
 
@@ -117,8 +126,6 @@ public class RedisManager {
     public void cleanPlayer(UUID player) {
         try(Jedis jedis = getConnection()) {
             jedis.srem("proxy:" + proxyName + ":onlines", player.toString());
-            jedis.hdel("player:" + player, "server", "ip", "proxy");
-
             jedis.hset("player:" + player, "lastOnline", Long.toString(System.currentTimeMillis()));
         }
     }
@@ -241,6 +248,12 @@ public class RedisManager {
      */
     public void unregisterChannel(String... channels) {
         psListener.unsubscribe(channels);
+    }
+
+    public void publishMessage(String channel, String message) {
+        try(Jedis jedis = getConnection()) {
+            jedis.publish(channel, message);
+        }
     }
 
     private Jedis getConnection() {

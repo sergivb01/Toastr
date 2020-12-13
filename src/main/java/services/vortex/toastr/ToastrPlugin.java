@@ -16,16 +16,10 @@ import services.vortex.toastr.backend.mysql.BackendCredentials;
 import services.vortex.toastr.backend.mysql.BackendStorage;
 import services.vortex.toastr.backend.redis.CacheManager;
 import services.vortex.toastr.backend.redis.RedisManager;
-import services.vortex.toastr.commands.admin.GListCommand;
-import services.vortex.toastr.commands.admin.ProfileCommand;
-import services.vortex.toastr.commands.admin.ReloadCommand;
-import services.vortex.toastr.commands.admin.ServerIDCommand;
+import services.vortex.toastr.commands.admin.*;
 import services.vortex.toastr.commands.auth.*;
 import services.vortex.toastr.commands.essentials.LobbyCommand;
-import services.vortex.toastr.listeners.AuthListener;
-import services.vortex.toastr.listeners.LobbyListener;
-import services.vortex.toastr.listeners.PlayerListener;
-import services.vortex.toastr.listeners.PluginMessageListener;
+import services.vortex.toastr.listeners.*;
 import services.vortex.toastr.lobbby.LobbyManager;
 import services.vortex.toastr.resolver.ResolverManager;
 import services.vortex.toastr.utils.Config;
@@ -75,8 +69,6 @@ public class ToastrPlugin {
         lobbyManager.loadLobbies();
 
         redisManager = new RedisManager();
-        redisManager.enable();
-
         cacheManager = new CacheManager();
 
         final JsonObject dbConfig = config.getObject().getAsJsonObject("database");
@@ -84,16 +76,17 @@ public class ToastrPlugin {
         backendStorage = new BackendStorage(new BackendCredentials(dbConfig.get("host").getAsString(), dbConfig.get("port").getAsInt(), dbConfig.get("username").getAsString(), dbConfig.get("password").getAsString(), dbConfig.get("database").getAsString()));
 
         CommandManager commandManager = proxy.getCommandManager();
+
+        commandManager.register("alert", new AlertCommand());
         commandManager.unregister("glist");
         commandManager.register("glist", new GListCommand());
         commandManager.register("tprofile", new ProfileCommand());
         commandManager.register("toastrl", new ReloadCommand());
+        commandManager.register("sendtoall", new SendToAllCommand());
         commandManager.register("serverid", new ServerIDCommand());
-
 
         commandManager.register("changepassword", new ChangePasswordCommand());
         commandManager.register("login", new LoginCommand());
-        commandManager.register("logoff", new LogoffCommand());
         commandManager.register("register", new RegisterCommand());
         commandManager.register("unregister", new UnRegisterCommand());
 
@@ -101,6 +94,7 @@ public class ToastrPlugin {
 
         proxy.getEventManager().register(this, new AuthListener());
         proxy.getEventManager().register(this, new LobbyListener());
+        proxy.getEventManager().register(this, new NetworkListener());
         proxy.getEventManager().register(this, new PlayerListener());
         proxy.getEventManager().register(this, new PluginMessageListener());
     }
@@ -112,7 +106,7 @@ public class ToastrPlugin {
     }
 
     @Subscribe
-    public void onProxyReload(ProxyReloadEvent event){
+    public void onProxyReload(ProxyReloadEvent event) {
         try {
             config.reload();
             lobbyManager.loadLobbies();
