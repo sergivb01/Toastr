@@ -64,13 +64,13 @@ public class AuthListener {
                     profile.setLastIP(player.getRemoteAddress().getHostName());
                     profile.setLoggedIn(player.isOnlineMode());
 
+
+                    Profile.getProfiles().put(player.getUniqueId(), profile);
+
                     long took = System.currentTimeMillis() - start;
 
                     instance.getLogger().info("GetProfile for " + player.getUsername() + " took " + took + "ms");
-
-                    player.sendMessage(Component.text("Your profile has been loaded in " + took + "ms!").color(NamedTextColor.DARK_AQUA)
-                            .append(Component.text("\n\n" + profile.toString()).color(NamedTextColor.WHITE)));
-                    Profile.getProfiles().put(player.getUniqueId(), profile);
+                    player.sendMessage(Component.text("Your profile has been loaded in " + took + "ms!").color(NamedTextColor.DARK_AQUA));
 
                 }).thenAccept((profile) -> instance.getBackendStorage().savePlayer(profile).whenComplete((saved, ex) -> {
             if(ex != null) {
