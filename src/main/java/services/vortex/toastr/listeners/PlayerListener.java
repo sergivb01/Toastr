@@ -41,7 +41,6 @@ public class PlayerListener {
         Player player = event.getPlayer();
 
         instance.getRedisManager().setPlayerServer(player.getUniqueId(), event.getServer().getServerInfo().getName());
-        //Profile.getProfiles().get(event.getPlayer().getUniqueId()).setLastServer(event.getServer().getServerInfo().getName());
     }
 
     @Subscribe

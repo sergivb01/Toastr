@@ -91,7 +91,7 @@ public class BackendStorage {
 
         executor.submit(() -> {
             try(Connection connection = this.hikari.getConnection();
-                final PreparedStatement query = connection.prepareStatement("SELECT * FROM playerdata WHERE uuid = ?")) {
+                final PreparedStatement query = connection.prepareStatement(SQLQueries.SELECT_PROFILE_BY_UUID.getQuery())) {
                 query.setString(1, playerUUID.toString());
                 query.setQueryTimeout(3);
 
@@ -133,7 +133,7 @@ public class BackendStorage {
         executor.submit(() -> {
             try(Connection connection = this.hikari.getConnection()) {
 
-                try(final PreparedStatement query = connection.prepareStatement("INSERT IGNORE INTO playerdata VALUES (?, ?, ?, INET_ATON(?), INET_ATON(?), ?, ?, ?, ?)")) {
+                try(final PreparedStatement query = connection.prepareStatement(SQLQueries.INSERT_PROFILE.getQuery())) {
                     query.setString(1, profile.getUniqueId().toString());
                     query.setString(2, profile.getUsername());
                     query.setString(3, profile.getAccountType().toString());
@@ -152,7 +152,7 @@ public class BackendStorage {
                     }
                 }
 
-                try(final PreparedStatement query = connection.prepareStatement("UPDATE playerdata SET player_name = ?, last_address = INET_ATON(?), last_login = ?, password = ?, salt = ? WHERE uuid = ?")) {
+                try(final PreparedStatement query = connection.prepareStatement(SQLQueries.UPDATE_PROFILE_BY_UUID.getQuery())) {
                     query.setString(1, profile.getUsername());
                     query.setString(2, profile.getLastIP());
                     query.setTimestamp(3, profile.getLastLogin());
