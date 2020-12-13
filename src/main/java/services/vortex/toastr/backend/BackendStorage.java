@@ -8,7 +8,10 @@ import services.vortex.toastr.profile.Profile;
 import services.vortex.toastr.utils.MyMonitorThread;
 import services.vortex.toastr.utils.RejectedExecutionHandlerImpl;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.*;
 
@@ -22,7 +25,7 @@ public class BackendStorage {
         ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("Toastr Storage - %1$d")
                 .setDaemon(true).build();
         this.executor = new ThreadPoolExecutor(16, Integer.MAX_VALUE, 30L, TimeUnit.SECONDS, new SynchronousQueue<>(), threadFactory, new RejectedExecutionHandlerImpl());
-        this.monitor = new MyMonitorThread(executor, 15);
+        this.monitor = new MyMonitorThread(executor, 60);
         Thread monitorThread = new Thread(monitor);
         monitorThread.start();
 
@@ -64,7 +67,7 @@ public class BackendStorage {
 
         executor.submit(() -> {
             try(Connection connection = this.hikari.getConnection();
-                final PreparedStatement query = connection.prepareStatement("SELECT uuid, player_name, account_type, INET_NTOA(first_address) AS first_address, INET_NTOA(last_address) AS last_address, first_login, last_login, last_login_at, password FROM playerdata WHERE uuid = ?")) {
+                final PreparedStatement query = connection.prepareStatement("SELECT * FROM playerdata WHERE uuid = ?")) {
                 query.setString(1, playerUUID.toString());
                 query.setQueryTimeout(3);
 
@@ -80,10 +83,11 @@ public class BackendStorage {
                         Profile.AccountType.valueOf(rs.getString("account_type")),
                         rs.getString("first_address"),
                         rs.getString("last_address"),
-                        rs.getTimestamp("first_login").toInstant().toEpochMilli(),
-                        rs.getTimestamp("last_login").toInstant().toEpochMilli(),
+                        rs.getTimestamp("first_login"),
+                        rs.getTimestamp("last_login"),
                         rs.getString("last_login_at"),
                         rs.getString("password"),
+                        rs.getString("salt"),
                         false
                 ));
             } catch(SQLException ex) {
@@ -98,28 +102,42 @@ public class BackendStorage {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
 
         executor.submit(() -> {
-            try(Connection connection = this.hikari.getConnection();
-                final PreparedStatement query = connection.prepareStatement("INSERT INTO playerdata SET uuid = ?, player_name = ?, account_type = ?, first_address = INET_ATON(?), last_address = INET_ATON(?), last_login = ?, last_login_at = ?, password = ?\n" +
-                        "    ON DUPLICATE KEY UPDATE player_name = ?, account_type = ?, last_address = INET_ATON(?), last_login = ?, last_login_at = ?, password = ?")) {
-                query.setString(1, profile.getUniqueId().toString());
-                query.setString(2, profile.getUsername());
-                query.setString(3, profile.getAccountType().toString());
-                query.setString(4, profile.getFirstIP());
-                query.setString(5, profile.getLastIP());
-                query.setTimestamp(6, new Timestamp(profile.getLastLogin()));
-                query.setString(7, profile.getLastServer());
-                query.setString(8, profile.getPassword());
-                //////////
-                query.setString(9, profile.getUsername());
-                query.setString(10, profile.getAccountType().toString());
-                query.setString(11, profile.getLastIP());
-                query.setTimestamp(12, new Timestamp(profile.getLastLogin()));
-                query.setString(13, profile.getLastServer());
-                query.setString(14, profile.getPassword());
+            try(Connection connection = this.hikari.getConnection()) {
 
-                query.setQueryTimeout(3);
+                try(final PreparedStatement query = connection.prepareStatement("INSERT IGNORE INTO playerdata VALUES (?, ?, ?, INET_ATON(?), INET_ATON(?), ?, ?, ?, ?, ?)")) {
+                    query.setString(1, profile.getUniqueId().toString());
+                    query.setString(2, profile.getUsername());
+                    query.setString(3, profile.getAccountType().toString());
+                    query.setString(4, profile.getFirstIP());
+                    query.setString(5, profile.getLastIP());
+                    query.setTimestamp(6, profile.getFirstLogin());
+                    query.setTimestamp(7, profile.getLastLogin());
+                    query.setString(8, profile.getLastServer());
+                    query.setString(9, profile.getPassword());
+                    query.setString(10, profile.getSalt());
 
-                future.complete(query.executeUpdate() == 1);
+                    query.setQueryTimeout(3);
+
+                    if(query.executeUpdate() == 1) {
+                        future.complete(true);
+                        return;
+                    }
+                }
+
+                try(final PreparedStatement query = connection.prepareStatement("UPDATE playerdata SET player_name = ?, last_address = INET_ATON(?), last_login = ?, last_login_at = ?, password = ?, salt = ? WHERE uuid = ?")) {
+                    query.setString(1, profile.getUsername());
+                    query.setString(2, profile.getLastIP());
+                    query.setTimestamp(3, profile.getLastLogin());
+                    query.setString(4, profile.getLastServer());
+                    query.setString(5, profile.getPassword());
+                    query.setString(6, profile.getSalt());
+                    query.setString(7, profile.getUniqueId().toString());
+
+                    query.setQueryTimeout(3);
+
+                    future.complete(query.executeUpdate() == 1);
+                }
+
             } catch(SQLException ex) {
                 future.completeExceptionally(ex);
             }

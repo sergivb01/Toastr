@@ -1,0 +1,29 @@
+{
+  "database": {
+    "host": "127.0.0.1",
+    "port": 3306,
+    "username": "root",
+    "password": "test",
+    "database": "toastr"
+  },
+  "lobby": {
+    "loadbalancer": "LOWEST",
+    "hubOnClose": true,
+    "servers": [
+      {
+        "name": "lobby1",
+        "restricted": false
+      },
+      {
+        "name": "lobby2",
+        "restricted": false
+      }
+    ]
+  },
+  "auth": {
+    "allowed_commands": [
+      "login",
+      "register"
+    ]
+  }
+}

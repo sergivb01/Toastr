@@ -1,5 +1,7 @@
 package services.vortex.toastr.listeners;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
@@ -7,7 +9,6 @@ import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
-import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.proxy.Player;
@@ -18,6 +19,8 @@ import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.Profile;
 import services.vortex.toastr.resolver.Resolver;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 public class PlayerPreLogin {
@@ -61,9 +64,8 @@ public class PlayerPreLogin {
 
                     if(profile == null) {
                         profile = Profile.createProfile(player);
-                        // TODO: implement first login captcha
                     }
-                    profile.setLastLogin(System.currentTimeMillis());
+                    profile.setLastLogin(Timestamp.from(Instant.now()));
                     profile.setLastIP(player.getRemoteAddress().getHostName());
                     profile.setLoggedIn(player.isOnlineMode());
 
@@ -105,6 +107,7 @@ public class PlayerPreLogin {
         instance.getBackendStorage().savePlayer(profile)
                 .whenComplete((updated, ex) -> {
                     if(ex != null) {
+                        instance.getLogger().error("saving " + player.getUsername() + " profile");
                         ex.printStackTrace();
                         return;
                     }
@@ -153,15 +156,20 @@ public class PlayerPreLogin {
     }
 
     @Subscribe
-    public void onInitialChoose(PlayerChooseInitialServerEvent event) {
-        // TODO: send to auth servers?
-    }
-
-    @Subscribe
     public void onPlayerCommand(CommandExecuteEvent event) {
-        if(!(event.getCommandSource() instanceof Player)) return;
+        if(!(event.getCommandSource() instanceof Player))
+            return;
 
-        // TODO: prevent commands if player is not logged in
+        final JsonArray allowedCommands = instance.getConfig().getObject().get("auth").getAsJsonObject().get("allowed_commands").getAsJsonArray();
+        if(!allowedCommands.contains(JsonParser.parseString(event.getCommand().split(" ")[0].replace("/", ""))))
+            return;
+
+        Player player = (Player) event.getCommandSource();
+        Profile profile = Profile.getProfiles().get(player.getUniqueId());
+
+        if(profile.isLoggedIn()) return;
+
+        event.setResult(CommandExecuteEvent.CommandResult.denied());
     }
 
     @Subscribe

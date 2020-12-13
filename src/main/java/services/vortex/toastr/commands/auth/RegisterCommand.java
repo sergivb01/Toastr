@@ -1,4 +1,4 @@
-package services.vortex.toastr.commands;
+package services.vortex.toastr.commands.auth;
 
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
@@ -6,8 +6,11 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.Profile;
+import services.vortex.toastr.utils.HashMethods;
+import services.vortex.toastr.utils.SaltGenerator;
 
 public class RegisterCommand implements SimpleCommand {
+    private final ToastrPlugin instance = ToastrPlugin.getInstance();
 
     @Override
     public void execute(Invocation invocation) {
@@ -34,8 +37,12 @@ public class RegisterCommand implements SimpleCommand {
             return;
         }
 
-        profile.setPassword(invocation.arguments()[0]);
-        ToastrPlugin.getInstance().getBackendStorage().savePlayer(profile).whenComplete((saved, ex) -> {
+        String salt = SaltGenerator.generateString();
+
+        profile.setSalt(salt);
+        profile.setPassword(HashMethods.SHA512H(invocation.arguments()[0], salt));
+
+        instance.getBackendStorage().savePlayer(profile).whenComplete((saved, ex) -> {
             if(ex != null) {
                 ex.printStackTrace();
                 player.sendMessage(Component.text("Error registering. Contact admin").color(NamedTextColor.RED));

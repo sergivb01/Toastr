@@ -3,10 +3,13 @@ package services.vortex.toastr.profile;
 import com.velocitypowered.api.proxy.Player;
 import lombok.*;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.UUID;
 
 @Getter
+@Setter
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
@@ -18,18 +21,14 @@ public class Profile {
     private final String username;
     private AccountType accountType;
     private String firstIP;
-    @Setter
     private String lastIP;
 
-    private long firstLogin;
-    @Setter
-    private long lastLogin;
-    @Setter
+    private Timestamp firstLogin;
+    private Timestamp lastLogin;
     private String lastServer;
-    @Setter
     private String password;
+    private String salt;
 
-    @Setter
     private boolean loggedIn = false;
 
     public static Profile createProfile(Player player) {
@@ -38,7 +37,7 @@ public class Profile {
         profile.accountType = player.isOnlineMode() ? AccountType.PREMIUM : AccountType.CRACKED;
         profile.firstIP = player.getRemoteAddress().getHostName();
         profile.lastIP = player.getRemoteAddress().getHostName();
-        profile.firstLogin = System.currentTimeMillis();
+        profile.firstLogin = Timestamp.from(Instant.now());
         profile.lastServer = !player.getCurrentServer().isPresent() ? "unknown" : player.getCurrentServer().get().getServerInfo().getName();
 
         return profile;

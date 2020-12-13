@@ -1,12 +1,15 @@
-package services.vortex.toastr.commands;
+package services.vortex.toastr.commands.auth;
 
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.Profile;
+import services.vortex.toastr.utils.HashMethods;
 
 public class LoginCommand implements SimpleCommand {
+    private final ToastrPlugin instance = ToastrPlugin.getInstance();
 
     @Override
     public void execute(Invocation invocation) {
@@ -33,7 +36,7 @@ public class LoginCommand implements SimpleCommand {
             return;
         }
 
-        if(!profile.getPassword().equals(invocation.arguments()[0])) {
+        if(!profile.getPassword().equals(HashMethods.SHA512H(invocation.arguments()[0], profile.getSalt()))) {
             player.sendMessage(Component.text("invalid password").color(NamedTextColor.RED));
             return;
         }
