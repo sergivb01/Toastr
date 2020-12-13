@@ -5,10 +5,11 @@ import lombok.Getter;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.JedisPubSub;
 import services.vortex.toastr.ToastrPlugin;
-import services.vortex.toastr.listeners.PubSubListener;
 import services.vortex.toastr.profile.PlayerData;
 import services.vortex.toastr.resolver.Resolver;
+import services.vortex.toastr.utils.PubSubEvent;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -42,35 +43,37 @@ public class RedisManager {
 
         proxyName = instance.getConfig().getObject().get("proxy-name").getAsString();
 
-        instance.getProxy().getScheduler().buildTask(instance, () -> {
-            int onlines = 0;
-
-            try(Jedis jedis = getConnection()) {
-                Map<String, String> proxies = jedis.hgetAll("proxies");
-                for(String proxy : proxies.keySet()) {
-                    if(System.currentTimeMillis() - Long.parseLong(proxies.get(proxy)) > TimeUnit.SECONDS.toMillis(15)) {
-                        jedis.hdel("proxies", proxy);
-                        instance.getLogger().warn("No heartbeat from " + proxy + " in 15 seconds, removing proxy.");
-                        continue;
-                    }
-
-                    if(System.currentTimeMillis() - Long.parseLong(proxies.get(proxy)) > TimeUnit.SECONDS.toMillis(5)) {
-                        instance.getLogger().warn("No heartbeat from " + proxy + " in 5 seconds, ignoring players.");
-                        continue;
-                    }
-
-                    onlines += jedis.scard("proxy:" + proxy + ":onlines");
-                }
-
-                jedis.hset("proxies", proxyName, Long.toString(System.currentTimeMillis()));
-            }
-
-            onlinePlayers = onlines;
-        }).repeat(1, TimeUnit.SECONDS).schedule();
+        instance.getProxy().getScheduler().buildTask(instance, this::updatePlayerCounts).repeat(1, TimeUnit.SECONDS).schedule();
     }
 
     public void shutdown() {
         pool.close();
+    }
+
+    private void updatePlayerCounts(){
+        int onlines = 0;
+
+        try(Jedis jedis = getConnection()) {
+            Map<String, String> proxies = jedis.hgetAll("proxies");
+            for(String proxy : proxies.keySet()) {
+                if(System.currentTimeMillis() - Long.parseLong(proxies.get(proxy)) > TimeUnit.SECONDS.toMillis(15)) {
+                    jedis.hdel("proxies", proxy);
+                    instance.getLogger().warn("No heartbeat from " + proxy + " in 15 seconds, removing proxy.");
+                    continue;
+                }
+
+                if(System.currentTimeMillis() - Long.parseLong(proxies.get(proxy)) > TimeUnit.SECONDS.toMillis(5)) {
+                    instance.getLogger().warn("No heartbeat from " + proxy + " in 5 seconds, ignoring players.");
+                    continue;
+                }
+
+                onlines += jedis.scard("proxy:" + proxy + ":onlines");
+            }
+
+            jedis.hset("proxies", proxyName, Long.toString(System.currentTimeMillis()));
+        }
+
+        onlinePlayers = onlines;
     }
 
     /**
@@ -242,6 +245,15 @@ public class RedisManager {
 
     private Jedis getConnection() {
         return pool.getResource();
+    }
+
+    static class PubSubListener extends JedisPubSub {
+
+        @Override
+        public void onMessage(String channel, String message) {
+            instance.getProxy().getEventManager().fireAndForget(new PubSubEvent(channel, message));
+        }
+
     }
 
 }

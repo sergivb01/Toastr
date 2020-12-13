@@ -11,15 +11,16 @@ import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.PlayerData;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 
 public class PluginMessageListener {
 
-    private static final ToastrPlugin plugin = ToastrPlugin.getInstance();
+    private static final ToastrPlugin instance = ToastrPlugin.getInstance();
 
-    private static final LegacyChannelIdentifier LEGACY_CHANNEL = new LegacyChannelIdentifier("Chocolate");
-    private static final MinecraftChannelIdentifier MODERN_CHANNEL = MinecraftChannelIdentifier.create("chocolate", "main");
+    private static final LegacyChannelIdentifier LEGACY_CHANNEL = new LegacyChannelIdentifier("RedisBungee");
+    private static final MinecraftChannelIdentifier MODERN_CHANNEL = MinecraftChannelIdentifier.create("redisbungee", "main");
 
     @Subscribe
     public void onPluginMessage(PluginMessageEvent event) {
@@ -39,7 +40,7 @@ public class PluginMessageListener {
         switch(subChannel.toUpperCase()) {
             case "PLAYERLIST": {
                 String server = input.readUTF();
-                Set<UUID> players = plugin.getCacheManager().getOnlinePlayersInServer(server.toLowerCase());
+                Set<UUID> players = instance.getCacheManager().getOnlinePlayersInServer(server.toLowerCase());
                 StringBuilder sb = new StringBuilder();
                 for(UUID uuid : players)
                     sb.append(uuid).append(", ");
@@ -57,9 +58,9 @@ public class PluginMessageListener {
                 String server = input.readUTF();
                 int players;
                 if(server.equalsIgnoreCase("ALL"))
-                    players = plugin.getRedisManager().getOnlinePlayers();
+                    players = instance.getRedisManager().getOnlinePlayers();
                 else
-                    players = plugin.getCacheManager().getOnlinePlayersInServer(server.toLowerCase()).size();
+                    players = instance.getCacheManager().getOnlinePlayersInServer(server.toLowerCase()).size();
 
                 output.writeUTF("PlayerCount");
                 output.writeUTF(server);
@@ -69,7 +70,7 @@ public class PluginMessageListener {
 
             case "LASTONLINE": {
                 String name = input.readUTF();
-                PlayerData data = plugin.getCacheManager().getPlayerData(name);
+                PlayerData data = instance.getCacheManager().getPlayerData(name);
 
                 output.writeUTF("LastOnline");
                 output.writeUTF(name);
@@ -77,17 +78,30 @@ public class PluginMessageListener {
                 break;
             }
 
+            case "SERVERPLAYERS": {
+                instance.getLogger().error(event.getSource().toString() + " tried to send a \"ServerPlayers\" plugin message, but feature is not implemented yet!");
+                instance.getLogger().error("Data: " + Arrays.toString(event.getData()));
+                break;
+            }
+
             case "PROXY": {
-                String uuidS = input.readUTF();
-
                 output.writeUTF("Proxy");
-                output.writeUTF(uuidS);
+                output.writeUTF(instance.getRedisManager().getProxyName());
+                break;
+            }
 
-                UUID uuid = UUID.fromString(uuidS);
-                if(plugin.getProxy().getPlayer(uuid).isPresent())
-                    output.writeUTF(plugin.getRedisManager().getProxyName());
-                else
-                    output.writeUTF(plugin.getCacheManager().getPlayerData(uuid).getProxy());
+            case "PLAYERPROXY": {
+                String username = input.readUTF();
+
+                output.writeUTF("PlayerProxy");
+                output.writeUTF(username);
+
+                if(instance.getProxy().getPlayer(username).isPresent())
+                    output.writeUTF(instance.getRedisManager().getProxyName());
+                else {
+                    final PlayerData playerData = instance.getCacheManager().getPlayerData(username);
+                    output.writeUTF(playerData == null ? "unknown" : playerData.getProxy());
+                }
                 break;
             }
 

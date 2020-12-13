@@ -15,9 +15,11 @@ import services.vortex.toastr.backend.mysql.BackendCredentials;
 import services.vortex.toastr.backend.mysql.BackendStorage;
 import services.vortex.toastr.backend.redis.CacheManager;
 import services.vortex.toastr.backend.redis.RedisManager;
-import services.vortex.toastr.commands.admin.*;
-import services.vortex.toastr.commands.auth.LoginCommand;
-import services.vortex.toastr.commands.auth.RegisterCommand;
+import services.vortex.toastr.commands.admin.GListCommand;
+import services.vortex.toastr.commands.admin.ProfileCommand;
+import services.vortex.toastr.commands.admin.ReloadCommand;
+import services.vortex.toastr.commands.admin.ServerIDCommand;
+import services.vortex.toastr.commands.auth.*;
 import services.vortex.toastr.commands.essentials.LobbyCommand;
 import services.vortex.toastr.listeners.AuthListener;
 import services.vortex.toastr.listeners.LobbyListener;
@@ -80,16 +82,18 @@ public class ToastrPlugin {
         backendStorage = new BackendStorage(new BackendCredentials(dbConfig.get("host").getAsString(), dbConfig.get("port").getAsInt(), dbConfig.get("username").getAsString(), dbConfig.get("password").getAsString(), dbConfig.get("database").getAsString()));
 
         CommandManager commandManager = proxy.getCommandManager();
-        commandManager.register("find", new FindCommand());
         commandManager.unregister("glist");
         commandManager.register("glist", new GListCommand());
-        commandManager.register("ip", new IPCommand());
-        commandManager.register("lastseen", new LastSeenCommand());
+        commandManager.register("tprofile", new ProfileCommand());
         commandManager.register("toastrl", new ReloadCommand());
         commandManager.register("serverid", new ServerIDCommand());
 
+
+        commandManager.register("changepassword", new ChangePasswordCommand());
         commandManager.register("login", new LoginCommand());
+        commandManager.register("logoff", new LogoffCommand());
         commandManager.register("register", new RegisterCommand());
+        commandManager.register("unregister", new UnRegisterCommand());
 
         commandManager.register("lobby", new LobbyCommand());
 

@@ -1,6 +1,8 @@
 package services.vortex.toastr.utils;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -8,6 +10,8 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.io.*;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class Config {
 
@@ -49,6 +53,17 @@ public class Config {
      */
     public Component getMessage(String name, String... placeholders) {
         return MiniMessage.get().parse(object.getAsJsonObject("messages").get(name).getAsString(), placeholders);
+    }
+
+    public Collection<Component> getMessages(String name, String... placeholders) {
+        Collection<Component> res = new ArrayList<>();
+
+        final JsonArray messages = object.getAsJsonObject("messages").get(name).getAsJsonArray();
+        for(JsonElement msg : messages) {
+            res.add(MiniMessage.get().parse(msg.getAsString(), placeholders));
+        }
+
+        return res;
     }
 
     private void createFile() throws IOException {

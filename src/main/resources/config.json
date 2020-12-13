@@ -40,25 +40,24 @@
 	"header": "<dark_aqua>Vortex Services <dark_gray>┃ <reset>Currently connected to <aqua><bold><proxy> <reset>Proxy",
 	"footer": "<white>There are <bold><dark_aqua><players> <reset>online users in the Network <dark_gray>┃ <reset>Connected to <aqua><bold><server>",
 
-	"glist_global": "<green>There are <players> on the network</green>",
-	"glist_no_proxy": "<red>Proxy not found</red>",
-	"glist_proxy": "<green>There are <players> on the <proxy> proxy</green>",
+	"glist_global": "<dark_green>There are <players> online players on the network</dark_green>",
+	"glist_proxy": "<dark_green>There are <players> online players on the <proxy> proxy.</dark_green>",
+	"glist_per_server": "<yellow><bold> * <reset><dark_green><server><reset>: <players>",
 
-	"find_usage": "<red>Usage: /find <player></red>",
-	"find_player_not_found": "<red>Player not found</red>",
-	"find_found": "<green>Player found on server <server> and on proxy <proxy></green>",
+	"profile_usage": "<red>Usage: /tprofile <player></red>",
+	"profile_player_not_found": "<red>Player not found </red>",
+	"profile_player_info": [
+	  "<gray><strikethrough>-------------------------",
+	  "<dark_green>UUID<reset>: <uuid>",
+	  "<dark_green>Username<reset>: <username>",
+	  "<dark_green>Last Online<reset>: <lastonline>",
+	  "<dark_green>IP<reset>: <ip>",
+	  "<dark_green>Proxy<reset>: <proxy>",
+	  "<dark_green>Server<reset>: <server>",
+	  "<gray><strikethrough>-------------------------"
+	],
 
-	"last_seen_usage": "<red>Usage: /lastseen <player></red>",
-	"last_seen_player_not_found": "<red>Player not found</red>",
-	"last_seen_already_online": "<red>This players is online</red>",
-	"last_seen_time": "Last online time: <time>",
-
-	"ip_usage": "<red>Usage: /ip <player></red>",
-	"ip_player_not_found": "<red>Player not found</red>",
-	"ip_player_not_online": "<red>Player not online</red>",
-	"ip_data": "<green>IP: <ip></green>",
-
-	"server_id": "<green>You are on proxy <proxy></green>"
+	"server_id": "<dark_green>You are connected to <proxy></dark_green>"
   }
 
 }

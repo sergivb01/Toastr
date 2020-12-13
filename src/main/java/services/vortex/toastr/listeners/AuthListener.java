@@ -1,7 +1,7 @@
 package services.vortex.toastr.listeners;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
+import com.google.gson.JsonElement;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
@@ -141,15 +141,19 @@ public class AuthListener {
         if(!(event.getCommandSource() instanceof Player))
             return;
 
-        final JsonArray allowedCommands = instance.getConfig().getObject().get("auth").getAsJsonObject().get("allowed_commands").getAsJsonArray();
-        if(!allowedCommands.contains(JsonParser.parseString(event.getCommand().split(" ")[0].replace("/", ""))))
-            return;
+        final JsonArray allowedCommands = instance.getConfig().getObject().getAsJsonObject("auth").getAsJsonArray("allowed_commands");
+        for(JsonElement allowed : allowedCommands) {
+            if(event.getCommand().toLowerCase().contains(allowed.getAsString())) {
+                return;
+            }
+        }
 
         Player player = (Player) event.getCommandSource();
         Profile profile = Profile.getProfiles().get(player.getUniqueId());
 
         if(profile.isLoggedIn()) return;
 
+        player.sendMessage(Component.text("You may not execute this command without logging in!").color(NamedTextColor.RED));
         event.setResult(CommandExecuteEvent.CommandResult.denied());
     }
 
