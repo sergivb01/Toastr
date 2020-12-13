@@ -27,6 +27,7 @@ import services.vortex.toastr.utils.Config;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 @Plugin(
         id = "toastr",
@@ -92,11 +93,13 @@ public class ToastrPlugin {
 
         commandManager.register("lobby", new LobbyCommand());
 
-        proxy.getEventManager().register(this, new AuthListener());
-        proxy.getEventManager().register(this, new LobbyListener());
-        proxy.getEventManager().register(this, new NetworkListener());
-        proxy.getEventManager().register(this, new PlayerListener());
-        proxy.getEventManager().register(this, new PluginMessageListener());
+        Arrays.asList(
+                new AuthListener(),
+                new LobbyListener(),
+                new NetworkListener(),
+                new PlayerListener(),
+                new PluginMessageListener()
+        ).forEach(listener ->  proxy.getEventManager().register(this, listener));
     }
 
     @Subscribe
