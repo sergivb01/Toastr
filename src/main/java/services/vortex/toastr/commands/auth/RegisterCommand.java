@@ -49,7 +49,8 @@ public class RegisterCommand implements SimpleCommand {
                 return;
             }
 
-            player.sendMessage(Component.text("Successfully registered!").color(NamedTextColor.DARK_AQUA));
+            profile.setLoggedIn(true);
+            player.sendMessage(Component.text("Successfully registered! You're now logged in").color(NamedTextColor.DARK_AQUA));
         });
 
     }

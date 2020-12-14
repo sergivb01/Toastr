@@ -151,7 +151,7 @@ public class BackendStorage {
 
                     if(query.executeUpdate() == 1) {
                         future.complete(true);
-                        instance.getLogger().info("[DATABASE] [SaveProfile] " + profile.getUniqueId() + " took " + (System.currentTimeMillis() - start) + "ms");
+                        instance.getLogger().info("[DATABASE] [InsertProfile] " + profile.getUniqueId() + " took " + (System.currentTimeMillis() - start) + "ms");
                         return;
                     }
                 }
@@ -165,6 +165,8 @@ public class BackendStorage {
                     query.setString(6, profile.getUniqueId().toString());
 
                     query.setQueryTimeout(3);
+
+                    query.execute();
 
                     future.complete(false);
                     instance.getLogger().info("[DATABASE] [SaveProfile] " + profile.getUniqueId() + " took " + (System.currentTimeMillis() - start) + "ms");
