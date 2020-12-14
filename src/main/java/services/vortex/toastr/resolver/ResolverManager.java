@@ -29,7 +29,7 @@ public class ResolverManager {
 
         Resolver.Result result = instance.getCacheManager().getPlayerResult(username);
         if(result != null) {
-            instance.getLogger().info("[CACHE] [RESOLVER] [CACHE - " + result.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (result.isPremium() ? "premium" : "cracked"));
+            instance.getLogger().info("[RESOLVER] [CACHE - " + result.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (result.isPremium() ? "premium" : "cracked"));
             return result;
         }
 

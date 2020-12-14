@@ -25,7 +25,7 @@ public class UnRegisterCommand implements SimpleCommand {
             return;
         }
 
-        if(!profile.isLoggedIn()){
+        if(!profile.isLoggedIn()) {
             player.sendMessage(Component.text("login first").color(NamedTextColor.RED));
             return;
         }

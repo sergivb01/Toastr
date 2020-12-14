@@ -13,22 +13,17 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class RedisManager {
-    private static final ToastrPlugin instance = ToastrPlugin.getInstance();
-    private static final int RESOLVER_CACHE_TIME = 3600 * 6;
-
-    private final PubSubListener psListener;
-
-    @Getter
-    private final String proxyName;
-    @Getter
-    private int onlinePlayers;
-
-    private final JedisPool pool;
-
     public static final String CHANNEL_ALERT = "toastr-alert";
     public static final String CHANNEL_SENDTOALL = "toastr-sendtoall";
-
+    private static final ToastrPlugin instance = ToastrPlugin.getInstance();
+    private static final int RESOLVER_CACHE_TIME = 3600 * 6;
+    private final PubSubListener psListener;
+    @Getter
+    private final String proxyName;
+    private final JedisPool pool;
     private final ScheduledTask updateTask, inconsistencyTask;
+    @Getter
+    private int onlinePlayers;
 
     public RedisManager() {
         JsonObject redisConfig = instance.getConfig().getObject().getAsJsonObject("redis");

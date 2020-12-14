@@ -1,24 +1,27 @@
 # Toastr
+
 Should probably make a good description
 
+* [ ] Replace "return null" to Optional
+
 # TODO Features/commands
- * [ ] migrate to pidgin
- * [ ] global /msg
- * [ ] stafflist
- * [ ] maintenance (proxy instance)
- * [ ] maintenance (global)
- * [ ] MOTD System (or use MiniMOTD/PistonMOTD)
- * [ ] AntiVPN
- * [ ] sub-servers managers: add/remove/edit servers
- * [ ] Auto announcer
- 
+
+* [ ] migrate to pidgin
+* [ ] global /msg
+* [ ] stafflist
+* [ ] maintenance (proxy instance)
+* [ ] maintenance (global)
+* [ ] MOTD System (or use MiniMOTD/PistonMOTD)
+* [ ] AntiVPN
+* [ ] sub-servers managers: add/remove/edit servers
+* [ ] Auto announcer
+
 # TODO Commands
- * Auth
+
+* Command framework
+* Auth
     * [ ] register other
     * [ ] unregister other
-    * [ ] changepass other
-
- * Essentials (with cross-proxy support!)
-    * [X] alert
+    * [ ] changepassword other
+* Essentials (with cross-proxy support!)
     * [ ] send
-    * [X] sendtoall

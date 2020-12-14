@@ -17,7 +17,10 @@ import services.vortex.toastr.backend.mysql.BackendStorage;
 import services.vortex.toastr.backend.redis.CacheManager;
 import services.vortex.toastr.backend.redis.RedisManager;
 import services.vortex.toastr.commands.admin.*;
-import services.vortex.toastr.commands.auth.*;
+import services.vortex.toastr.commands.auth.ChangePasswordCommand;
+import services.vortex.toastr.commands.auth.LoginCommand;
+import services.vortex.toastr.commands.auth.RegisterCommand;
+import services.vortex.toastr.commands.auth.UnRegisterCommand;
 import services.vortex.toastr.commands.essentials.LobbyCommand;
 import services.vortex.toastr.listeners.*;
 import services.vortex.toastr.lobbby.LobbyManager;
@@ -99,7 +102,7 @@ public class ToastrPlugin {
                 new NetworkListener(),
                 new PlayerListener(),
                 new PluginMessageListener()
-        ).forEach(listener ->  proxy.getEventManager().register(this, listener));
+        ).forEach(listener -> proxy.getEventManager().register(this, listener));
     }
 
     @Subscribe
