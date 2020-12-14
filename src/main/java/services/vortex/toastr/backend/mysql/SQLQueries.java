@@ -9,8 +9,8 @@ public enum SQLQueries {
     INSERT_PROFILE,
     UPDATE_PROFILE_BY_UUID;
 
-    private final @NonNull String query;
     private static final String PATH = "sql/";
+    private final @NonNull String query;
 
     SQLQueries() {
         ToastrPlugin.getInstance().getLogger().info("Loading query " + this.toString() + "(" + PATH + this.toString().toLowerCase().replace("_", "-") + ".sql)");
