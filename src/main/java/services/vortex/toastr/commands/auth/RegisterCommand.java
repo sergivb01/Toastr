@@ -42,7 +42,7 @@ public class RegisterCommand implements SimpleCommand {
         profile.setSalt(salt);
         profile.setPassword(HashMethods.SHA512H(invocation.arguments()[0], salt));
 
-        instance.getBackendStorage().savePlayer(profile).whenComplete((saved, ex) -> {
+        instance.getBackendStorage().saveProfile(profile).whenComplete((saved, ex) -> {
             if(ex != null) {
                 ex.printStackTrace();
                 player.sendMessage(Component.text("Error registering. Contact admin").color(NamedTextColor.RED));

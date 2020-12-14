@@ -88,6 +88,7 @@ public class BackendStorage {
      */
     public CompletableFuture<Profile> getProfile(UUID playerUUID) {
         CompletableFuture<Profile> future = new CompletableFuture<>();
+        final long start = System.currentTimeMillis();
 
         executor.submit(() -> {
             try(Connection connection = this.hikari.getConnection();
@@ -113,6 +114,7 @@ public class BackendStorage {
                         rs.getString("salt"),
                         false
                 ));
+                instance.getLogger().info("[DATABASE] [GetProfile] " + playerUUID.toString() + " took " + (System.currentTimeMillis() - start) + "ms");
             } catch(SQLException ex) {
                 future.completeExceptionally(ex);
             }
@@ -127,7 +129,8 @@ public class BackendStorage {
      * @param profile The profile that needs to be stored.
      * @return CompletableFuture<Boolean> that can return a SQLException. Returns true if the player never played before
      */
-    public CompletableFuture<Boolean> savePlayer(final Profile profile) {
+    public CompletableFuture<Boolean> saveProfile(final Profile profile) {
+        final long start = System.currentTimeMillis();
         CompletableFuture<Boolean> future = new CompletableFuture<>();
 
         executor.submit(() -> {
@@ -148,6 +151,7 @@ public class BackendStorage {
 
                     if(query.executeUpdate() == 1) {
                         future.complete(true);
+                        instance.getLogger().info("[DATABASE] [SaveProfile] " + profile.getUniqueId() + " took " + (System.currentTimeMillis() - start) + "ms");
                         return;
                     }
                 }
@@ -163,6 +167,7 @@ public class BackendStorage {
                     query.setQueryTimeout(3);
 
                     future.complete(false);
+                    instance.getLogger().info("[DATABASE] [SaveProfile] " + profile.getUniqueId() + " took " + (System.currentTimeMillis() - start) + "ms");
                 }
 
             } catch(SQLException ex) {

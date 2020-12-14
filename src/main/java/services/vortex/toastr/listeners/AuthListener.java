@@ -47,8 +47,6 @@ public class AuthListener {
     public void onLogin(LoginEvent event) {
         Player player = event.getPlayer();
 
-        long start = System.currentTimeMillis();
-
         instance.getBackendStorage().getProfile(player.getUniqueId())
                 .whenComplete((profile, ex) -> {
                     if(ex != null) {
@@ -67,20 +65,14 @@ public class AuthListener {
 
                     Profile.getProfiles().put(player.getUniqueId(), profile);
 
-                    long took = System.currentTimeMillis() - start;
+                    player.sendMessage(Component.text("Your profile has been loaded!").color(NamedTextColor.DARK_AQUA));
 
-                    instance.getLogger().info("GetProfile for " + player.getUsername() + " took " + took + "ms");
-                    player.sendMessage(Component.text("Your profile has been loaded in " + took + "ms!").color(NamedTextColor.DARK_AQUA));
-
-                }).thenAccept((profile) -> instance.getBackendStorage().savePlayer(profile).whenComplete((saved, ex) -> {
+                }).thenAccept((profile) -> instance.getBackendStorage().saveProfile(profile).whenComplete((saved, ex) -> {
             if(ex != null) {
                 // TODO: add to queue and try again in few seconds/min or exponantial backoff. Remove from queue on logout if save was successful
                 ex.printStackTrace();
                 player.sendMessage(Component.text("Failed to save your profile after login. Will try in few minutes and on logout").color(NamedTextColor.RED));
-                return;
             }
-
-            instance.getLogger().info("Saved " + player.getUsername() + " in " + (System.currentTimeMillis() - start) + "ms");
         }));
 
         // TODO: check if player with different nameCase exists. If so, kick the player!
@@ -94,19 +86,14 @@ public class AuthListener {
     @Subscribe
     public void onQuit(DisconnectEvent event) {
         // TODO: use event.getLoginStatus()
-
-        final long start = System.currentTimeMillis();
         final Player player = event.getPlayer();
 
         final Profile profile = Profile.getProfiles().get(player.getUniqueId());
-        instance.getBackendStorage().savePlayer(profile)
+        instance.getBackendStorage().saveProfile(profile)
                 .whenComplete((updated, ex) -> {
                     if(ex != null) {
                         instance.getLogger().error("Saving " + player.getUsername() + " profile!", ex);
-                        return;
                     }
-
-                    instance.getLogger().info("Saved " + player.getUsername() + " in " + (System.currentTimeMillis() - start) + "ms");
                 });
 
         Profile.getProfiles().remove(player.getUniqueId());

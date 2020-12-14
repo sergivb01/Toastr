@@ -29,7 +29,7 @@ public class ResolverManager {
 
         Resolver.Result result = instance.getCacheManager().getPlayerResult(username);
         if(result != null) {
-            instance.getLogger().info("[CACHE] [" + result.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (result.isPremium() ? "premium" : "cracked"));
+            instance.getLogger().info("[CACHE] [RESOLVER] [CACHE - " + result.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (result.isPremium() ? "premium" : "cracked"));
             return result;
         }
 
@@ -41,7 +41,7 @@ public class ResolverManager {
         result = executor.invokeAny(resolverTasks, 1500, TimeUnit.MILLISECONDS);
         instance.getRedisManager().setPlayerResult(username, result);
 
-        instance.getLogger().info("[" + result.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (result.isPremium() ? "premium" : "cracked"));
+        instance.getLogger().info("[RESOLVER] [" + result.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (result.isPremium() ? "premium" : "cracked"));
 
         return result;
     }
