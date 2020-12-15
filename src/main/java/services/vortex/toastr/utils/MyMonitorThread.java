@@ -3,6 +3,7 @@ package services.vortex.toastr.utils;
 import services.vortex.toastr.ToastrPlugin;
 
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class MyMonitorThread implements Runnable {
     private final ThreadPoolExecutor executor;
@@ -31,7 +32,7 @@ public class MyMonitorThread implements Runnable {
                             this.executor.isShutdown(),
                             this.executor.isTerminated()));
             try {
-                Thread.sleep(seconds * 1000L);
+                TimeUnit.SECONDS.sleep(seconds);
             } catch(InterruptedException e) {
                 e.printStackTrace();
             }

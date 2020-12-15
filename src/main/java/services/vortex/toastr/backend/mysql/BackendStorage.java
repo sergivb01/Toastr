@@ -7,7 +7,6 @@ import lombok.SneakyThrows;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.Profile;
 import services.vortex.toastr.utils.MyMonitorThread;
-import services.vortex.toastr.utils.RejectedExecutionHandlerImpl;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,6 +17,8 @@ import java.util.concurrent.*;
 
 public class BackendStorage {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
+    private static final int MIN_IDLE = 8;
+
     private final ThreadPoolExecutor executor;
     private final MyMonitorThread monitor;
     private final HikariDataSource hikari;
@@ -25,7 +26,7 @@ public class BackendStorage {
     public BackendStorage(BackendCredentials credentials) {
         ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("Toastr Storage - %1$d")
                 .setDaemon(true).build();
-        this.executor = new ThreadPoolExecutor(16, Integer.MAX_VALUE, 30L, TimeUnit.SECONDS, new SynchronousQueue<>(), threadFactory, new RejectedExecutionHandlerImpl());
+        this.executor = new ThreadPoolExecutor(MIN_IDLE, Integer.MAX_VALUE, 30L, TimeUnit.SECONDS, new SynchronousQueue<>(), threadFactory);
         this.monitor = new MyMonitorThread(executor, 60);
         Thread monitorThread = new Thread(monitor);
         monitorThread.start();
@@ -33,6 +34,7 @@ public class BackendStorage {
         executor.allowCoreThreadTimeOut(true);
 
         HikariConfig config = new HikariConfig();
+        config.setMinimumIdle(MIN_IDLE);
         config.setPoolName("Toastr-Hikari");
         config.setDataSourceClassName("com.mysql.cj.jdbc.MysqlDataSource");
 
@@ -61,21 +63,18 @@ public class BackendStorage {
      */
     @SneakyThrows
     public void shutdown() {
-        instance.getLogger().info(
-                String.format("[monitor] [%d/%d] Active: %d, Completed: %d, Task: %d, isShutdown: %s, isTerminated: %s",
-                        this.executor.getPoolSize(),
-                        this.executor.getCorePoolSize(),
-                        this.executor.getActiveCount(),
-                        this.executor.getCompletedTaskCount(),
-                        this.executor.getTaskCount(),
-                        this.executor.isShutdown(),
-                        this.executor.isTerminated()));
-        while(executor.getCompletedTaskCount() - executor.getTaskCount() > 0) {
-            Thread.sleep(250);
-            instance.getLogger().warn("sleeping...");
-        }
-        executor.shutdown();
         monitor.shutdown();
+
+        instance.getLogger().info("ExecutorService is being shutdown, awaiting tasks to finish");
+        executor.shutdown();
+        try {
+            if(!executor.awaitTermination(15, TimeUnit.SECONDS)) {
+                instance.getLogger().warn("timed out while waiting ExecutorService to finish");
+                executor.shutdownNow();
+            }
+        } catch(InterruptedException e) {
+            executor.shutdownNow();
+        }
 
         this.hikari.close();
     }
