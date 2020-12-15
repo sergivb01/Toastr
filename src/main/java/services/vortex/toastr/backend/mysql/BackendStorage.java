@@ -68,7 +68,8 @@ public class BackendStorage {
         instance.getLogger().info("ExecutorService is being shutdown, awaiting tasks to finish");
         executor.shutdown();
         try {
-            if(!executor.awaitTermination(15, TimeUnit.SECONDS)) {
+            // Velocity has a timeout to disable all plugins of 10 seconds
+            if(!executor.awaitTermination(8, TimeUnit.SECONDS)) {
                 instance.getLogger().warn("timed out while waiting ExecutorService to finish");
                 executor.shutdownNow();
             }
