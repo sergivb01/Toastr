@@ -53,7 +53,7 @@ public class CacheManager {
      */
     public Resolver.Result getPlayerResult(String username) {
         Resolver.Result result = resolver.getIfPresent(username.toLowerCase());
-        if(result == null && instance.isMultiInstance()) {
+        if(result == null) {
             result = instance.getRedisManager().getPlayerResult(username.toLowerCase());
             if(result == null)
                 return null;

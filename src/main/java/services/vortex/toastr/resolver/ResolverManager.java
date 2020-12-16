@@ -39,9 +39,7 @@ public class ResolverManager {
         }
 
         result = executor.invokeAny(resolverTasks, 1500, TimeUnit.MILLISECONDS);
-        if(instance.isMultiInstance()) {
-            instance.getRedisManager().setPlayerResult(username, result);
-        }
+        instance.getRedisManager().setPlayerResult(username, result);
 
         instance.getLogger().info("[resolver] [" + result.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (result.isPremium() ? "premium" : "cracked"));
 

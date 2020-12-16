@@ -4,7 +4,7 @@ import com.velocitypowered.api.command.RawCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
-import services.vortex.toastr.backend.redis.RedisManager;
+import services.vortex.toastr.backend.packets.CommandPacket;
 
 public class SendToAllCommand implements RawCommand {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
@@ -16,7 +16,7 @@ public class SendToAllCommand implements RawCommand {
             return;
         }
 
-        instance.getRedisManager().publishMessage(RedisManager.CHANNEL_SENDTOALL, invocation.arguments());
+        instance.getRedisManager().getPidgin().sendPacket(new CommandPacket(invocation.arguments()));
         invocation.source().sendMessage(Component.text("Sent command to all proxy instances!").color(NamedTextColor.GREEN));
     }
 

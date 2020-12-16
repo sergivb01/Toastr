@@ -19,10 +19,7 @@ public class Lobby {
     private int maxPlayers = -1;
 
     public int getOnline() {
-        if(instance.isMultiInstance()) {
-            return instance.getRedisManager().getServerCount(server.getServerInfo().getName());
-        }
-        return server.getPlayersConnected().size();
+        return instance.getRedisManager().getServerCount(server.getServerInfo().getName());
     }
 
 }

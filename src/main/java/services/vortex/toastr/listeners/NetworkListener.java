@@ -1,34 +1,46 @@
 package services.vortex.toastr.listeners;
 
-import com.velocitypowered.api.event.Subscribe;
+import com.minexd.pidgin.packet.handler.IncomingPacketHandler;
+import com.minexd.pidgin.packet.listener.PacketListener;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import services.vortex.toastr.ToastrPlugin;
-import services.vortex.toastr.backend.redis.RedisManager;
-import services.vortex.toastr.utils.PubSubEvent;
+import services.vortex.toastr.backend.packets.AlertPacket;
+import services.vortex.toastr.backend.packets.CommandPacket;
+import services.vortex.toastr.backend.packets.KickPacket;
 
-public class NetworkListener {
+public class NetworkListener implements PacketListener {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
 
-    @Subscribe
-    public void onPubSub(PubSubEvent event) {
-        switch(event.getChannel()) {
-            case RedisManager.CHANNEL_ALERT:
-                final Component alert = instance.getConfig().getMessage("alert")
-                        .append(LegacyComponentSerializer.legacyAmpersand().deserialize(event.getMessage()));
-                instance.getProxy().getAllPlayers().forEach(player -> player.sendMessage(alert));
-                instance.getProxy().getConsoleCommandSource().sendMessage(alert);
-                break;
+    @IncomingPacketHandler
+    public void onAlert(AlertPacket packet) {
+        final Component alert = instance.getConfig().getMessage("alert")
+                .append(LegacyComponentSerializer.legacyAmpersand().deserialize(packet.getMessage()));
+        instance.getProxy().getAllPlayers().forEach(player -> player.sendMessage(alert));
+        instance.getProxy().getConsoleCommandSource().sendMessage(alert);
 
-            case RedisManager.CHANNEL_SENDTOALL:
-                instance.getProxy().getCommandManager().executeImmediatelyAsync(instance.getProxy().getConsoleCommandSource(), event.getMessage());
-                instance.getLogger().info("Running \"" + event.getMessage() + "\" from sendtoall command");
-                break;
+        instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Sent alert: " + packet.getMessage());
+    }
 
-            default:
-                instance.getLogger().warn("Received unhandled pubsub message in channel \"" + event.getChannel() + "\": " + event.getMessage());
-                break;
-        }
+    @IncomingPacketHandler
+    public void onCommand(CommandPacket packet) {
+        instance.getProxy().getCommandManager().executeImmediatelyAsync(instance.getProxy().getConsoleCommandSource(), packet.getCommand());
+
+        instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Executing command: " + packet.getCommand());
+    }
+
+    @IncomingPacketHandler
+    public void onPacket(KickPacket packet) {
+        instance.getProxy().getPlayer(packet.getUsername()).ifPresent(player -> {
+            final TextComponent reason = Component.text("Cross network kick requested from " + packet.getOrigin() + ":")
+                    .color(NamedTextColor.RED)
+                    .append(LegacyComponentSerializer.legacyAmpersand().deserialize(packet.getReason()));
+            player.disconnect(reason);
+        });
+
+        instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Requested cross-network kick for " + packet.getUsername() + ": " + packet.getReason());
     }
 
 }

@@ -10,6 +10,7 @@ import com.velocitypowered.api.proxy.server.ServerPing;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
+import services.vortex.toastr.backend.packets.KickPacket;
 import services.vortex.toastr.profile.PlayerData;
 
 import java.util.concurrent.TimeUnit;
@@ -38,8 +39,8 @@ public class PlayerListener {
 
         final PlayerData playerData = instance.getRedisManager().getPlayer(player.getUniqueId());
         if(playerData != null && playerData.getLastOnline() == 0) {
-            // TODO: request cross-network kick
-            player.disconnect(Component.text("Player already online in the network, relog in").color(NamedTextColor.RED));
+            player.disconnect(Component.text("Player already online in the network, requested cross-network kick.\nPlease relog in").color(NamedTextColor.RED));
+            instance.getRedisManager().getPidgin().sendPacket(new KickPacket(player.getUsername(), "&cYou have logged in from another location, contact an admin if the issue persists"));
             return;
         }
 

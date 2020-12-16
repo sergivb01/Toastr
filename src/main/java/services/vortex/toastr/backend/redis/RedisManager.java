@@ -1,14 +1,18 @@
 package services.vortex.toastr.backend.redis;
 
 import com.google.gson.JsonObject;
+import com.minexd.pidgin.Pidgin;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import lombok.Getter;
 import redis.clients.jedis.*;
 import services.vortex.toastr.ToastrPlugin;
+import services.vortex.toastr.backend.packets.AlertPacket;
+import services.vortex.toastr.backend.packets.CommandPacket;
+import services.vortex.toastr.backend.packets.KickPacket;
+import services.vortex.toastr.listeners.NetworkListener;
 import services.vortex.toastr.profile.PlayerData;
 import services.vortex.toastr.resolver.Resolver;
-import services.vortex.toastr.utils.PubSubEvent;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -16,12 +20,9 @@ import java.util.concurrent.TimeUnit;
 public class RedisManager {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
 
-    public static final String CHANNEL_ALERT = "toastr-alert";
-    public static final String CHANNEL_SENDTOALL = "toastr-sendtoall";
     private static final int CACHE_RESOLVER = 3600 * 2;
     private static final int CACHE_UUID = 3600 * 24 * 5;
 
-    private final PubSubListener psListener;
     private final JedisPool pool;
     private final ScheduledTask updateTask, inconsistencyProxyTask, clockDifferenceTask;
 
@@ -31,6 +32,8 @@ public class RedisManager {
     private final Set<String> knownProxies = new HashSet<>();
     @Getter
     private final String proxyName;
+    @Getter
+    private final Pidgin pidgin;
 
     public RedisManager() {
         JsonObject redisConfig = instance.getConfig().getObject().getAsJsonObject("redis");
@@ -41,16 +44,15 @@ public class RedisManager {
             pool = new JedisPool(new JedisPoolConfig(), redisConfig.get("host").getAsString(), redisConfig.get("port").getAsInt(), 2000, redisConfig.get("password").getAsString());
         }
 
-        proxyName = instance.getConfig().getObject().get("proxy-name").getAsString();
+        pidgin = new Pidgin("toastr", redisConfig.get("host").getAsString(), redisConfig.get("port").getAsInt(), redisConfig.get("password").getAsString());
+        pidgin.registerListener(new NetworkListener());
+        Arrays.asList(
+                AlertPacket.class,
+                CommandPacket.class,
+                KickPacket.class
+        ).forEach(pidgin::registerPacket);
 
-        psListener = new PubSubListener();
-        Thread subscribeThread = new Thread(() -> {
-            try(Jedis jedis = getConnection()) {
-                jedis.subscribe(psListener, RedisManager.CHANNEL_ALERT, RedisManager.CHANNEL_SENDTOALL);
-            }
-        }, "Toastr PubSub subscriber");
-        subscribeThread.setDaemon(true);
-        subscribeThread.start();
+        proxyName = instance.getConfig().getObject().get("proxy-name").getAsString();
 
         clockDifferenceTask = instance.getProxy().getScheduler().buildTask(instance, this::checkClockDifference).delay(5, TimeUnit.SECONDS).repeat(30, TimeUnit.SECONDS).schedule();
         inconsistencyProxyTask = instance.getProxy().getScheduler().buildTask(instance, this::fixPlayerProxyInconsistency).delay(10, TimeUnit.SECONDS).repeat(30, TimeUnit.SECONDS).schedule();
@@ -369,24 +371,6 @@ public class RedisManager {
         }
     }
 
-    /**
-     * This method register a channel to be used in the PubSubEvent
-     *
-     * @param channels The channels to register
-     */
-    public void registerChannel(String... channels) {
-        psListener.subscribe(channels);
-    }
-
-    /**
-     * This method unregister a channel for the PubSubEvent
-     *
-     * @param channels The channels to unregister
-     */
-    public void unregisterChannel(String... channels) {
-        psListener.unsubscribe(channels);
-    }
-
     public void publishMessage(String channel, String message) {
         try(Jedis jedis = getConnection()) {
             jedis.publish(channel, message);
@@ -395,15 +379,6 @@ public class RedisManager {
 
     private Jedis getConnection() {
         return pool.getResource();
-    }
-
-    static class PubSubListener extends JedisPubSub {
-
-        @Override
-        public void onMessage(String channel, String message) {
-            instance.getProxy().getEventManager().fireAndForget(new PubSubEvent(channel, message));
-        }
-
     }
 
 }

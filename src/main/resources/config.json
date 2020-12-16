@@ -7,7 +7,6 @@
 	"database": "toastr"
   },
 
-  "multi-instance": false,
   "proxy-name": "",
   "redis": {
 	"host": "127.0.0.1",

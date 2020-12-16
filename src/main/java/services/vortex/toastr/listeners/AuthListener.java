@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 public class AuthListener {
     private final ToastrPlugin instance = ToastrPlugin.getInstance();
 
-    @Subscribe
+    @Subscribe(order = PostOrder.LAST)
     public void onPlayerPreLogin(PreLoginEvent event) {
         try {
             Resolver.Result result = instance.getResolverManager().resolveUsername(event.getUsername());
