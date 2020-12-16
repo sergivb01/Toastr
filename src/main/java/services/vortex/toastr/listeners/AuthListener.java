@@ -10,24 +10,61 @@ import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
+import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.title.Title;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.Profile;
 import services.vortex.toastr.resolver.Resolver;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class AuthListener {
     private final ToastrPlugin instance = ToastrPlugin.getInstance();
+    public static final HashMap<Player, Long> pendingRegister = new HashMap<>();
+    public static final HashMap<Player, Long> pendingLogin = new HashMap<>();
 
-    @Subscribe(order = PostOrder.LAST)
+    public AuthListener() {
+        instance.getProxy().getScheduler().buildTask(instance, this::checkRegister).repeat(5, TimeUnit.SECONDS).schedule();
+        instance.getProxy().getScheduler().buildTask(instance, this::checkLogin).repeat(5, TimeUnit.SECONDS).schedule();
+    }
+
+    private void checkRegister() {
+        for(Player player : pendingRegister.keySet()) {
+            Long loggedAt = pendingRegister.get(player);
+            if((System.currentTimeMillis() - loggedAt) > TimeUnit.SECONDS.toMillis(30)) {
+                player.disconnect(Component.text("Register time exceeded. Please try again").color(NamedTextColor.RED));
+                return;
+            }
+            player.sendMessage(Component.text("Register using /register <password> <password>").color(NamedTextColor.DARK_GREEN));
+            player.showTitle(Title.title(Component.text("Please register").color(NamedTextColor.DARK_AQUA),
+                    Component.text("/register <password> <password>").color(NamedTextColor.WHITE)));
+        }
+    }
+
+    private void checkLogin() {
+        for(Player player : pendingLogin.keySet()) {
+            Long loggedAt = pendingLogin.get(player);
+            if((System.currentTimeMillis() - loggedAt) > TimeUnit.SECONDS.toMillis(30)) {
+                player.disconnect(Component.text("Login time exceeded. Please try again").color(NamedTextColor.RED));
+                return;
+            }
+            player.sendMessage(Component.text("Login using /login <password>").color(NamedTextColor.DARK_GREEN));
+            player.showTitle(Title.title(Component.text("Please login").color(NamedTextColor.DARK_AQUA),
+                    Component.text("/login <password>").color(NamedTextColor.WHITE)));
+        }
+    }
+
+    @Subscribe(order = PostOrder.FIRST)
     public void onPlayerPreLogin(PreLoginEvent event) {
         try {
             Resolver.Result result = instance.getResolverManager().resolveUsername(event.getUsername());
@@ -73,6 +110,22 @@ public class AuthListener {
     public void onLogin(LoginEvent event) {
         Player player = event.getPlayer();
 
+        instance.getBackendStorage().checkNamecase(player.getUsername())
+                .whenComplete((repeated, ex) -> {
+                    if(ex != null) {
+                        ex.printStackTrace();
+                        player.disconnect(Component.text("Error trying to check namecase!").color(NamedTextColor.RED));
+                        return;
+                    }
+
+                    if(!repeated) {
+                        return;
+                    }
+
+                    instance.getLogger().warn("Player with UUID " + player.getUniqueId() + " and username " + player.getUsername() + "tried to login with different namecase " + player.getRemoteAddress().toString());
+                    player.disconnect(Component.text("Different namecase! Contact admin").color(NamedTextColor.RED));
+                });
+
         instance.getBackendStorage().getProfile(player.getUniqueId())
                 .whenComplete((profile, ex) -> {
                     if(ex != null) {
@@ -86,22 +139,30 @@ public class AuthListener {
                     }
                     profile.setLastLogin(Timestamp.from(Instant.now()));
                     profile.setLastIP(player.getRemoteAddress().getAddress().getHostAddress());
-                    profile.setLoggedIn(player.isOnlineMode());
+                    // TODO: BETA change
+//                    profile.setLoggedIn(player.isOnlineMode());
 
 
                     Profile.getProfiles().put(player.getUniqueId(), profile);
-
                     player.sendMessage(Component.text("Your profile has been loaded!").color(NamedTextColor.DARK_AQUA));
+
+                    // TODO: BETA change
+//                    if(player.isOnlineMode()) return;
+                    if(profile.isLoggedIn()) return;
+
+                    if(profile.getPassword() == null || profile.getPassword().trim().equals("")) {
+                        pendingRegister.put(player, System.currentTimeMillis());
+                    } else {
+                        pendingLogin.put(player, System.currentTimeMillis());
+                    }
 
                 }).thenAccept((profile) -> instance.getBackendStorage().saveProfile(profile).whenComplete((saved, ex) -> {
             if(ex != null) {
                 // TODO: add to queue and try again in few seconds/min or exponantial backoff. Remove from queue on logout if save was successful
                 ex.printStackTrace();
-                player.sendMessage(Component.text("Failed to save your profile after login. Will try in few minutes and on logout").color(NamedTextColor.RED));
+                player.sendMessage(Component.text("Failed to save your profile after login. Will try again on logout").color(NamedTextColor.RED));
             }
         }));
-
-        // TODO: check if player with different nameCase exists. If so, kick the player!
 
         /*
          * TODO: captcha system -> force new users to click text on book with:
@@ -111,8 +172,14 @@ public class AuthListener {
 
     @Subscribe
     public void onQuit(DisconnectEvent event) {
-        // TODO: use event.getLoginStatus()
         final Player player = event.getPlayer();
+
+        pendingRegister.remove(player);
+        pendingLogin.remove(player);
+
+        if(event.getLoginStatus().equals(DisconnectEvent.LoginStatus.CANCELLED_BY_PROXY)) {
+            return;
+        }
 
         final Profile profile = Profile.getProfiles().get(player.getUniqueId());
         instance.getBackendStorage().saveProfile(profile)
@@ -142,12 +209,6 @@ public class AuthListener {
          *      * true -> profile->loggedIn = true
          *      * false -> profile->loggedIn = false
          * */
-
-        /*
-         * TODO: ALWAYS:
-         *  * if lastRemoteAddress != currentRemoteAddress -> add log
-         *  * update lastRemoteAddress, lastLoggedIn, etc...
-         * */
     }
 
     @Subscribe
@@ -167,14 +228,27 @@ public class AuthListener {
 
         if(profile.isLoggedIn()) return;
 
-        player.sendMessage(Component.text("You may not execute this command without logging in!").color(NamedTextColor.RED));
+        player.sendMessage(Component.text("You may not execute this command without being logging in!").color(NamedTextColor.RED));
         event.setResult(CommandExecuteEvent.CommandResult.denied());
     }
 
     @Subscribe
+    public void onChat(PlayerChatEvent event) {
+        Player player = event.getPlayer();
+        Profile profile = Profile.getProfiles().get(player.getUniqueId());
+
+        if(profile.isLoggedIn()) return;
+
+        player.sendMessage(Component.text("You may not send chat messages without being logging in!").color(NamedTextColor.RED));
+        event.setResult(PlayerChatEvent.ChatResult.denied());
+    }
+
+    @Subscribe
     public void onChange(ServerPreConnectEvent event) {
-        // TODO: prevent serverswitch if player is not logged in
-        if(event.getOriginalServer().getServerInfo().getName().toLowerCase().contains("lobby")) return;
+        if(event.getOriginalServer() == null) return;
+
+        final Optional<RegisteredServer> server = event.getResult().getServer();
+        if(server.isPresent() && instance.getLobbyManager().isLobby(server.get())) return;
 
         Profile profile = Profile.getProfiles().get(event.getPlayer().getUniqueId());
         if(!profile.isLoggedIn()) {

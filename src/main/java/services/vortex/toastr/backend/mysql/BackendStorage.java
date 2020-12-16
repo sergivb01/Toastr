@@ -81,6 +81,43 @@ public class BackendStorage {
     }
 
     /**
+     * This method checks if a player with different namecase exists
+     *
+     * @param username The username from the player
+     * @return CompletableFuture<Boolean> that can return a SQLException
+     */
+    public CompletableFuture<Boolean> checkNamecase(String username) {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        final long start = System.currentTimeMillis();
+
+        executor.submit(() -> {
+            try(Connection connection = this.hikari.getConnection();
+                final PreparedStatement query = connection.prepareStatement(SQLQueries.CHECK_NAMECASE.getQuery())) {
+                query.setString(1, username);
+                query.setQueryTimeout(3);
+
+                final ResultSet rs = query.executeQuery();
+                if(!rs.next()) {
+                    instance.getLogger().warn("doesn't exist");
+                    future.complete(false);
+                    return;
+                }
+
+                final String expected = rs.getString("player_name");
+                future.complete(!username.equals(expected));
+
+                instance.getLogger().warn("db = " + expected + " | res = " + !username.equals(expected));
+
+                instance.getLogger().info("[database] [CheckNamecase] " + username + " took " + (System.currentTimeMillis() - start) + "ms");
+            } catch(SQLException ex) {
+                future.completeExceptionally(ex);
+            }
+        });
+
+        return future;
+    }
+
+    /**
      * This method gets a player Profile from the database
      *
      * @param playerUUID The UUID from the player. Can be an offline UUID
@@ -139,13 +176,14 @@ public class BackendStorage {
                 try(final PreparedStatement query = connection.prepareStatement(SQLQueries.INSERT_PROFILE.getQuery())) {
                     query.setString(1, profile.getUniqueId().toString());
                     query.setString(2, profile.getUsername());
-                    query.setString(3, profile.getAccountType().toString());
-                    query.setString(4, profile.getFirstIP());
-                    query.setString(5, profile.getLastIP());
-                    query.setTimestamp(6, profile.getFirstLogin());
-                    query.setTimestamp(7, profile.getLastLogin());
-                    query.setString(8, profile.getPassword());
-                    query.setString(9, profile.getSalt());
+                    query.setString(3, profile.getUsername());
+                    query.setString(4, profile.getAccountType().toString());
+                    query.setString(5, profile.getFirstIP());
+                    query.setString(6, profile.getLastIP());
+                    query.setTimestamp(7, profile.getFirstLogin());
+                    query.setTimestamp(8, profile.getLastLogin());
+                    query.setString(9, profile.getPassword());
+                    query.setString(10, profile.getSalt());
 
                     query.setQueryTimeout(3);
 
@@ -158,11 +196,12 @@ public class BackendStorage {
 
                 try(final PreparedStatement query = connection.prepareStatement(SQLQueries.UPDATE_PROFILE_BY_UUID.getQuery())) {
                     query.setString(1, profile.getUsername());
-                    query.setString(2, profile.getLastIP());
-                    query.setTimestamp(3, profile.getLastLogin());
-                    query.setString(4, profile.getPassword());
-                    query.setString(5, profile.getSalt());
-                    query.setString(6, profile.getUniqueId().toString());
+                    query.setString(2, profile.getUsername());
+                    query.setString(3, profile.getLastIP());
+                    query.setTimestamp(4, profile.getLastLogin());
+                    query.setString(5, profile.getPassword());
+                    query.setString(6, profile.getSalt());
+                    query.setString(7, profile.getUniqueId().toString());
 
                     query.setQueryTimeout(3);
 

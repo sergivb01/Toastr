@@ -5,6 +5,7 @@ import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
+import services.vortex.toastr.listeners.AuthListener;
 import services.vortex.toastr.profile.Profile;
 import services.vortex.toastr.utils.HashMethods;
 
@@ -26,7 +27,7 @@ public class LoginCommand implements SimpleCommand {
             return;
         }
 
-        if(profile.getPassword() == null) {
+        if(profile.getPassword() == null || profile.getPassword().trim().equals("")) {
             player.sendMessage(Component.text("register first...").color(NamedTextColor.RED));
             return;
         }
@@ -41,6 +42,7 @@ public class LoginCommand implements SimpleCommand {
             return;
         }
 
+        AuthListener.pendingLogin.remove(player);
         profile.setLoggedIn(true);
         player.sendMessage(Component.text("logged in success").color(NamedTextColor.DARK_AQUA));
     }

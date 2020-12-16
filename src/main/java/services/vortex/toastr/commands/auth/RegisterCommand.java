@@ -5,6 +5,7 @@ import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
+import services.vortex.toastr.listeners.AuthListener;
 import services.vortex.toastr.profile.Profile;
 import services.vortex.toastr.utils.HashMethods;
 import services.vortex.toastr.utils.SaltGenerator;
@@ -32,13 +33,19 @@ public class RegisterCommand implements SimpleCommand {
             return;
         }
 
-        if(invocation.arguments().length != 1) {
-            player.sendMessage(Component.text("/register <password>").color(NamedTextColor.RED));
+        if(invocation.arguments().length != 2) {
+            player.sendMessage(Component.text("/register <password> <password>").color(NamedTextColor.RED));
+            return;
+        }
+
+        if(!invocation.arguments()[0].equals(invocation.arguments()[1])) {
+            player.sendMessage(Component.text("Password and password confirmation are different!").color(NamedTextColor.RED));
             return;
         }
 
         String salt = SaltGenerator.generateString();
 
+        AuthListener.pendingRegister.remove(player);
         profile.setSalt(salt);
         profile.setPassword(HashMethods.SHA512H(invocation.arguments()[0], salt));
 

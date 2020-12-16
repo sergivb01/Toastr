@@ -5,6 +5,7 @@ import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
+import services.vortex.toastr.listeners.AuthListener;
 import services.vortex.toastr.profile.Profile;
 
 public class UnRegisterCommand implements SimpleCommand {
@@ -30,7 +31,7 @@ public class UnRegisterCommand implements SimpleCommand {
             return;
         }
 
-        if(profile.getPassword() == null) {
+        if(profile.getPassword() == null || profile.getPassword().trim().equals("")) {
             player.sendMessage(Component.text("not registered...").color(NamedTextColor.RED));
             return;
         }
@@ -45,6 +46,7 @@ public class UnRegisterCommand implements SimpleCommand {
                 return;
             }
 
+            AuthListener.pendingRegister.put(player, System.currentTimeMillis());
             player.sendMessage(Component.text("Successfully un-registered!").color(NamedTextColor.DARK_AQUA));
         });
 

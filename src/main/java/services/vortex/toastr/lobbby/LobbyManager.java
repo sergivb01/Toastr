@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class LobbyManager {
 
@@ -80,6 +81,11 @@ public class LobbyManager {
 
         balancer = getBalancer(config.get("load-balancer").getAsString());
         sendPlayerToHubOnClose = config.get("send-on-close").getAsBoolean();
+    }
+
+    public boolean isLobby(RegisteredServer server) {
+        return lobbies.stream().map(Lobby::getServer).collect(Collectors.toSet()).contains(server)
+                || restrictedLobbies.stream().map(Lobby::getServer).collect(Collectors.toSet()).contains(server);
     }
 
     /**

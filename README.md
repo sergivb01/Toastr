@@ -6,7 +6,7 @@ Should probably make a good description
 
 # TODO Features/commands
 
-* [ ] migrate to pidgin
+* [X] migrate to pidgin
 * [ ] global /msg
 * [ ] stafflist
 * [ ] maintenance (proxy instance)

@@ -7,7 +7,8 @@ import services.vortex.toastr.utils.ResourceReader;
 public enum SQLQueries {
     SELECT_PROFILE_BY_UUID,
     INSERT_PROFILE,
-    UPDATE_PROFILE_BY_UUID;
+    UPDATE_PROFILE_BY_UUID,
+    CHECK_NAMECASE;
 
     private static final String PATH = "sql/";
     private final @NonNull String query;

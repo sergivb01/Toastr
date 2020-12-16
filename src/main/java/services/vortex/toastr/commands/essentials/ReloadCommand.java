@@ -1,4 +1,4 @@
-package services.vortex.toastr.commands.admin;
+package services.vortex.toastr.commands.essentials;
 
 import com.velocitypowered.api.command.SimpleCommand;
 import net.kyori.adventure.text.Component;
