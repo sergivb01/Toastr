@@ -12,8 +12,6 @@ import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.PlayerData;
 
 import java.util.Arrays;
-import java.util.Set;
-import java.util.UUID;
 
 public class PluginMessageListener {
 
@@ -38,22 +36,6 @@ public class PluginMessageListener {
 
         String subChannel = input.readUTF();
         switch(subChannel.toUpperCase()) {
-            case "PLAYERLIST": {
-                String server = input.readUTF();
-                Set<UUID> players = instance.getRedisManager().getServerUUIDs(server);
-                StringBuilder sb = new StringBuilder();
-                for(UUID uuid : players)
-                    sb.append(uuid).append(", ");
-
-                if(sb.length() != 0)
-                    sb.setLength(sb.length() - 2);
-
-                output.writeUTF("PlayerList");
-                output.writeUTF(server);
-                output.writeUTF(sb.toString());
-                break;
-            }
-
             case "PLAYERCOUNT": {
                 String server = input.readUTF();
                 int players;
@@ -78,12 +60,6 @@ public class PluginMessageListener {
                 break;
             }
 
-            case "SERVERPLAYERS": {
-                instance.getLogger().error(event.getSource().toString() + " tried to send a \"ServerPlayers\" plugin message, but feature is not implemented yet!");
-                instance.getLogger().error("Data: " + Arrays.toString(event.getData()));
-                break;
-            }
-
             case "PROXY": {
                 output.writeUTF("Proxy");
                 output.writeUTF(instance.getRedisManager().getProxyName());
@@ -102,6 +78,31 @@ public class PluginMessageListener {
                     final PlayerData playerData = instance.getCacheManager().getPlayerData(username);
                     output.writeUTF(playerData == null ? "unknown" : playerData.getProxy());
                 }
+                break;
+            }
+
+
+            case "SERVERPLAYERS": {
+                instance.getLogger().error(event.getSource().toString() + " tried to send a \"ServerPlayers\" plugin message, but feature is not implemented yet!");
+                instance.getLogger().error("Data: " + Arrays.toString(event.getData()));
+                break;
+            }
+
+            case "PLAYERLIST": {
+//                String server = input.readUTF();
+//                Set<UUID> players = instance.getRedisManager().getServerUUIDs(server);
+//                StringBuilder sb = new StringBuilder();
+//                for(UUID uuid : players)
+//                    sb.append(uuid).append(", ");
+//
+//                if(sb.length() != 0)
+//                    sb.setLength(sb.length() - 2);
+//
+//                output.writeUTF("PlayerList");
+//                output.writeUTF(server);
+//                output.writeUTF(sb.toString());
+                instance.getLogger().error(event.getSource().toString() + " tried to send a \"ServerPlayers\" plugin message, but feature is not implemented yet!");
+                instance.getLogger().error("Data: " + Arrays.toString(event.getData()));
                 break;
             }
 

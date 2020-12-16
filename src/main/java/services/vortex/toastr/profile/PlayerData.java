@@ -12,6 +12,7 @@ import java.util.UUID;
 public class PlayerData {
 
     private final UUID uuid;
+    private final String username;
 
     private final long lastOnline;
     private final String ip;

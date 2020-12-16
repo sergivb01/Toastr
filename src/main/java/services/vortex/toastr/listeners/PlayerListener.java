@@ -46,7 +46,7 @@ public class PlayerListener {
     @Subscribe
     public void onPlayerQuit(DisconnectEvent event) {
         Player player = event.getPlayer();
-        instance.getRedisManager().cleanPlayer(player.getUniqueId());
+        instance.getRedisManager().cleanPlayer(player.getUniqueId(), player.getUsername());
     }
 
     @Subscribe
