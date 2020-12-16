@@ -35,9 +35,10 @@ public class CacheManager {
      *
      * @return Set of usernames
      */
-    public Set<String> getAllOnline() {
+    // TODO: clean this up
+    public Set<String> getUsernamesOnline() {
         if((System.currentTimeMillis() - lastAllOnline) > TimeUnit.SECONDS.toMillis(5)) {
-            allOnline = instance.getRedisManager().getAllUsernamesOnline();
+            allOnline = instance.getRedisManager().getUsernamesOnline();
             lastAllOnline = System.currentTimeMillis();
         }
 

@@ -47,7 +47,7 @@ public class ProfileCommand implements SimpleCommand {
 
         instance.getProxy().getScheduler().buildTask(instance, () -> {
             List<String> res = new ArrayList<>();
-            for(String online : instance.getCacheManager().getAllOnline()) {
+            for(String online : instance.getCacheManager().getUsernamesOnline()) {
                 if(invocation.arguments().length == 0 || online.startsWith(invocation.arguments()[0]))
                     res.add(online);
             }
