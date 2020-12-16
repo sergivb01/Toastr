@@ -297,6 +297,7 @@ public class RedisManager {
         int i = 0;
         for(String proxy : knownProxies) {
             keys[i] = "proxy:" + proxy + ":onlines";
+            i++;
         }
 
         List<Response<List<String>>> results = new ArrayList<>(keys.length);
@@ -341,6 +342,7 @@ public class RedisManager {
         int i = 0;
         for(String proxy : knownProxies) {
             keys[i] = "server:" + proxy + ":" + server;
+            i++;
         }
 
         List<Response<Map<String, String>>> results = new ArrayList<>(keys.length);
@@ -375,6 +377,7 @@ public class RedisManager {
         int i = 0;
         for(String proxy : knownProxies) {
             keys[i] = "server:" + proxy + ":" + server;
+            i++;
         }
 
         List<Response<Set<String>>> results = new ArrayList<>(keys.length);
@@ -407,6 +410,7 @@ public class RedisManager {
         int i = 0;
         for(String proxy : knownProxies) {
             keys[i] = "server:" + proxy + ":" + server;
+            i++;
         }
 
         List<Response<List<String>>> results = new ArrayList<>(keys.length);
@@ -433,10 +437,12 @@ public class RedisManager {
      * @return The player count, null if server not found
      */
     public int getServerCount(String server) {
+        instance.getLogger().info("knownProxies: " + knownProxies.toString());
         String[] keys = new String[knownProxies.size()];
         int i = 0;
         for(String proxy : knownProxies) {
             keys[i] = "server:" + proxy + ":" + server;
+            i++;
         }
 
         int online = 0;
