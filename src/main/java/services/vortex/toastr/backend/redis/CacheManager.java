@@ -27,7 +27,7 @@ public class CacheManager {
 
     private final Cache<String, Resolver.Result> resolver = CacheBuilder.newBuilder()
             .expireAfterWrite(5, TimeUnit.MINUTES)
-            .maximumSize(500)
+            .maximumSize(250)
             .build();
 
     /**

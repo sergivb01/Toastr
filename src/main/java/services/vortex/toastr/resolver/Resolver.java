@@ -19,7 +19,7 @@ public abstract class Resolver implements IResolver {
             .build();
 
     protected Result fromOffline(String rawUsername) {
-        return new Result(rawUsername, UuidUtils.generateOfflinePlayerUuid(rawUsername), false, false, getSource());
+        return new Result(rawUsername, UuidUtils.generateOfflinePlayerUuid(rawUsername), false, getSource());
     }
 
     @AllArgsConstructor
@@ -28,13 +28,9 @@ public abstract class Resolver implements IResolver {
     public static
     class Result {
         private final String username;
-        private final UUID playerUUID;
-        private final boolean isPremium;
-        private final boolean isSpoofed;
+        private final UUID uniqueId;
+        private final boolean premium;
         private final String source;
-        /*
-        * TODO: isSpoofed should be removed as 
-        * */
     }
 
 }

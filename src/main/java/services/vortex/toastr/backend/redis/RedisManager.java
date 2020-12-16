@@ -20,8 +20,8 @@ public class RedisManager {
 
     public static final String CHANNEL_ALERT = "toastr-alert";
     public static final String CHANNEL_SENDTOALL = "toastr-sendtoall";
-    private static final int CACHE_RESOLVER = 3600 * 6;
-    private static final int CACHE_UUID = 3600 * 24;
+    private static final int CACHE_RESOLVER = 3600 * 2;
+    private static final int CACHE_UUID = 3600 * 24 * 5;
 
     private final PubSubListener psListener;
     private final JedisPool pool;
@@ -59,10 +59,21 @@ public class RedisManager {
     }
 
     public void shutdown() {
+        removeProxyInstance(proxyName);
+
         updateTask.cancel();
         inconsistencyProxyTask.cancel();
 
         pool.close();
+    }
+
+    private void removeProxyInstance(String proxy) {
+        try(Jedis jedis = getConnection()) {
+            jedis.hdel("proxies", proxy);
+            jedis.del(" proxy:" + proxy + ":onlines");
+            jedis.eval("return redis.call('del', unpack(redis.call('keys', ARGV[1])))", 0, "server:" + proxy + ":*");
+            knownProxies.remove(proxy.toLowerCase());
+        }
     }
 
     private void updatePlayerCounts() {
@@ -72,9 +83,7 @@ public class RedisManager {
             Map<String, String> proxies = jedis.hgetAll("proxies");
             for(String proxy : proxies.keySet()) {
                 if(System.currentTimeMillis() - Long.parseLong(proxies.get(proxy)) > TimeUnit.SECONDS.toMillis(15)) {
-                    jedis.hdel("proxies", proxy);
-                    jedis.del(" proxy:" + proxy + ":onlines");
-                    knownProxies.remove(proxy.toLowerCase());
+                    removeProxyInstance(proxy);
                     instance.getLogger().warn("No heartbeat from " + proxy + " in 15 seconds, removing proxy.");
                     continue;
                 }
@@ -229,8 +238,17 @@ public class RedisManager {
     public UUID getPlayerUUID(String player) {
         try(Jedis jedis = getConnection()) {
             String s = jedis.get("playeruuid:" + player.toLowerCase());
-            if(s == null)
+            if(s == null) {
+                try {
+                    final Resolver.Result result = instance.getResolverManager().resolveUsername(player);
+                    if(result != null) {
+                        return result.getUniqueId();
+                    }
+                } catch(Exception ignore) {
+
+                }
                 return null;
+            }
 
             return UUID.fromString(s);
         }
@@ -262,15 +280,14 @@ public class RedisManager {
         try(Jedis jedis = getConnection()) {
             Map<String, String> data = new HashMap<>();
             data.put("username", username);
-            data.put("uuid", result.getPlayerUUID().toString());
+            data.put("uuid", result.getUniqueId().toString());
             data.put("premium", String.valueOf(result.isPremium()));
-            data.put("spoofed", String.valueOf(result.isSpoofed()));
             data.put("source", result.getSource());
 
             jedis.hset("resolver:" + username.toLowerCase(), data);
             jedis.expire("resolver:" + username.toLowerCase(), CACHE_RESOLVER);
 
-            jedis.setex("playeruuid:" + username.toLowerCase(), CACHE_UUID, result.getPlayerUUID().toString());
+            jedis.setex("playeruuid:" + username.toLowerCase(), CACHE_UUID, result.getUniqueId().toString());
         }
     }
 
@@ -283,7 +300,7 @@ public class RedisManager {
             }
 
             return new Resolver.Result(result.get("username"), UUID.fromString(result.get("uuid")),
-                    Boolean.parseBoolean(result.get("premium")), Boolean.parseBoolean(result.get("spoofed")), result.get("source"));
+                    Boolean.parseBoolean(result.get("premium")), result.get("source"));
         }
     }
 
@@ -437,7 +454,6 @@ public class RedisManager {
      * @return The player count, null if server not found
      */
     public int getServerCount(String server) {
-        instance.getLogger().info("knownProxies: " + knownProxies.toString());
         String[] keys = new String[knownProxies.size()];
         int i = 0;
         for(String proxy : knownProxies) {

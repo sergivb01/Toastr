@@ -2,14 +2,17 @@ package services.vortex.toastr.listeners;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
+import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.util.GameProfile;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
@@ -18,6 +21,7 @@ import services.vortex.toastr.resolver.Resolver;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class AuthListener {
@@ -27,7 +31,7 @@ public class AuthListener {
     public void onPlayerPreLogin(PreLoginEvent event) {
         try {
             Resolver.Result result = instance.getResolverManager().resolveUsername(event.getUsername());
-            if(result.isSpoofed()) {
+            if(!result.getUsername().equals(event.getUsername())) {
                 event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.text("Spoof #1 detected")));
                 return;
             }
@@ -40,6 +44,28 @@ public class AuthListener {
         } catch(Exception ex) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.text("error in backend")));
             ex.printStackTrace();
+        }
+    }
+
+    @Subscribe(order = PostOrder.LAST)
+    public void onGameProfileRequest(GameProfileRequestEvent event) {
+        final Optional<Player> player = instance.getProxy().getPlayer(event.getOriginalProfile().getId());
+
+        final Resolver.Result result = instance.getCacheManager().getPlayerResult(event.getUsername());
+        if(result == null) {
+            player.ifPresent(target -> target.disconnect(Component.text("Internal Toastr error #1").color(NamedTextColor.RED)));
+            instance.getLogger().error("tried to check for spoof #2 and #3 for " + event.getUsername() + ", ResolverResult is null");
+            return;
+        }
+
+        final GameProfile gameProfile = event.getGameProfile();
+        if(!gameProfile.getName().equals(result.getUsername())) {
+            player.ifPresent(target -> target.disconnect(Component.text("Spoof #2").color(NamedTextColor.RED)));
+            return;
+        }
+
+        if(!gameProfile.getId().equals(result.getUniqueId())) {
+            player.ifPresent(target -> target.disconnect(Component.text("Spoof #3").color(NamedTextColor.RED)));
         }
     }
 

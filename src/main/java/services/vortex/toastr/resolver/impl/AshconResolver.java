@@ -37,9 +37,8 @@ public class AshconResolver extends Resolver {
         String username = data.get("username").getAsString();
         String rawUUID = data.get("uuid").getAsString();
         UUID playerUUID = UUID.fromString(rawUUID);
-        boolean isSpoofed = !username.equals(rawUsername);
 
-        return new Result(username, playerUUID, true, isSpoofed, getSource());
+        return new Result(username, playerUUID, true, getSource());
     }
 
 }
