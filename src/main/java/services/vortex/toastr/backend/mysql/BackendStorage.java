@@ -70,7 +70,7 @@ public class BackendStorage {
         try {
             // Velocity has a timeout to disable all plugins of 10 seconds
             if(!executor.awaitTermination(8, TimeUnit.SECONDS)) {
-                instance.getLogger().warn("timed out while waiting ExecutorService to finish");
+                instance.getLogger().warn("Timed out while waiting ExecutorService to finish");
                 executor.shutdownNow();
             }
         } catch(InterruptedException e) {
@@ -114,7 +114,7 @@ public class BackendStorage {
                         rs.getString("salt"),
                         false
                 ));
-                instance.getLogger().info("[DATABASE] [GetProfile] " + playerUUID.toString() + " took " + (System.currentTimeMillis() - start) + "ms");
+                instance.getLogger().info("[database] [GetProfile] " + playerUUID.toString() + " took " + (System.currentTimeMillis() - start) + "ms");
             } catch(SQLException ex) {
                 future.completeExceptionally(ex);
             }
@@ -151,7 +151,7 @@ public class BackendStorage {
 
                     if(query.executeUpdate() == 1) {
                         future.complete(true);
-                        instance.getLogger().info("[DATABASE] [InsertProfile] " + profile.getUniqueId() + " took " + (System.currentTimeMillis() - start) + "ms");
+                        instance.getLogger().info("[database] [InsertProfile] " + profile.getUniqueId() + " took " + (System.currentTimeMillis() - start) + "ms");
                         return;
                     }
                 }
@@ -169,7 +169,7 @@ public class BackendStorage {
                     query.execute();
 
                     future.complete(false);
-                    instance.getLogger().info("[DATABASE] [SaveProfile] " + profile.getUniqueId() + " took " + (System.currentTimeMillis() - start) + "ms");
+                    instance.getLogger().info("[database] [SaveProfile] " + profile.getUniqueId() + " took " + (System.currentTimeMillis() - start) + "ms");
                 }
 
             } catch(SQLException ex) {

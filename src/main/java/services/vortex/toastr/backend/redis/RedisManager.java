@@ -247,18 +247,11 @@ public class RedisManager {
      * @return A Set of Strings with all the Players from all the proxies, null if proxy not found
      */
     public Set<String> getUsernamesOnline() {
-        String[] keys = new String[knownProxies.size()];
-        int i = 0;
-        for(String proxy : knownProxies) {
-            keys[i] = "proxy:" + proxy + ":onlines";
-            i++;
-        }
-
-        List<Response<List<String>>> results = new ArrayList<>(keys.length);
+        List<Response<List<String>>> results = new ArrayList<>(knownProxies.size());
         try(Jedis jedis = getConnection()) {
             final Pipeline pipe = jedis.pipelined();
-            for(String key : keys) {
-                results.add(pipe.hvals(key));
+            for(String proxy : knownProxies) {
+                results.add(pipe.hvals("proxy:" + proxy + ":onlines"));
             }
             pipe.sync();
         }

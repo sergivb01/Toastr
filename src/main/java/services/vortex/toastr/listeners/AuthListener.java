@@ -54,7 +54,7 @@ public class AuthListener {
         final Resolver.Result result = instance.getCacheManager().getPlayerResult(event.getUsername());
         if(result == null) {
             player.ifPresent(target -> target.disconnect(Component.text("Internal Toastr error #1").color(NamedTextColor.RED)));
-            instance.getLogger().error("tried to check for spoof #2 and #3 for " + event.getUsername() + ", ResolverResult is null");
+            instance.getLogger().warn("Tried to check for spoof #2 and #3 for " + event.getUsername() + ", ResolverResult is null");
             return;
         }
 
