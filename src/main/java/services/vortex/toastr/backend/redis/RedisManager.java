@@ -68,6 +68,7 @@ public class RedisManager {
     }
 
     private void removeProxyInstance(String proxy) {
+        final long start = System.currentTimeMillis();
         try(Jedis jedis = getConnection()) {
             final Map<String, String> onlines = jedis.hgetAll("proxy:" + proxy + ":onlines");
             knownProxies.remove(proxy.toLowerCase());
@@ -76,15 +77,16 @@ public class RedisManager {
                 pipe.hdel("proxies", proxy);
                 pipe.del(" proxy:" + proxy + ":onlines");
 
+                for(RegisteredServer server : instance.getProxy().getAllServers()) {
+                    pipe.srem("server:" + server.getServerInfo().getName(), onlines.keySet().toArray(new String[0]));
+                }
                 for(String rawUUID : onlines.keySet()) {
-                    for(RegisteredServer server : instance.getProxy().getAllServers()) {
-                        pipe.srem("server:" + server.getServerInfo().getName(), onlines.get(rawUUID));
-                    }
                     pipe.hset("player:" + rawUUID, "lastOnline", Long.toString(System.currentTimeMillis()));
                 }
                 pipe.sync();
             }
         }
+        instance.getLogger().info("Removed current proxy instance in " + (System.currentTimeMillis() - start) + "ms");
     }
 
     private void updatePlayerCounts() {
