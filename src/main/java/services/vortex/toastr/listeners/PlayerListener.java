@@ -8,7 +8,9 @@ import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
+import services.vortex.toastr.profile.PlayerData;
 
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +35,14 @@ public class PlayerListener {
     @Subscribe
     public void onPlayerJoin(PostLoginEvent event) {
         Player player = event.getPlayer();
+
+        final PlayerData playerData = instance.getRedisManager().getPlayer(player.getUniqueId());
+        if(playerData != null && playerData.getLastOnline() == 0) {
+            // TODO: request cross-network kick
+            player.disconnect(Component.text("Player already online in the network, relog in").color(NamedTextColor.RED));
+            return;
+        }
+
         instance.getRedisManager().createPlayer(player.getUniqueId(), player.getUsername(), player.getRemoteAddress().getAddress().getHostAddress());
     }
 
