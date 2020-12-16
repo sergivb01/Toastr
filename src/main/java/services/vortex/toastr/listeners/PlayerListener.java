@@ -22,8 +22,8 @@ public class PlayerListener {
             Component header, footer;
             for(Player player : instance.getProxy().getAllPlayers()) {
                 String server = player.getCurrentServer().isPresent() ? player.getCurrentServer().get().getServerInfo().getName() : "unknown";
-                header = instance.getConfig().getMessage("header", "proxy", instance.getRedisManager().getProxyName(), "players", Integer.toString(instance.getRedisManager().getOnlinePlayers()), "server", server);
-                footer = instance.getConfig().getMessage("footer", "proxy", instance.getRedisManager().getProxyName(), "players", Integer.toString(instance.getRedisManager().getOnlinePlayers()), "server", server);
+                header = instance.getConfig().getMessage("header", "proxy", instance.getRedisManager().getProxyName(), "online", Integer.toString(instance.getRedisManager().getOnlinePlayers()), "server", server);
+                footer = instance.getConfig().getMessage("footer", "proxy", instance.getRedisManager().getProxyName(), "online", Integer.toString(instance.getRedisManager().getOnlinePlayers()), "server", server);
 
                 player.getTabList().setHeaderAndFooter(header, footer);
             }

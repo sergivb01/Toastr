@@ -7,6 +7,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
 
+import java.util.Set;
+
 // TODO: rework this mess
 public class GListCommand implements SimpleCommand {
 
@@ -19,7 +21,7 @@ public class GListCommand implements SimpleCommand {
 
         int global = instance.getRedisManager().getOnlinePlayers();
         if(args.length == 0) {
-            source.sendMessage(instance.getConfig().getMessage("glist_global", "players", Integer.toString(global)));
+            source.sendMessage(instance.getConfig().getMessage("glist_global", "online", Integer.toString(global)));
             return;
         }
 
@@ -29,17 +31,17 @@ public class GListCommand implements SimpleCommand {
             return;
         }
 
-        final Long players = instance.getRedisManager().getProxyCount(proxy);
-        if(players == null || proxy.equalsIgnoreCase("ALL")) {
+        final Long online = instance.getRedisManager().getProxyCount(proxy);
+        if(online == null || proxy.equalsIgnoreCase("ALL")) {
             for(RegisteredServer server : instance.getProxy().getAllServers()) {
-                final int online = instance.getRedisManager().getServerCount(server.getServerInfo().getName());
-                source.sendMessage(instance.getConfig().getMessage("glist_per_server", "server", server.getServerInfo().getName(), "players", Long.toString(online)));
+                final Set<String> players = instance.getRedisManager().getServerUsernames(server.getServerInfo().getName());
+                source.sendMessage(instance.getConfig().getMessage("glist_per_server", "server", server.getServerInfo().getName(), "online", Long.toString(players.size()), "players", String.join(", ", players)));
             }
-            source.sendMessage(instance.getConfig().getMessage("glist_global", "players", Integer.toString(global)));
+            source.sendMessage(instance.getConfig().getMessage("glist_global", "online", Integer.toString(global)));
             return;
         }
 
-        source.sendMessage(instance.getConfig().getMessage("glist_proxy", "proxy", proxy, "players", Integer.toString(global)));
+        source.sendMessage(instance.getConfig().getMessage("glist_proxy", "proxy", proxy, "online", Long.toString(online)));
     }
 
     @Override
