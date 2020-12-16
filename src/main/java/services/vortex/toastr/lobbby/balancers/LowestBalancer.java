@@ -18,7 +18,7 @@ public class LowestBalancer implements Balancer {
         int lowestOnline = 0;
 
         for(Lobby lobby : lobbies) {
-            int currOnline = instance.getRedisManager().getServerCount(lobby.getName());
+            int currOnline = lobby.getOnline();
             if(lowestLobby == null || lowestOnline > currOnline) {
                 lowestLobby = lobby;
                 lowestOnline = currOnline;

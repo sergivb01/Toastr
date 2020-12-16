@@ -50,11 +50,15 @@ public class ToastrPlugin {
     private final Logger logger;
     private final Path dataDirector;
     private Config config;
+
     private ResolverManager resolverManager;
     private BackendStorage backendStorage;
     private LobbyManager lobbyManager;
+
     private RedisManager redisManager;
     private CacheManager cacheManager;
+
+    private boolean multiInstance;
 
     @Inject
     public ToastrPlugin(Logger logger, ProxyServer proxy, @DataDirectory Path dataDirector) {
@@ -69,11 +73,17 @@ public class ToastrPlugin {
 
         if(!registerConfigs()) return;
 
+        multiInstance = config.getObject().get("multi-instance").getAsBoolean();
+
         resolverManager = new ResolverManager();
         lobbyManager = new LobbyManager();
         lobbyManager.loadLobbies();
 
-        redisManager = new RedisManager();
+        if(multiInstance) {
+            for(int i = 0; i < 10; i++)
+                logger.warn("Starting up server with multi-instance enabled - RUN AT YOUR OWN RISK");
+            redisManager = new RedisManager();
+        }
         cacheManager = new CacheManager();
 
         final JsonObject dbConfig = config.getObject().getAsJsonObject("database");
@@ -83,12 +93,15 @@ public class ToastrPlugin {
         CommandManager commandManager = proxy.getCommandManager();
 
         commandManager.register("alert", new AlertCommand());
-        commandManager.unregister("glist");
-        commandManager.register("glist", new GListCommand());
-        commandManager.register("tprofile", new ProfileCommand());
-        commandManager.register("toastrl", new ReloadCommand());
-        commandManager.register("sendtoall", new SendToAllCommand());
-        commandManager.register("serverid", new ServerIDCommand());
+
+        if(multiInstance) {
+            commandManager.unregister("glist");
+            commandManager.register("glist", new GListCommand());
+            commandManager.register("tprofile", new ProfileCommand());
+            commandManager.register("toastrl", new ReloadCommand());
+            commandManager.register("sendtoall", new SendToAllCommand());
+            commandManager.register("serverid", new ServerIDCommand());
+        }
 
         commandManager.register("changepassword", new ChangePasswordCommand());
         commandManager.register("login", new LoginCommand());
@@ -97,12 +110,17 @@ public class ToastrPlugin {
 
         commandManager.register("lobby", new LobbyCommand());
 
+        if(multiInstance) {
+            Arrays.asList(
+                    new NetworkListener(),
+                    new PlayerListener(),
+                    new PluginMessageListener()
+            ).forEach(listener -> proxy.getEventManager().register(this, listener));
+        }
+
         Arrays.asList(
                 new AuthListener(),
-                new LobbyListener(),
-                new NetworkListener(),
-                new PlayerListener(),
-                new PluginMessageListener()
+                new LobbyListener()
         ).forEach(listener -> proxy.getEventManager().register(this, listener));
     }
 

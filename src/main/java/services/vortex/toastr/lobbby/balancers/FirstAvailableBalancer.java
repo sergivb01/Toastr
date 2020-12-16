@@ -13,7 +13,7 @@ public class FirstAvailableBalancer implements Balancer {
     @Override
     public Lobby getLobby(List<Lobby> lobbies) {
         for(Lobby lobby : lobbies) {
-            int onlinePlayers = instance.getRedisManager().getServerCount(lobby.getName());
+            int onlinePlayers = lobby.getOnline();
             if(onlinePlayers < lobby.getMaxPlayers())
                 return lobby;
         }
