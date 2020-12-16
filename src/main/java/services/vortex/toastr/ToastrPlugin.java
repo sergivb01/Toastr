@@ -11,6 +11,7 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import services.vortex.toastr.backend.mysql.BackendCredentials;
 import services.vortex.toastr.backend.mysql.BackendStorage;
@@ -105,10 +106,13 @@ public class ToastrPlugin {
         ).forEach(listener -> proxy.getEventManager().register(this, listener));
     }
 
+    @SneakyThrows
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent event) {
+        final Thread shutdown = new Thread(() -> redisManager.shutdown(), "Redis shutdown");
+        shutdown.start();
+
         backendStorage.shutdown();
-        redisManager.shutdown();
     }
 
     @Subscribe
