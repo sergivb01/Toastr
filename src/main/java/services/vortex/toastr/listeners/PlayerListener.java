@@ -40,13 +40,13 @@ public class PlayerListener {
     public void onServerConnected(ServerConnectedEvent event) {
         Player player = event.getPlayer();
 
-        instance.getRedisManager().setPlayerServer(player.getUniqueId(), event.getServer().getServerInfo().getName());
+        instance.getRedisManager().setPlayerServer(player.getUniqueId(), player.getUsername(), event.getServer().getServerInfo().getName());
     }
 
     @Subscribe
     public void onPlayerQuit(DisconnectEvent event) {
         Player player = event.getPlayer();
-        instance.getRedisManager().cleanPlayer(player.getUniqueId());
+        instance.getRedisManager().cleanPlayer(player.getUniqueId(), player.getUsername());
     }
 
     @Subscribe

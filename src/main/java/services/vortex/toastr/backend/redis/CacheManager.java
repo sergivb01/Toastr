@@ -6,11 +6,16 @@ import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.PlayerData;
 import services.vortex.toastr.resolver.Resolver;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class CacheManager {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
+
+    private Set<String> allOnline = new HashSet<>();
+    private long lastAllOnline = 0;
 
     private final Cache<String, UUID> uuids = CacheBuilder.newBuilder()
             .expireAfterWrite(5, TimeUnit.SECONDS)
@@ -24,6 +29,20 @@ public class CacheManager {
             .expireAfterWrite(5, TimeUnit.MINUTES)
             .maximumSize(500)
             .build();
+
+    /**
+     * This method gets all online player's usernames, if not cached it gets data from redis
+     *
+     * @return Set of usernames
+     */
+    public Set<String> getAllOnline() {
+        if((System.currentTimeMillis() - lastAllOnline) > TimeUnit.SECONDS.toMillis(5)) {
+            allOnline = instance.getRedisManager().getAllUsernamesOnline();
+            lastAllOnline = System.currentTimeMillis();
+        }
+
+        return allOnline;
+    }
 
     /**
      * This method gets the Resolver Result of a username, if not cached it gets the data from redis

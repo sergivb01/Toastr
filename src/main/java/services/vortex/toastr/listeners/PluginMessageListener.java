@@ -40,7 +40,7 @@ public class PluginMessageListener {
         switch(subChannel.toUpperCase()) {
             case "PLAYERLIST": {
                 String server = input.readUTF();
-                Set<UUID> players = instance.getRedisManager().getServerOnline(server);
+                Set<UUID> players = instance.getRedisManager().getServerOnline(server).keySet();
                 StringBuilder sb = new StringBuilder();
                 for(UUID uuid : players)
                     sb.append(uuid).append(", ");

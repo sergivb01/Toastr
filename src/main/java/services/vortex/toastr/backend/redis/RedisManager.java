@@ -18,6 +18,7 @@ public class RedisManager {
     public static final String CHANNEL_ALERT = "toastr-alert";
     public static final String CHANNEL_SENDTOALL = "toastr-sendtoall";
     private static final int CACHE_RESOLVER = 3600 * 6;
+    private static final int CACHE_UUID = 3600 * 24;
 
     private final PubSubListener psListener;
     private final JedisPool pool;
@@ -26,7 +27,7 @@ public class RedisManager {
     @Getter
     private int onlinePlayers;
     @Getter
-    private Set<String> knownProxies = new HashSet<>();
+    private final Set<String> knownProxies = new HashSet<>();
     @Getter
     private final String proxyName;
 
@@ -50,7 +51,7 @@ public class RedisManager {
         subscribeThread.setDaemon(true);
         subscribeThread.start();
 
-        updateTask = instance.getProxy().getScheduler().buildTask(instance, this::updatePlayerCounts).delay(1, TimeUnit.SECONDS).repeat(1, TimeUnit.SECONDS).schedule();
+        updateTask = instance.getProxy().getScheduler().buildTask(instance, this::updatePlayerCounts).repeat(1, TimeUnit.SECONDS).schedule();
         inconsistencyProxyTask = instance.getProxy().getScheduler().buildTask(instance, this::fixPlayerProxyInconsistency).delay(5, TimeUnit.SECONDS).repeat(30, TimeUnit.SECONDS).schedule();
     }
 
@@ -70,19 +71,19 @@ public class RedisManager {
                 if(System.currentTimeMillis() - Long.parseLong(proxies.get(proxy)) > TimeUnit.SECONDS.toMillis(15)) {
                     jedis.hdel("proxies", proxy);
                     jedis.del(" proxy:" + proxy + ":onlines");
-                    knownProxies.remove(proxy);
+                    knownProxies.remove(proxy.toLowerCase());
                     instance.getLogger().warn("No heartbeat from " + proxy + " in 15 seconds, removing proxy.");
                     continue;
                 }
 
                 if(System.currentTimeMillis() - Long.parseLong(proxies.get(proxy)) > TimeUnit.SECONDS.toMillis(5)) {
                     instance.getLogger().warn("No heartbeat from " + proxy + " in 5 seconds, ignoring players.");
-                    knownProxies.remove(proxy);
+                    knownProxies.remove(proxy.toLowerCase());
                     continue;
                 }
 
-                knownProxies.add(proxy);
-                onlines += jedis.scard("proxy:" + proxy + ":onlines");
+                knownProxies.add(proxy.toLowerCase());
+                onlines += jedis.hlen("proxy:" + proxy + ":onlines");
             }
 
             jedis.hset("proxies", proxyName, Long.toString(System.currentTimeMillis()));
@@ -94,7 +95,7 @@ public class RedisManager {
     private void fixPlayerProxyInconsistency() {
         long start = System.currentTimeMillis();
         try(Jedis jedis = getConnection(); final Pipeline pipe = jedis.pipelined()) {
-            final Set<String> stored = jedis.smembers("proxy:" + proxyName + ":onlines");
+            final Set<String> stored = jedis.hkeys("proxy:" + proxyName + ":onlines");
             int count = 0;
 
             for(String storedPlayer : stored) {
@@ -118,26 +119,39 @@ public class RedisManager {
         }
     }
 
-    /**
-     * This method creates a new player and sets all the info
+    /*
+     * Implement another anti inconsistency
      *
-     * @param player The Player UUID
-     * @param name   The Player name
-     * @param ip     The Player IP
+     * For all servers in redis:
+     *   * INTERSECT (https://redis.io/commands/sinter) each server pair
+     *
+     *   * OR look through each server and make a UNION (https://redis.io/commands/sunion)
+     *   of everything except current server. Check if it exists.
+     *   and remove players that are repeated
+     * */
+
+    /**
+     * This method creates a new uuid and sets all the info
+     *
+     * @param uuid     The Player UUID
+     * @param username The Player username
+     * @param ip       The Player IP
      */
-    public void createPlayer(UUID player, String name, String ip) {
-        Map<String, String> data = new HashMap<>();
-        data.put("ip", ip);
-        data.put("lastOnline", "0");
-        data.put("proxy", proxyName);
+    public void createPlayer(UUID uuid, String username, String ip) {
+        final Map<String, String> playerData = new HashMap<>();
+        playerData.put("ip", ip);
+        playerData.put("lastOnline", "0");
+        playerData.put("proxy", proxyName);
+        playerData.put("username", username);
+
+        final HashMap<String, String> proxyData = new HashMap<>();
+        proxyData.put(uuid.toString(), username);
 
         try(Jedis jedis = getConnection()) {
             final Transaction tx = jedis.multi();
 
-            tx.sadd("proxy:" + proxyName + ":onlines", player.toString());
-            tx.hmset("player:" + player, data);
-
-            tx.set("playeruuid:" + name.toLowerCase(), player.toString());
+            tx.hmset("proxy:" + proxyName + ":onlines", proxyData);
+            tx.hmset("player:" + uuid, playerData);
 
             tx.exec();
         }
@@ -146,35 +160,37 @@ public class RedisManager {
     /**
      * This method sets the server where a Player is
      *
-     * @param player The Player's UUID
-     * @param server The server
+     * @param uuid     The Player's UUID
+     * @param username The Player's username
+     * @param server   The server
      */
-    public void setPlayerServer(UUID player, String server) {
+    public void setPlayerServer(UUID uuid, String username, String server) {
         try(Jedis jedis = getConnection()) {
-            String previous = jedis.hget("player:" + player, "server");
+            String previous = jedis.hget("player:" + uuid, "server");
             if(previous != null) {
-                jedis.srem("server:" + proxyName + ":" + previous, player.toString());
+                jedis.hdel("server:" + proxyName + ":" + previous, uuid.toString());
             }
 
-            jedis.hset("player:" + player, "server", server);
-            jedis.sadd("server:" + proxyName + ":" + server, player.toString());
+            jedis.hset("player:" + uuid, "server", server);
+            jedis.hset("server:" + proxyName + ":" + server, uuid.toString(), username);
         }
     }
 
     /**
      * This method cleans all the info of a Player
      *
-     * @param player The UUID of the Player
+     * @param uuid     The UUID of the Player
+     * @param username The username of the Player
      */
-    public void cleanPlayer(UUID player) {
+    public void cleanPlayer(UUID uuid, String username) {
         try(Jedis jedis = getConnection()) {
-            String previous = jedis.hget("player:" + player, "server");
+            String previous = jedis.hget("player:" + uuid, "server");
             if(previous != null) {
-                jedis.srem("server:" + proxyName + ":" + previous, player.toString());
+                jedis.hdel("server:" + proxyName + ":" + previous, uuid.toString());
             }
 
-            jedis.srem("proxy:" + proxyName + ":onlines", player.toString());
-            jedis.hset("player:" + player, "lastOnline", Long.toString(System.currentTimeMillis()));
+            jedis.hdel("proxy:" + proxyName + ":onlines", uuid.toString());
+            jedis.hset("player:" + uuid, "lastOnline", Long.toString(System.currentTimeMillis()));
         }
     }
 
@@ -227,6 +243,8 @@ public class RedisManager {
 
             jedis.hset("resolver:" + username.toLowerCase(), data);
             jedis.expire("resolver:" + username.toLowerCase(), CACHE_RESOLVER);
+
+            jedis.setex("playeruuid:" + username.toLowerCase(), CACHE_UUID, result.getPlayerUUID().toString());
         }
     }
 
@@ -244,6 +262,67 @@ public class RedisManager {
     }
 
     /**
+     * This method gets all the online players in <strong>all the online proxies</strong>
+     *
+     * @return A Set of Strings with all the Players from all the proxies, null if proxy not found
+     */
+    public HashMap<UUID, String> getAllOnline() {
+        String[] keys = new String[knownProxies.size()];
+        int i = 0;
+        for(String proxy : knownProxies) {
+            keys[i] = "proxy:" + proxy + ":onlines";
+        }
+
+        List<Response<Map<String, String>>> results = new ArrayList<>(keys.length);
+        try(Jedis jedis = getConnection()) {
+            final Pipeline pipe = jedis.pipelined();
+            for(String key : keys) {
+                results.add(pipe.hgetAll(key));
+            }
+            pipe.sync();
+        }
+
+        HashMap<UUID, String> onlines = new HashMap<>();
+        for(Response<Map<String, String>> result : results) {
+            final Map<String, String> data = result.get();
+            for(String uuid : data.keySet()) {
+                onlines.put(UUID.fromString(uuid), data.get(uuid));
+            }
+        }
+
+        return onlines;
+    }
+
+    /**
+     * This method gets all the online players in <strong>all the online proxies</strong>
+     *
+     * @return A Set of Strings with all the Players from all the proxies, null if proxy not found
+     */
+    public Set<String> getAllUsernamesOnline() {
+        String[] keys = new String[knownProxies.size()];
+        int i = 0;
+        for(String proxy : knownProxies) {
+            keys[i] = "proxy:" + proxy + ":onlines";
+        }
+
+        List<Response<List<String>>> results = new ArrayList<>(keys.length);
+        try(Jedis jedis = getConnection()) {
+            final Pipeline pipe = jedis.pipelined();
+            for(String key : keys) {
+                results.add(pipe.hvals(key));
+            }
+            pipe.sync();
+        }
+
+        Set<String> onlines = new HashSet<>();
+        for(Response<List<String>> result : results) {
+            onlines.addAll(result.get());
+        }
+
+        return onlines;
+    }
+
+    /**
      * This method gets all the online players in a proxy
      *
      * @param proxy The proxy name
@@ -251,7 +330,7 @@ public class RedisManager {
      */
     public Set<String> getProxyOnline(String proxy) {
         try(Jedis jedis = getConnection()) {
-            return jedis.smembers("proxy:" + proxy + ":onlines");
+            return jedis.hkeys("proxy:" + proxy + ":onlines");
         }
     }
 
@@ -263,7 +342,7 @@ public class RedisManager {
      */
     public Long getProxyCount(String proxy) {
         try(Jedis jedis = getConnection()) {
-            return jedis.scard("proxy:" + proxy + ":onlines");
+            return jedis.hlen("proxy:" + proxy + ":onlines");
         }
     }
 
@@ -273,19 +352,58 @@ public class RedisManager {
      * @param server The server name
      * @return A list of the players in the server (UUID)
      */
-    public Set<UUID> getServerOnline(String server) {
+    public HashMap<UUID, String> getServerOnline(String server) {
         String[] keys = new String[knownProxies.size()];
         int i = 0;
         for(String proxy : knownProxies) {
             keys[i] = "server:" + proxy + ":" + server;
         }
 
-        Set<UUID> onlines = new HashSet<>();
+        List<Response<Map<String, String>>> results = new ArrayList<>(keys.length);
         try(Jedis jedis = getConnection()) {
-            final Set<String> players = jedis.sinter(keys);
-            for(String player : players) {
-                onlines.add(UUID.fromString(player));
+            final Pipeline pipe = jedis.pipelined();
+            for(String key : keys) {
+                results.add(pipe.hgetAll(key));
             }
+            pipe.sync();
+        }
+
+        HashMap<UUID, String> onlines = new HashMap<>();
+        for(Response<Map<String, String>> result : results) {
+            final Map<String, String> data = result.get();
+            for(String uuid : data.keySet()) {
+                onlines.put(UUID.fromString(uuid), data.get(uuid));
+            }
+        }
+
+        return onlines;
+    }
+
+    /**
+     * This method gets the online players in a specified server
+     *
+     * @param server The server name
+     * @return A list of the players in the server (UUID)
+     */
+    public Set<String> getServerUsernamesOnline(String server) {
+        String[] keys = new String[knownProxies.size()];
+        int i = 0;
+        for(String proxy : knownProxies) {
+            keys[i] = "server:" + proxy + ":" + server;
+        }
+
+        List<Response<List<String>>> results = new ArrayList<>(keys.length);
+        try(Jedis jedis = getConnection()) {
+            final Pipeline pipe = jedis.pipelined();
+            for(String key : keys) {
+                results.add(pipe.hvals(key));
+            }
+            pipe.sync();
+        }
+
+        Set<String> onlines = new HashSet<>();
+        for(Response<List<String>> result : results) {
+            onlines.addAll(result.get());
         }
 
         return onlines;
@@ -298,7 +416,20 @@ public class RedisManager {
      * @return The player count, null if server not found
      */
     public int getServerCount(String server) {
-        return getServerOnline(server).size();
+        String[] keys = new String[knownProxies.size()];
+        int i = 0;
+        for(String proxy : knownProxies) {
+            keys[i] = "server:" + proxy + ":" + server;
+        }
+
+        int online = 0;
+        try(Jedis jedis = getConnection()) {
+            for(String key : keys) {
+                online += jedis.hlen(key);
+            }
+        }
+
+        return online;
     }
 
     /**

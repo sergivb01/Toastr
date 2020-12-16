@@ -7,7 +7,10 @@ import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.PlayerData;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 // TODO: implement lookup by UUID
 public class ProfileCommand implements SimpleCommand {
@@ -36,6 +39,22 @@ public class ProfileCommand implements SimpleCommand {
         for(Component info : instance.getConfig().getMessages("profile_player_info", "uuid", data.getUuid().toString(), "username", args[0], "lastonline", lastOnline, "ip", ip, "proxy", data.getProxy(), "server", data.getServer())) {
             source.sendMessage(info);
         }
+    }
+
+    @Override
+    public CompletableFuture<List<String>> suggestAsync(Invocation invocation) {
+        CompletableFuture<List<String>> future = new CompletableFuture<>();
+
+        instance.getProxy().getScheduler().buildTask(instance, () -> {
+            List<String> res = new ArrayList<>();
+            for(String online : instance.getCacheManager().getAllOnline()) {
+                if(invocation.arguments().length == 0 || online.startsWith(invocation.arguments()[0]))
+                    res.add(online);
+            }
+            future.complete(res);
+        }).schedule();
+
+        return future;
     }
 
     @Override
