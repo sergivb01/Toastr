@@ -6,21 +6,11 @@ import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.PlayerData;
 import services.vortex.toastr.resolver.Resolver;
 
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class CacheManager {
-
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
-
-    private final Cache<String, Set<String>> onlines = CacheBuilder.newBuilder()
-            .expireAfterWrite(5, TimeUnit.SECONDS)
-            .build();
-
-    private final Cache<String, Set<UUID>> onlinesPerServer = CacheBuilder.newBuilder()
-            .expireAfterWrite(5, TimeUnit.SECONDS)
-            .build();
 
     private final Cache<String, UUID> uuids = CacheBuilder.newBuilder()
             .expireAfterWrite(5, TimeUnit.SECONDS)
@@ -35,52 +25,23 @@ public class CacheManager {
             .maximumSize(500)
             .build();
 
-    public Resolver.Result getPlayerResult(String playername) {
-        Resolver.Result result = resolver.getIfPresent(playername.toLowerCase());
+    /**
+     * This method gets the Resolver Result of a username, if not cached it gets the data from redis
+     *
+     * @param username The username of the Player
+     * @return the Resolver.Result, null if not found
+     */
+    public Resolver.Result getPlayerResult(String username) {
+        Resolver.Result result = resolver.getIfPresent(username.toLowerCase());
         if(result == null) {
-            result = instance.getRedisManager().getPlayerResult(playername.toLowerCase());
+            result = instance.getRedisManager().getPlayerResult(username.toLowerCase());
             if(result == null)
                 return null;
 
-            resolver.put(playername.toLowerCase(), result);
+            resolver.put(username.toLowerCase(), result);
         }
 
         return result;
-    }
-
-    /**
-     * This method tries to get the online players from the cache, if not cached it gets the data from redis
-     *
-     * @param proxy The proxy name
-     * @return A Set of Strings, null if not found
-     */
-    public Set<String> getOnlinePlayers(String proxy) {
-        Set<String> players = onlines.getIfPresent(proxy.toLowerCase());
-        if(players == null) {
-            players = instance.getRedisManager().getOnlinePlayers(proxy.toLowerCase());
-            if(players == null)
-                return null;
-
-            onlines.put(proxy.toLowerCase(), players);
-        }
-
-        return players;
-    }
-
-    /**
-     * This method gets a Set<UUID> with the players in a server
-     *
-     * @param server The server name
-     * @return The Set with the players in the server
-     */
-    public Set<UUID> getOnlinePlayersInServer(String server) {
-        Set<UUID> players = onlinesPerServer.getIfPresent(server);
-        if(players == null) {
-            players = instance.getRedisManager().getOnlinePlayersInServer(server);
-            onlinesPerServer.put(server, players);
-        }
-
-        return players;
     }
 
     /**

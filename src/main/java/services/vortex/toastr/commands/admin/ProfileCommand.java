@@ -9,6 +9,7 @@ import services.vortex.toastr.profile.PlayerData;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+// TODO: implement lookup by UUID
 public class ProfileCommand implements SimpleCommand {
 
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();

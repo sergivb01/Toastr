@@ -40,7 +40,7 @@ public class PluginMessageListener {
         switch(subChannel.toUpperCase()) {
             case "PLAYERLIST": {
                 String server = input.readUTF();
-                Set<UUID> players = instance.getCacheManager().getOnlinePlayersInServer(server.toLowerCase());
+                Set<UUID> players = instance.getRedisManager().getServerOnline(server);
                 StringBuilder sb = new StringBuilder();
                 for(UUID uuid : players)
                     sb.append(uuid).append(", ");
@@ -60,7 +60,7 @@ public class PluginMessageListener {
                 if(server.equalsIgnoreCase("ALL"))
                     players = instance.getRedisManager().getOnlinePlayers();
                 else
-                    players = instance.getCacheManager().getOnlinePlayersInServer(server.toLowerCase()).size();
+                    players = Math.toIntExact(instance.getRedisManager().getServerCount(server));
 
                 output.writeUTF("PlayerCount");
                 output.writeUTF(server);

@@ -32,6 +32,9 @@ public abstract class Resolver implements IResolver {
         private final boolean isPremium;
         private final boolean isSpoofed;
         private final String source;
+        /*
+        * TODO: isSpoofed should be removed as 
+        * */
     }
 
 }

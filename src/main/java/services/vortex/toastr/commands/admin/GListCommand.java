@@ -5,9 +5,7 @@ import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import services.vortex.toastr.ToastrPlugin;
 
-import java.util.Set;
-import java.util.UUID;
-
+// TODO: rework this mess
 public class GListCommand implements SimpleCommand {
 
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
@@ -24,20 +22,18 @@ public class GListCommand implements SimpleCommand {
         }
 
         String proxy = args[0];
-        Set<String> players = instance.getCacheManager().getOnlinePlayers(proxy);
+        final Long players = instance.getRedisManager().getProxyCount(proxy);
 
         if(players == null || proxy.equalsIgnoreCase("ALL")) {
             for(RegisteredServer server : instance.getProxy().getAllServers()) {
-                final Set<UUID> online = instance.getCacheManager().getOnlinePlayersInServer(server.getServerInfo().getName());
-                if(online != null) {
-                    source.sendMessage(instance.getConfig().getMessage("glist_per_server", "server", server.getServerInfo().getName(), "players", Integer.toString(online.size())));
-                }
+                final int online = instance.getRedisManager().getServerCount(server.getServerInfo().getName());
+                source.sendMessage(instance.getConfig().getMessage("glist_per_server", "server", server.getServerInfo().getName(), "players", Long.toString(online)));
             }
             source.sendMessage(instance.getConfig().getMessage("glist_global", "players", Integer.toString(global)));
             return;
         }
 
-        source.sendMessage(instance.getConfig().getMessage("glist_proxy", "proxy", proxy, "players", Integer.toString(players.size())));
+        source.sendMessage(instance.getConfig().getMessage("glist_proxy", "proxy", proxy, "players", Integer.toString(global)));
     }
 
     @Override
