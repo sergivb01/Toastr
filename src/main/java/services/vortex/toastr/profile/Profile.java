@@ -44,7 +44,17 @@ public class Profile {
 
     public enum AccountType {
         CRACKED,
-        PREMIUM,
+        PREMIUM;
+
+        public AccountType fromBool(boolean isPremium) {
+            return isPremium ? PREMIUM : CRACKED;
+        }
+    }
+
+    public enum CheckAccountResult {
+        DIFFERENT_NAMECASE,
+        OLD_PREMIUM,
+        ALLOWED;
     }
 
 }

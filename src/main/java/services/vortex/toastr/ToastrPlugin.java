@@ -88,6 +88,7 @@ public class ToastrPlugin {
         commandManager.register("alert", new AlertCommand());
         commandManager.unregister("glist");
         commandManager.register("glist", new GListCommand());
+        commandManager.register("gmsg", new GlobalMessageCommand());
         commandManager.register("tprofile", new ProfileCommand());
         commandManager.register("toastrl", new ReloadCommand());
         commandManager.register("sendtoall", new SendToAllCommand());

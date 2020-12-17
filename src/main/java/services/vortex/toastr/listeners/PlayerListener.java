@@ -12,6 +12,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.backend.packets.KickPacket;
 import services.vortex.toastr.profile.PlayerData;
+import services.vortex.toastr.tasks.UpdateTabTask;
 
 import java.util.concurrent.TimeUnit;
 
@@ -20,18 +21,7 @@ public class PlayerListener {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
 
     public PlayerListener() {
-        instance.getProxy().getScheduler().buildTask(instance, () -> {
-            int online = instance.getRedisManager().getOnlinePlayers().get();
-
-            Component header, footer;
-            for(Player player : instance.getProxy().getAllPlayers()) {
-                String server = player.getCurrentServer().isPresent() ? player.getCurrentServer().get().getServerInfo().getName() : "unknown";
-                header = instance.getConfig().getMessage("header", "proxy", instance.getRedisManager().getProxyName(), "online", Integer.toString(online), "server", server);
-                footer = instance.getConfig().getMessage("footer", "proxy", instance.getRedisManager().getProxyName(), "online", Integer.toString(online), "server", server);
-
-                player.getTabList().setHeaderAndFooter(header, footer);
-            }
-        }).repeat(3, TimeUnit.SECONDS).schedule();
+        instance.getProxy().getScheduler().buildTask(instance, new UpdateTabTask()).repeat(3, TimeUnit.SECONDS).schedule();
     }
 
     @Subscribe

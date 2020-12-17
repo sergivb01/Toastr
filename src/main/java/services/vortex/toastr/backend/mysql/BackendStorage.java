@@ -1,6 +1,7 @@
 package services.vortex.toastr.backend.mysql;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.velocitypowered.api.proxy.Player;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
@@ -18,6 +19,7 @@ import java.util.concurrent.*;
 public class BackendStorage {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
     private static final int MIN_IDLE = 8;
+    private static final long NAMECHANGE_DELAY = TimeUnit.DAYS.toMillis(37);
 
     private final ThreadPoolExecutor executor;
     private final MyMonitorThread monitor;
@@ -80,33 +82,67 @@ public class BackendStorage {
         this.hikari.close();
     }
 
+    private Profile createProfileFromRS(final ResultSet rs) throws SQLException {
+        return new Profile(
+                UUID.fromString(rs.getString("uuid")),
+                rs.getString("player_name"),
+                Profile.AccountType.valueOf(rs.getString("account_type")),
+                rs.getString("first_address"),
+                rs.getString("last_address"),
+                rs.getTimestamp("first_login"),
+                rs.getTimestamp("last_login"),
+                rs.getString("password"),
+                rs.getString("salt"),
+                false
+        );
+    }
+
     /**
      * This method checks if a player with different namecase exists
      *
-     * @param username The username from the player
+     * @param player The player
      * @return CompletableFuture<Boolean> that can return a SQLException
      */
-    public CompletableFuture<Boolean> checkNamecase(String username) {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+    public CompletableFuture<Profile.CheckAccountResult> checkAccounts(final Player player) {
+        CompletableFuture<Profile.CheckAccountResult> future = new CompletableFuture<>();
         final long start = System.currentTimeMillis();
 
         executor.submit(() -> {
             try(Connection connection = this.hikari.getConnection();
                 final PreparedStatement query = connection.prepareStatement(SQLQueries.CHECK_NAMECASE.getQuery())) {
-                query.setString(1, username);
+                query.setString(1, player.getUsername());
                 query.setQueryTimeout(3);
 
                 final ResultSet rs = query.executeQuery();
-                if(!rs.next()) {
-                    instance.getLogger().warn("doesn't exist");
-                    future.complete(false);
+
+                // player doesn't exist in database
+                if(!rs.next() || player.isOnlineMode()) {
+                    future.complete(Profile.CheckAccountResult.ALLOWED);
                     return;
                 }
 
-                final String expected = rs.getString("player_name");
-                future.complete(!username.equals(expected));
+                final Profile profile = createProfileFromRS(rs);
 
-                instance.getLogger().info("[database] [CheckNamecase] " + username + " took " + (System.currentTimeMillis() - start) + "ms");
+                // cracked player trying to login with different name-case - block
+                if(!profile.getUsername().equals(player.getUsername())) {
+                    future.complete(Profile.CheckAccountResult.DIFFERENT_NAMECASE);
+                    instance.getLogger().info("[database] [CheckAccounts] " + player.getUsername() + "(" + player.getUniqueId() + ") took " + (System.currentTimeMillis() - start) + "ms");
+                    return;
+                }
+
+                // cracked player logged in with nickname of an premium account (< 37d ?)
+                long elapsedSinceLast = System.currentTimeMillis() - profile.getLastLogin().getTime();
+                if(profile.getAccountType().equals(Profile.AccountType.PREMIUM) && elapsedSinceLast < NAMECHANGE_DELAY) {
+                    // premium account is still premium, block
+                    future.complete(Profile.CheckAccountResult.OLD_PREMIUM);
+                    instance.getLogger().info("[database] [CheckAccounts] " + player.getUsername() + "(" + player.getUniqueId() + ") took " + (System.currentTimeMillis() - start) + "ms");
+                    return;
+                }
+
+                // premium account is no longer premium, allow, or other cases
+                future.complete(Profile.CheckAccountResult.ALLOWED);
+
+                instance.getLogger().info("[database] [CheckAccounts] " + player.getUsername() + "(" + player.getUniqueId() + ") took " + (System.currentTimeMillis() - start) + "ms");
             } catch(SQLException ex) {
                 future.completeExceptionally(ex);
             }
@@ -137,18 +173,7 @@ public class BackendStorage {
                     return;
                 }
 
-                future.complete(new Profile(
-                        UUID.fromString(rs.getString("uuid")),
-                        rs.getString("player_name"),
-                        Profile.AccountType.valueOf(rs.getString("account_type")),
-                        rs.getString("first_address"),
-                        rs.getString("last_address"),
-                        rs.getTimestamp("first_login"),
-                        rs.getTimestamp("last_login"),
-                        rs.getString("password"),
-                        rs.getString("salt"),
-                        false
-                ));
+                future.complete(createProfileFromRS(rs));
                 instance.getLogger().info("[database] [GetProfile] " + playerUUID.toString() + " took " + (System.currentTimeMillis() - start) + "ms");
             } catch(SQLException ex) {
                 future.completeExceptionally(ex);

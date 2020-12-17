@@ -2,6 +2,7 @@ package services.vortex.toastr.listeners;
 
 import com.minexd.pidgin.packet.handler.IncomingPacketHandler;
 import com.minexd.pidgin.packet.listener.PacketListener;
+import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -9,7 +10,10 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.backend.packets.AlertPacket;
 import services.vortex.toastr.backend.packets.CommandPacket;
+import services.vortex.toastr.backend.packets.GlobalMessagePacket;
 import services.vortex.toastr.backend.packets.KickPacket;
+
+import java.util.Optional;
 
 public class NetworkListener implements PacketListener {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
@@ -29,6 +33,17 @@ public class NetworkListener implements PacketListener {
         instance.getProxy().getCommandManager().executeImmediatelyAsync(instance.getProxy().getConsoleCommandSource(), packet.getCommand());
 
         instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Executing command: " + packet.getCommand());
+    }
+
+    @IncomingPacketHandler
+    public void onGlobalMessage(GlobalMessagePacket packet) {
+        final Optional<Player> optionalPlayer = instance.getProxy().getPlayer(packet.getReceiver());
+        if(!optionalPlayer.isPresent()) return;
+
+        final Player target = optionalPlayer.get();
+        final TextComponent message = LegacyComponentSerializer.legacyAmpersand().deserialize("&8[&b&l" + packet.getOrigin() + "&8] &3" + packet.getReceiver() + "&r: " + packet.getMessage());
+
+        target.sendMessage(message);
     }
 
     @IncomingPacketHandler

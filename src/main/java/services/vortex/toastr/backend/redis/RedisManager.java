@@ -9,6 +9,7 @@ import redis.clients.jedis.*;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.backend.packets.AlertPacket;
 import services.vortex.toastr.backend.packets.CommandPacket;
+import services.vortex.toastr.backend.packets.GlobalMessagePacket;
 import services.vortex.toastr.backend.packets.KickPacket;
 import services.vortex.toastr.listeners.NetworkListener;
 import services.vortex.toastr.profile.PlayerData;
@@ -50,6 +51,7 @@ public class RedisManager {
         Arrays.asList(
                 AlertPacket.class,
                 CommandPacket.class,
+                GlobalMessagePacket.class,
                 KickPacket.class
         ).forEach(pidgin::registerPacket);
 
