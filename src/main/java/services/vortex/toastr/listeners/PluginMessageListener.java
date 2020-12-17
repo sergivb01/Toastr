@@ -40,7 +40,7 @@ public class PluginMessageListener {
                 String server = input.readUTF();
                 int players;
                 if(server.equalsIgnoreCase("ALL"))
-                    players = instance.getRedisManager().getOnlinePlayers();
+                    players = instance.getRedisManager().getOnlinePlayers().get();
                 else
                     players = Math.toIntExact(instance.getRedisManager().getServerCount(server));
 

@@ -21,12 +21,13 @@ public class PlayerListener {
 
     public PlayerListener() {
         instance.getProxy().getScheduler().buildTask(instance, () -> {
+            int online = instance.getRedisManager().getOnlinePlayers().get();
 
             Component header, footer;
             for(Player player : instance.getProxy().getAllPlayers()) {
                 String server = player.getCurrentServer().isPresent() ? player.getCurrentServer().get().getServerInfo().getName() : "unknown";
-                header = instance.getConfig().getMessage("header", "proxy", instance.getRedisManager().getProxyName(), "online", Integer.toString(instance.getRedisManager().getOnlinePlayers()), "server", server);
-                footer = instance.getConfig().getMessage("footer", "proxy", instance.getRedisManager().getProxyName(), "online", Integer.toString(instance.getRedisManager().getOnlinePlayers()), "server", server);
+                header = instance.getConfig().getMessage("header", "proxy", instance.getRedisManager().getProxyName(), "online", Integer.toString(online), "server", server);
+                footer = instance.getConfig().getMessage("footer", "proxy", instance.getRedisManager().getProxyName(), "online", Integer.toString(online), "server", server);
 
                 player.getTabList().setHeaderAndFooter(header, footer);
             }
@@ -64,7 +65,7 @@ public class PlayerListener {
     public void onProxyPing(ProxyPingEvent event) {
         ServerPing ping = event.getPing();
 
-        ping.asBuilder().onlinePlayers(instance.getRedisManager().getOnlinePlayers());
+        event.setPing(ping.asBuilder().onlinePlayers(instance.getRedisManager().getOnlinePlayers().get()).build());
     }
 
 }

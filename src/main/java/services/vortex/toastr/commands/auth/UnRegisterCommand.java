@@ -21,10 +21,11 @@ public class UnRegisterCommand implements SimpleCommand {
         Player player = (Player) invocation.source();
         Profile profile = Profile.getProfiles().get(player.getUniqueId());
 
-        if(profile.getAccountType() == Profile.AccountType.PREMIUM) {
-            player.sendMessage(Component.text("You are a premium user.").color(NamedTextColor.RED));
-            return;
-        }
+        // TODO: BETA change
+//        if(profile.getAccountType() == Profile.AccountType.PREMIUM) {
+//            player.sendMessage(Component.text("You are a premium user.").color(NamedTextColor.RED));
+//            return;
+//        }
 
         if(!profile.isLoggedIn()) {
             player.sendMessage(Component.text("login first").color(NamedTextColor.RED));

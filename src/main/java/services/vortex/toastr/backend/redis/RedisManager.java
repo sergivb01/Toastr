@@ -16,6 +16,7 @@ import services.vortex.toastr.resolver.Resolver;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RedisManager {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
@@ -27,7 +28,7 @@ public class RedisManager {
     private final ScheduledTask updateTask, inconsistencyProxyTask, clockDifferenceTask;
 
     @Getter
-    private int onlinePlayers;
+    private final AtomicInteger onlinePlayers = new AtomicInteger(0);
     @Getter
     private final Set<String> knownProxies = new HashSet<>();
     @Getter
@@ -116,7 +117,7 @@ public class RedisManager {
             jedis.hset("proxies", proxyName, Long.toString(System.currentTimeMillis()));
         }
 
-        onlinePlayers = online;
+        onlinePlayers.set(online);
     }
 
     private void fixPlayerProxyInconsistency() {

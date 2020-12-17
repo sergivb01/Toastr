@@ -19,7 +19,7 @@ public class GListCommand implements SimpleCommand {
         final String[] args = invocation.arguments();
         final CommandSource source = invocation.source();
 
-        int global = instance.getRedisManager().getOnlinePlayers();
+        int global = instance.getRedisManager().getOnlinePlayers().get();
         if(args.length == 0) {
             source.sendMessage(instance.getConfig().getMessage("glist_global", "online", Integer.toString(global)));
             return;

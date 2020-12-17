@@ -12,9 +12,4 @@ public class ServerIDCommand implements SimpleCommand {
         invocation.source().sendMessage(instance.getConfig().getMessage("server_id", "proxy", instance.getRedisManager().getProxyName()));
     }
 
-    @Override
-    public boolean hasPermission(Invocation invocation) {
-        return invocation.source().hasPermission("toastr.command.serverid");
-    }
-
 }

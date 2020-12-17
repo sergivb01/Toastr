@@ -1,5 +1,6 @@
 package services.vortex.toastr.commands.essentials;
 
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -11,13 +12,19 @@ public class SendToAllCommand implements RawCommand {
 
     @Override
     public void execute(Invocation invocation) {
+        final CommandSource source = invocation.source();
         if(invocation.arguments().isEmpty()) {
-            invocation.source().sendMessage(Component.text("/sendtoall <message>").color(NamedTextColor.RED));
+            source.sendMessage(Component.text("/sendtoall <message>").color(NamedTextColor.RED));
+            return;
+        }
+
+        if(invocation.arguments().trim().equalsIgnoreCase("end") || invocation.arguments().trim().equalsIgnoreCase("shutdown")) {
+            source.sendMessage(Component.text("Don't do that please :(").color(NamedTextColor.RED));
             return;
         }
 
         instance.getRedisManager().getPidgin().sendPacket(new CommandPacket(invocation.arguments()));
-        invocation.source().sendMessage(Component.text("Sent command to all proxy instances!").color(NamedTextColor.GREEN));
+        source.sendMessage(Component.text("Sent command to all proxy instances!").color(NamedTextColor.GREEN));
     }
 
     @Override

@@ -106,8 +106,6 @@ public class BackendStorage {
                 final String expected = rs.getString("player_name");
                 future.complete(!username.equals(expected));
 
-                instance.getLogger().warn("db = " + expected + " | res = " + !username.equals(expected));
-
                 instance.getLogger().info("[database] [CheckNamecase] " + username + " took " + (System.currentTimeMillis() - start) + "ms");
             } catch(SQLException ex) {
                 future.completeExceptionally(ex);
