@@ -18,11 +18,13 @@ public class CacheManager {
     private long lastAllOnline = 0;
 
     private final Cache<String, UUID> uuids = CacheBuilder.newBuilder()
-            .expireAfterWrite(5, TimeUnit.SECONDS)
+            .expireAfterWrite(15, TimeUnit.MINUTES)
+            .maximumSize(250)
             .build();
 
     private final Cache<UUID, PlayerData> players = CacheBuilder.newBuilder()
-            .expireAfterWrite(5, TimeUnit.SECONDS)
+            .expireAfterWrite(10, TimeUnit.SECONDS)
+            .maximumSize(50)
             .build();
 
     private final Cache<String, Resolver.Result> resolver = CacheBuilder.newBuilder()

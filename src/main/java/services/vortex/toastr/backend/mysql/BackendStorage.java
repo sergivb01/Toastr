@@ -26,10 +26,14 @@ public class BackendStorage {
     private final HikariDataSource hikari;
 
     public BackendStorage(BackendCredentials credentials) {
+        // Number of threads = Number of Available Cores * (1 + Wait time / Service time)
+        int numThreads = Runtime.getRuntime().availableProcessors() * (1 + 10 / 5);
+        instance.getLogger().info("Setting a max pool of " + numThreads + " for the Executor");
+
         ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("Toastr Storage - %1$d")
                 .setDaemon(true).build();
-        this.executor = new ThreadPoolExecutor(MIN_IDLE, Integer.MAX_VALUE, 30L, TimeUnit.SECONDS, new SynchronousQueue<>(), threadFactory);
-        this.monitor = new MyMonitorThread(executor, 60);
+        this.executor = new ThreadPoolExecutor(MIN_IDLE, numThreads, 15L, TimeUnit.SECONDS, new SynchronousQueue<>(), threadFactory);
+        this.monitor = new MyMonitorThread(executor, 15 * 60);
         Thread monitorThread = new Thread(monitor);
         monitorThread.start();
 
