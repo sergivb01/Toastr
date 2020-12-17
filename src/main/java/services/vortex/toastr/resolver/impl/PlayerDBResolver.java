@@ -19,27 +19,25 @@ public class PlayerDBResolver extends Resolver {
         Request request = new Request.Builder()
                 .url(PLAYERDB_URL + rawUsername)
                 .build();
-        final Response response = httpClient.newCall(request).execute();
 
-        if(response.code() != 200 && response.code() != 500) {
-            response.body().close();
-            throw new Exception("Invalid status code from PlayerDB " + response.code());
+        try(final Response response = httpClient.newCall(request).execute()) {
+            if(response.code() != 200 && response.code() != 500) {
+                throw new Exception("Invalid status code from PlayerDB " + response.code());
+            }
+
+            final JsonObject data = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
+            if(!data.get("code").getAsString().equals("player.found")) {
+                throw new Exception("Player not found but API can't verify player exists");
+            }
+
+            final JsonObject meta = data.get("data").getAsJsonObject().get("player").getAsJsonObject();
+
+            final String username = meta.get("username").getAsString();
+            final String rawUUID = meta.get("id").getAsString();
+            UUID playerUUID = UUID.fromString(rawUUID);
+
+            return new Result(username, playerUUID, true, getSource());
         }
-
-        final JsonObject data = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
-        response.body().close();
-
-        if(!data.get("code").getAsString().equals("player.found")) {
-            throw new Exception("Player not found but API can't verify player exists");
-        }
-
-        final JsonObject meta = data.get("data").getAsJsonObject().get("player").getAsJsonObject();
-
-        final String username = meta.get("username").getAsString();
-        final String rawUUID = meta.get("id").getAsString();
-        UUID playerUUID = UUID.fromString(rawUUID);
-
-        return new Result(username, playerUUID, true, getSource());
     }
 
 }

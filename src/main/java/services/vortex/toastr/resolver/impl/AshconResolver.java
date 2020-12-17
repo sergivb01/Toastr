@@ -19,26 +19,24 @@ public class AshconResolver extends Resolver {
         Request request = new Request.Builder()
                 .url(ASHCON_URL + rawUsername)
                 .build();
-        final Response response = httpClient.newCall(request).execute();
 
-        if(response.code() == 404) {
-            response.body().close();
-            return fromOffline(rawUsername);
+        try(final Response response = httpClient.newCall(request).execute()) {
+            if(response.code() == 404) {
+                return fromOffline(rawUsername);
+            }
+
+            if(response.code() != 200) {
+                throw new Exception("Invalid status code from Ashcon " + response.code());
+            }
+
+            final JsonObject data = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
+
+            String username = data.get("username").getAsString();
+            String rawUUID = data.get("uuid").getAsString();
+            UUID playerUUID = UUID.fromString(rawUUID);
+
+            return new Result(username, playerUUID, true, getSource());
         }
-
-        if(response.code() != 200) {
-            response.body().close();
-            throw new Exception("Invalid status code from Ashcon " + response.code());
-        }
-
-        final JsonObject data = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
-        response.body().close();
-
-        String username = data.get("username").getAsString();
-        String rawUUID = data.get("uuid").getAsString();
-        UUID playerUUID = UUID.fromString(rawUUID);
-
-        return new Result(username, playerUUID, true, getSource());
     }
 
 }
