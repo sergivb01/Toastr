@@ -7,10 +7,7 @@ import com.velocitypowered.api.scheduler.ScheduledTask;
 import lombok.Getter;
 import redis.clients.jedis.*;
 import services.vortex.toastr.ToastrPlugin;
-import services.vortex.toastr.backend.packets.AlertPacket;
-import services.vortex.toastr.backend.packets.CommandPacket;
-import services.vortex.toastr.backend.packets.GlobalMessagePacket;
-import services.vortex.toastr.backend.packets.KickPacket;
+import services.vortex.toastr.backend.packets.*;
 import services.vortex.toastr.listeners.NetworkListener;
 import services.vortex.toastr.profile.PlayerData;
 import services.vortex.toastr.resolver.Resolver;
@@ -50,6 +47,7 @@ public class RedisManager {
         pidgin.registerListener(new NetworkListener());
         Arrays.asList(
                 AlertPacket.class,
+                ClearCachePacket.class,
                 CommandPacket.class,
                 GlobalMessagePacket.class,
                 KickPacket.class
@@ -80,7 +78,7 @@ public class RedisManager {
 
             try(final Pipeline pipe = jedis.pipelined()) {
                 pipe.hdel("proxies", proxy);
-                pipe.del(" proxy:" + proxy + ":onlines");
+                pipe.del("proxy:" + proxy + ":onlines");
 
                 for(RegisteredServer server : instance.getProxy().getAllServers()) {
                     pipe.srem("server:" + server.getServerInfo().getName(), onlines.keySet().toArray(new String[0]));
@@ -374,9 +372,10 @@ public class RedisManager {
         }
     }
 
-    public void publishMessage(String channel, String message) {
-        try(Jedis jedis = getConnection()) {
-            jedis.publish(channel, message);
+    public void clearCache(String username){
+        try(Jedis jedis = getConnection()){
+            jedis.del("resolver:" + username.toLowerCase());
+            jedis.del("playeruuid:" + username.toLowerCase());
         }
     }
 

@@ -23,7 +23,7 @@ public class KickPacket implements Packet {
 
     @Override
     public int id() {
-        return 4;
+        return 5;
     }
 
     @Override

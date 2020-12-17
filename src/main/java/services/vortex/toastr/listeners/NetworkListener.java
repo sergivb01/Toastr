@@ -8,10 +8,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import services.vortex.toastr.ToastrPlugin;
-import services.vortex.toastr.backend.packets.AlertPacket;
-import services.vortex.toastr.backend.packets.CommandPacket;
-import services.vortex.toastr.backend.packets.GlobalMessagePacket;
-import services.vortex.toastr.backend.packets.KickPacket;
+import services.vortex.toastr.backend.packets.*;
 
 import java.util.Optional;
 
@@ -26,6 +23,14 @@ public class NetworkListener implements PacketListener {
         instance.getProxy().getConsoleCommandSource().sendMessage(alert);
 
         instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Sent alert: " + packet.getMessage());
+    }
+
+    @IncomingPacketHandler
+    public void onClearCache(ClearCachePacket packet) {
+        instance.getRedisManager().clearCache(packet.getPlayer());
+        instance.getCacheManager().clearCache(packet.getPlayer());
+
+        instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Requested clearcache for " + packet.getPlayer());
     }
 
     @IncomingPacketHandler

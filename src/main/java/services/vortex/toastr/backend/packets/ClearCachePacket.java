@@ -8,31 +8,32 @@ import services.vortex.toastr.ToastrPlugin;
 
 @NoArgsConstructor
 @Getter
-public class CommandPacket implements Packet {
+public class ClearCachePacket implements Packet {
     private String origin;
-    private String command;
+    private String player;
 
-    public CommandPacket(String command) {
-        this.command = command;
-        this.origin = ToastrPlugin.getInstance().getRedisManager().getProxyName();
+    public ClearCachePacket(String player) {
+        this.player = player;
+        this.origin = this.origin = ToastrPlugin.getInstance().getRedisManager().getProxyName();
     }
 
     @Override
     public int id() {
-        return 3;
+        return 2;
     }
 
     @Override
     public JsonObject serialize() {
         JsonObject data = new JsonObject();
         data.addProperty("origin", origin);
-        data.addProperty("command", command);
+        data.addProperty("player", player);
         return data;
     }
 
     @Override
     public void deserialize(JsonObject data) {
         origin = data.get("origin").getAsString();
-        command = data.get("command").getAsString();
+        player = data.get("player").getAsString();
     }
+
 }

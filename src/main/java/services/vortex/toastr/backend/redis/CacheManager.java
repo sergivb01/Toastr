@@ -116,4 +116,9 @@ public class CacheManager {
         return uuid;
     }
 
+    public void clearCache(String username) {
+        uuids.invalidate(username);
+        resolver.invalidate(username);
+    }
+
 }

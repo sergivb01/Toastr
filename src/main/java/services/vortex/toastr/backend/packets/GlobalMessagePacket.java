@@ -23,7 +23,7 @@ public class GlobalMessagePacket implements Packet {
 
     @Override
     public int id() {
-        return 3;
+        return 4;
     }
 
     @Override

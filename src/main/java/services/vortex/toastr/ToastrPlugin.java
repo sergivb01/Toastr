@@ -18,6 +18,7 @@ import services.vortex.toastr.backend.mysql.BackendCredentials;
 import services.vortex.toastr.backend.mysql.BackendStorage;
 import services.vortex.toastr.backend.redis.CacheManager;
 import services.vortex.toastr.backend.redis.RedisManager;
+import services.vortex.toastr.commands.admin.*;
 import services.vortex.toastr.commands.auth.ChangePasswordCommand;
 import services.vortex.toastr.commands.auth.LoginCommand;
 import services.vortex.toastr.commands.auth.RegisterCommand;
@@ -86,10 +87,7 @@ public class ToastrPlugin {
         CommandManager commandManager = proxy.getCommandManager();
 
         commandManager.register("alert", new AlertCommand());
-        commandManager.unregister("glist");
-        commandManager.register("glist", new GListCommand());
-        commandManager.register("gmsg", new GlobalMessageCommand());
-        commandManager.register("tprofile", new ProfileCommand());
+        commandManager.register("clearcache", new ClearCacheCommand());
         commandManager.register("toastrl", new ReloadCommand());
         commandManager.register("sendtoall", new SendToAllCommand());
         commandManager.register("serverid", new ServerIDCommand());
@@ -99,7 +97,11 @@ public class ToastrPlugin {
         commandManager.register("register", new RegisterCommand());
         commandManager.register("unregister", new UnRegisterCommand());
 
+        commandManager.unregister("glist");
+        commandManager.register("glist", new GListCommand());
+        commandManager.register("gmsg", new GlobalMessageCommand());
         commandManager.register("lobby", new LobbyCommand());
+        commandManager.register("tprofile", new ProfileCommand());
 
         Arrays.asList(
                 new AuthListener(),
