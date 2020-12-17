@@ -13,24 +13,20 @@ import java.util.concurrent.TimeUnit;
 
 public class CacheManager {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
-
-    private Set<String> allOnline = new HashSet<>();
-    private long lastAllOnline = 0;
-
     private final Cache<String, UUID> uuids = CacheBuilder.newBuilder()
             .expireAfterWrite(15, TimeUnit.MINUTES)
             .maximumSize(250)
             .build();
-
     private final Cache<UUID, PlayerData> players = CacheBuilder.newBuilder()
             .expireAfterWrite(10, TimeUnit.SECONDS)
             .maximumSize(50)
             .build();
-
     private final Cache<String, Resolver.Result> resolver = CacheBuilder.newBuilder()
             .expireAfterWrite(5, TimeUnit.MINUTES)
             .maximumSize(250)
             .build();
+    private Set<String> allOnline = new HashSet<>();
+    private long lastAllOnline = 0;
 
     /**
      * This method gets all online player's usernames, if not cached it gets data from redis

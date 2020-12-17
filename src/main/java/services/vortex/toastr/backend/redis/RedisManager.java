@@ -372,8 +372,8 @@ public class RedisManager {
         }
     }
 
-    public void clearCache(String username){
-        try(Jedis jedis = getConnection()){
+    public void clearCache(String username) {
+        try(Jedis jedis = getConnection()) {
             jedis.del("resolver:" + username.toLowerCase());
             jedis.del("playeruuid:" + username.toLowerCase());
         }

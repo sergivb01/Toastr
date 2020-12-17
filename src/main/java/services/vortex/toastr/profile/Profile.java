@@ -54,7 +54,7 @@ public class Profile {
     public enum CheckAccountResult {
         DIFFERENT_NAMECASE,
         OLD_PREMIUM,
-        ALLOWED;
+        ALLOWED
     }
 
 }

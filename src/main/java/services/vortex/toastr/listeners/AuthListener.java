@@ -31,9 +31,9 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class AuthListener {
-    private final ToastrPlugin instance = ToastrPlugin.getInstance();
     public static final HashMap<Player, Long> pendingRegister = new HashMap<>();
     public static final HashMap<Player, Long> pendingLogin = new HashMap<>();
+    private final ToastrPlugin instance = ToastrPlugin.getInstance();
 
     public AuthListener() {
         instance.getProxy().getScheduler().buildTask(instance, new RegisterTask(pendingRegister)).repeat(5, TimeUnit.SECONDS).schedule();
