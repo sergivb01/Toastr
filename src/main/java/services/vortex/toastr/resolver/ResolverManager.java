@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.resolver.impl.AshconResolver;
 import services.vortex.toastr.resolver.impl.MineToolsResolver;
+import services.vortex.toastr.resolver.impl.PlayerDBResolver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,8 @@ public class ResolverManager {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
     private final Resolver[] resolvers = new Resolver[]{
             new AshconResolver(),
-            new MineToolsResolver()
+            new MineToolsResolver(),
+            new PlayerDBResolver()
     };
 
     public Resolver.Result resolveUsername(String username) throws Exception {
