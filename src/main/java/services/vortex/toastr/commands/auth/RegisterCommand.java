@@ -9,6 +9,7 @@ import services.vortex.toastr.listeners.AuthListener;
 import services.vortex.toastr.profile.Profile;
 import services.vortex.toastr.utils.HashMethods;
 import services.vortex.toastr.utils.SaltGenerator;
+import services.vortex.toastr.utils.StringUtils;
 
 public class RegisterCommand implements SimpleCommand {
     private final ToastrPlugin instance = ToastrPlugin.getInstance();
@@ -28,7 +29,7 @@ public class RegisterCommand implements SimpleCommand {
 //            return;
 //        }
 
-        if(profile.getPassword() != null) {
+        if(!StringUtils.isNullOrEmpty(profile.getPassword())) {
             player.sendMessage(Component.text("already registered...").color(NamedTextColor.RED));
             return;
         }
