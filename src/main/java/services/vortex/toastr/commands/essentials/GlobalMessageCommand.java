@@ -5,12 +5,14 @@ import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.backend.packets.GlobalMessagePacket;
 import services.vortex.toastr.profile.PlayerData;
 import services.vortex.toastr.utils.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -44,12 +46,18 @@ public class GlobalMessageCommand implements SimpleCommand {
         }
 
         String message = StringUtils.joinArray(args, " ", 2);
-        instance.getRedisManager().getPidgin().sendPacket(new GlobalMessagePacket(sender, args[1], message));
+        instance.getRedisManager().getPidgin().sendPacket(new GlobalMessagePacket(sender, args[0], message));
+
+        source.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize("&8[&b&l" + instance.getRedisManager().getProxyName() + "&8] &3You &6-> &3" + args[0] + "&r: " + message));
     }
 
     @Override
     public CompletableFuture<List<String>> suggestAsync(Invocation invocation) {
         CompletableFuture<List<String>> future = new CompletableFuture<>();
+        if(invocation.arguments().length > 1) {
+            future.complete(Collections.emptyList());
+            return future;
+        }
 
         instance.getProxy().getScheduler().buildTask(instance, () -> {
             List<String> res = new ArrayList<>();

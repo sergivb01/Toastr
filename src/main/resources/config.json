@@ -49,6 +49,7 @@
 	"glist_global": "<dark_green>There are <online> online players on the network</dark_green>",
 	"glist_proxy": "<dark_green>There are <online> online players on the <proxy> proxy.</dark_green>",
 	"glist_per_server": "<yellow><bold> * <reset><dark_green><server><reset>: <gray>(<online>)<reset> <players>",
+	"glist_per_proxy": "<yellow><bold> * <reset><dark_green><proxy> <gray>(Proxy) <reset>: <online>)",
 
 	"profile_usage": "<red>Usage: /tprofile <player></red>",
 	"profile_player_not_found": "<red>Player not found </red>",

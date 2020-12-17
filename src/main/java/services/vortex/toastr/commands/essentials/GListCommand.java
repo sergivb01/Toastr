@@ -37,6 +37,9 @@ public class GListCommand implements SimpleCommand {
                 final Set<String> players = instance.getRedisManager().getServerUsernames(server.getServerInfo().getName());
                 source.sendMessage(instance.getConfig().getMessage("glist_per_server", "server", server.getServerInfo().getName(), "online", Long.toString(players.size()), "players", String.join(", ", players)));
             }
+            for(String knownProxy : instance.getRedisManager().getKnownProxies()) {
+                source.sendMessage(instance.getConfig().getMessage("glist_per_proxy", "proxy", knownProxy, "online", Long.toString(instance.getRedisManager().getProxyCount(knownProxy))));
+            }
             source.sendMessage(instance.getConfig().getMessage("glist_global", "online", Integer.toString(global)));
             return;
         }
