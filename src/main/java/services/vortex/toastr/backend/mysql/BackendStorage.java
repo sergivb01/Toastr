@@ -50,6 +50,7 @@ public class BackendStorage {
         config.addDataSourceProperty("user", credentials.getUsername());
         config.addDataSourceProperty("password", credentials.getPassword());
 
+        config.addDataSourceProperty("paranoid", true);
         config.addDataSourceProperty("cachePrepStmts", true);
         config.addDataSourceProperty("prepStmtCacheSize", 250);
         config.addDataSourceProperty("prepStmtCacheSqlLimit", 2048);
