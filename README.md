@@ -19,8 +19,8 @@ INSERT INTO sergi_toastr.playerdata (uuid, player_name, player_name_lower, first
 # TODO Features/commands
 
 * [X] migrate to pidgin
-* [ ] two players can have the same nickname in the Database (remove unique index). If a premium user logs in with a cracked nickname, unregister cracked user. When checking for different namecase, ignore "invalid" accounts.
-* [ ] add thread limit
+* [X] two players can have the same nickname in the Database (remove unique index). If a premium user logs in with a cracked nickname, unregister cracked user. When checking for different namecase, ignore "invalid" accounts.
+* [X] add thread limit
 * [ ] add queue to retry failed queries
 * [ ] global /msg
 * [ ] stafflist
