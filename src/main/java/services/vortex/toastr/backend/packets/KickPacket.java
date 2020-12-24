@@ -5,11 +5,13 @@ import com.minexd.pidgin.packet.Packet;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import services.vortex.toastr.ToastrPlugin;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
+@ToString
 public class KickPacket implements Packet {
     private String origin;
     private String username;

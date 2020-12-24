@@ -5,8 +5,8 @@ import lombok.*;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 @Setter
@@ -15,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Profile {
     @Getter
-    private static final HashMap<UUID, Profile> profiles = new HashMap<>();
+    private static final ConcurrentHashMap<UUID, Profile> profiles = new ConcurrentHashMap<>();
 
     private final UUID uniqueId;
     private final String username;

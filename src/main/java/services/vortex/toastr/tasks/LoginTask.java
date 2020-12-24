@@ -6,18 +6,19 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 
-import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 public class LoginTask implements Runnable {
-    private final HashMap<Player, Long> pending;
+    private final ConcurrentHashMap<Player, Long> pending;
 
     @Override
     public void run() {
-        for(Player player : pending.keySet()) {
-            Long loggedAt = pending.get(player);
-            if((System.currentTimeMillis() - loggedAt) > TimeUnit.SECONDS.toMillis(30)) {
+        for(Map.Entry<Player, Long> entry : pending.entrySet()) {
+            final Player player = entry.getKey();
+            if((System.currentTimeMillis() - entry.getValue()) > TimeUnit.SECONDS.toMillis(30)) {
                 player.disconnect(Component.text("Login time exceeded. Please try again").color(NamedTextColor.RED));
                 return;
             }

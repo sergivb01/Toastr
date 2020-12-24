@@ -4,10 +4,12 @@ import com.google.gson.JsonObject;
 import com.minexd.pidgin.packet.Packet;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import services.vortex.toastr.ToastrPlugin;
 
 @NoArgsConstructor
 @Getter
+@ToString
 public class ClearCachePacket implements Packet {
     private String origin;
     private String player;

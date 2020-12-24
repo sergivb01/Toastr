@@ -2,39 +2,45 @@ package services.vortex.toastr.backend.packets;
 
 import com.google.gson.JsonObject;
 import com.minexd.pidgin.packet.Packet;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import services.vortex.toastr.ToastrPlugin;
 
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @ToString
-public class CommandPacket implements Packet {
+public class NetworkStatusPacket implements Packet {
     private String origin;
-    private String command;
+    private String proxy;
+    private boolean up;
 
-    public CommandPacket(String command) {
-        this.command = command;
+    public NetworkStatusPacket(String proxy, boolean up) {
+        this.proxy = proxy;
+        this.up = up;
         this.origin = ToastrPlugin.getInstance().getRedisManager().getProxyName();
     }
 
     @Override
     public int id() {
-        return 3;
+        return 6;
     }
 
     @Override
     public JsonObject serialize() {
         JsonObject data = new JsonObject();
         data.addProperty("origin", origin);
-        data.addProperty("command", command);
+        data.addProperty("proxy", proxy);
+        data.addProperty("up", up);
         return data;
     }
 
     @Override
     public void deserialize(JsonObject data) {
         origin = data.get("origin").getAsString();
-        command = data.get("command").getAsString();
+        proxy = data.get("proxy").getAsString();
+        up = data.get("up").getAsBoolean();
     }
 }

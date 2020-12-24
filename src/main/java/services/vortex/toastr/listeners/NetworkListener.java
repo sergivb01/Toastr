@@ -2,6 +2,12 @@ package services.vortex.toastr.listeners;
 
 import com.minexd.pidgin.packet.handler.IncomingPacketHandler;
 import com.minexd.pidgin.packet.listener.PacketListener;
+import com.velocitypowered.api.event.PostOrder;
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.connection.DisconnectEvent;
+import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
+import com.velocitypowered.api.event.player.ServerConnectedEvent;
+import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -11,6 +17,37 @@ import services.vortex.toastr.backend.packets.*;
 
 public class NetworkListener implements PacketListener {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
+
+    // TODO: broadcast packets to staff only
+
+    @Subscribe(order = PostOrder.LAST)
+    public void onInitialServerSelect(PlayerChooseInitialServerEvent event) {
+        if(!event.getInitialServer().isPresent()) return;
+
+        final Player player = event.getPlayer();
+        if(!player.hasPermission("toastr.utils.staff")) return;
+
+        instance.getRedisManager().getPidgin().sendPacket(new StaffJoinPacket(player.getUsername(), event.getInitialServer().get().getServerInfo().getName()));
+    }
+
+    @Subscribe
+    public void onStaffQuit(DisconnectEvent event) {
+        final Player player = event.getPlayer();
+
+        if(!player.hasPermission("toastr.utils.staff") || !player.getCurrentServer().isPresent()) return;
+
+        instance.getRedisManager().getPidgin().sendPacket(new StaffQuitPacket(player.getUsername(), player.getCurrentServer().get().getServerInfo().getName()));
+    }
+
+    @Subscribe
+    public void onServerSwitch(ServerConnectedEvent event) {
+        if(!event.getPreviousServer().isPresent()) return;
+
+        final Player player = event.getPlayer();
+        if(!player.hasPermission("toastr.utils.staff")) return;
+
+        instance.getRedisManager().getPidgin().sendPacket(new StaffSwitchPacket(player.getUsername(), event.getPreviousServer().get().getServerInfo().getName(), event.getServer().getServerInfo().getName()));
+    }
 
     @IncomingPacketHandler
     public void onAlert(AlertPacket packet) {
@@ -48,7 +85,7 @@ public class NetworkListener implements PacketListener {
     }
 
     @IncomingPacketHandler
-    public void onPacket(KickPacket packet) {
+    public void onKick(KickPacket packet) {
         instance.getProxy().getPlayer(packet.getUsername()).ifPresent(player -> {
             final TextComponent reason = Component.text("Cross network kick requested from " + packet.getOrigin() + ":")
                     .color(NamedTextColor.RED)
@@ -57,6 +94,34 @@ public class NetworkListener implements PacketListener {
         });
 
         instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Requested cross-network kick for " + packet.getUsername() + ": " + packet.getReason());
+    }
+
+    @IncomingPacketHandler
+    public void onNetworkStatus(NetworkStatusPacket packet) {
+        instance.getProxy().getAllPlayers().forEach(player -> player.sendMessage(Component.text(packet.toString())));
+
+        instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Proxy " + packet.getOrigin() + " is now " + (packet.isUp() ? "online" : "offline"));
+    }
+
+    @IncomingPacketHandler
+    public void onStaffJoin(StaffJoinPacket packet) {
+        instance.getProxy().getAllPlayers().forEach(player -> player.sendMessage(Component.text(packet.toString())));
+
+        instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Staff " + packet.getPlayer() + " joined the network");
+    }
+
+    @IncomingPacketHandler
+    public void onStaffQuit(StaffQuitPacket packet) {
+        instance.getProxy().getAllPlayers().forEach(player -> player.sendMessage(Component.text(packet.toString())));
+
+        instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Staff " + packet.getPlayer() + " quit the network");
+    }
+
+    @IncomingPacketHandler
+    public void onStaffSwitch(StaffSwitchPacket packet) {
+        instance.getProxy().getAllPlayers().forEach(player -> player.sendMessage(Component.text(packet.toString())));
+
+        instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Staff " + packet.getPlayer() + " switched from " + packet.getFrom() + " to " + packet.getTo());
     }
 
 }

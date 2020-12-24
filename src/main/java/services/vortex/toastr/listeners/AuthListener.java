@@ -26,13 +26,15 @@ import services.vortex.toastr.utils.StringUtils;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import static com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus.*;
+
 public class AuthListener {
-    public static final HashMap<Player, Long> pendingRegister = new HashMap<>();
-    public static final HashMap<Player, Long> pendingLogin = new HashMap<>();
+    public static final ConcurrentHashMap<Player, Long> pendingRegister = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<Player, Long> pendingLogin = new ConcurrentHashMap<>();
     private final ToastrPlugin instance = ToastrPlugin.getInstance();
 
     public AuthListener() {
@@ -158,7 +160,8 @@ public class AuthListener {
         pendingRegister.remove(player);
         pendingLogin.remove(player);
 
-        if(event.getLoginStatus().equals(DisconnectEvent.LoginStatus.CANCELLED_BY_PROXY)) {
+        final DisconnectEvent.LoginStatus loginStatus = event.getLoginStatus();
+        if(loginStatus.equals(CANCELLED_BY_PROXY) || loginStatus.equals(CANCELLED_BY_USER_BEFORE_COMPLETE) || loginStatus.equals(PRE_SERVER_JOIN)) {
             return;
         }
 
@@ -207,7 +210,7 @@ public class AuthListener {
         Player player = (Player) event.getCommandSource();
         Profile profile = Profile.getProfiles().get(player.getUniqueId());
 
-        if(profile.isLoggedIn()) return;
+        if(profile != null && profile.isLoggedIn()) return;
 
         player.sendMessage(Component.text("You may not execute this command without being logging in!").color(NamedTextColor.RED));
         event.setResult(CommandExecuteEvent.CommandResult.denied());
@@ -218,7 +221,7 @@ public class AuthListener {
         Player player = event.getPlayer();
         Profile profile = Profile.getProfiles().get(player.getUniqueId());
 
-        if(profile.isLoggedIn()) return;
+        if(profile != null && profile.isLoggedIn()) return;
 
         player.sendMessage(Component.text("You may not send chat messages without being logging in!").color(NamedTextColor.RED));
         event.setResult(PlayerChatEvent.ChatResult.denied());
@@ -232,7 +235,7 @@ public class AuthListener {
         if(server.isPresent() && instance.getLobbyManager().isLobby(server.get())) return;
 
         Profile profile = Profile.getProfiles().get(event.getPlayer().getUniqueId());
-        if(!profile.isLoggedIn()) {
+        if(profile == null || !profile.isLoggedIn()) {
             event.getPlayer().sendMessage(Component.text("You may not switch servers without logging in!").color(NamedTextColor.RED));
             event.setResult(ServerPreConnectEvent.ServerResult.denied());
         }
