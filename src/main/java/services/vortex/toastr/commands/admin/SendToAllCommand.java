@@ -14,11 +14,11 @@ public class SendToAllCommand implements RawCommand {
     public void execute(Invocation invocation) {
         final CommandSource source = invocation.source();
         if(invocation.arguments().isEmpty()) {
-            source.sendMessage(Component.text("/sendtoall <message>").color(NamedTextColor.RED));
+            source.sendMessage(Component.text("/sendtoall <command>").color(NamedTextColor.RED));
             return;
         }
 
-        if(invocation.arguments().trim().equalsIgnoreCase("end") || invocation.arguments().trim().equalsIgnoreCase("shutdown")) {
+        if(invocation.arguments().trim().equalsIgnoreCase("end") || invocation.arguments().trim().equalsIgnoreCase("shutdown") || invocation.arguments().trim().equalsIgnoreCase("sendtoall")) {
             source.sendMessage(Component.text("Don't do that please :(").color(NamedTextColor.RED));
             return;
         }
