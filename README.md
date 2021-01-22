@@ -4,6 +4,31 @@ Should probably make a good description
 
 * [ ] Replace "return null" to Optional
 
+# Creation
+```mysql
+CREATE TABLE playerdata
+(
+    uuid              char(36) character set ascii  NOT NULL,
+    player_name       varchar(16)                   NOT NULL,
+    player_name_lower varchar(16)                   NOT NULL,
+    first_address     int unsigned                  NOT NULL comment 'ipv4 address stored as an unsigned int',
+    last_address      int unsigned                  NOT NULL comment 'ipv4 address stored as an unsigned int',
+    first_login       timestamp                     NOT NULL,
+    last_login        timestamp                     NOT NULL,
+    password          varchar(256)                  NULL,
+    salt              varchar(10)                   NULL,
+    account_type      varchar(25) default 'PREMIUM' NOT NULL,
+    CONSTRAINT playerdata_uuid_uindex
+        UNIQUE (uuid)
+) COMMENT 'describes the essential data from a player';
+
+CREATE INDEX playerdata_username_index ON playerdata (player_name);
+
+CREATE INDEX playerdata_usernamelower_index ON playerdata (player_name_lower);
+
+ALTER TABLE playerdata ADD PRIMARY KEY (uuid);
+```
+
 # Migration
 ```mysql
 INSERT INTO sergi_toastr.playerdata (uuid, player_name, player_name_lower, first_address, last_address, first_login, last_login, password, salt, account_type)
@@ -12,8 +37,7 @@ INSERT INTO sergi_toastr.playerdata (uuid, player_name, player_name_lower, first
     	WHEN old.premium = 1 THEN "PREMIUM"
     	ELSE "CRACKED"
     END
-    FROM water_auth.playerdata old
-    LIMIT 10000;
+    FROM dynamic_auth.playerdata old;
 ```
 
 # TODO Features/commands
