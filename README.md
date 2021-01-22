@@ -21,12 +21,12 @@ INSERT INTO sergi_toastr.playerdata (uuid, player_name, player_name_lower, first
 * [X] migrate to pidgin
 * [X] two players can have the same nickname in the Database (remove unique index). If a premium user logs in with a cracked nickname, unregister cracked user. When checking for different namecase, ignore "invalid" accounts.
 * [X] add thread limit
+* [X] global /msg
+* [X] MOTD System (or use MiniMOTD/PistonMOTD)
 * [ ] add queue to retry failed queries
-* [ ] global /msg
 * [ ] stafflist
 * [ ] maintenance (proxy instance)
 * [ ] maintenance (global)
-* [ ] MOTD System (or use MiniMOTD/PistonMOTD)
 * [ ] AntiVPN
 * [ ] sub-servers managers: add/remove/edit servers
 * [ ] Auto announcer
@@ -35,9 +35,10 @@ INSERT INTO sergi_toastr.playerdata (uuid, player_name, player_name_lower, first
 
 * Command framework
 * Auth
-    * [ ] clear cache from user (in-memory and redis -> invoke pubsub event)
+    * [X] clear cache from user (in-memory and redis -> invoke pubsub event)
     * [ ] register other
     * [ ] unregister other
     * [ ] changepassword other
 * Essentials (with cross-proxy support!)
     * [ ] send
+    * [ ] warn when proxy-name is empty/null

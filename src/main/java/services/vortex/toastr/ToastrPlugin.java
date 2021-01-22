@@ -67,7 +67,7 @@ public class ToastrPlugin {
         this.proxy = proxy;
         this.dataDirector = dataDirector;
     }
-
+    
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
         instance = this;

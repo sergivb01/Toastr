@@ -7,7 +7,9 @@
 	"database": "toastr"
   },
 
-  "proxy-name": "",
+  "proxy-name": "changeme",
+  "proxy_motd_1" : "&6Another server running Toastr",
+  "proxy_motd_2" : "&7Check us out on GitHub",
   "redis": {
 	"host": "127.0.0.1",
 	"port": 6379,
