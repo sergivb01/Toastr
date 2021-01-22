@@ -25,6 +25,7 @@ public class CacheManager {
             .expireAfterWrite(5, TimeUnit.MINUTES)
             .maximumSize(500)
             .build();
+    // TODO: allOnline should be concurrently safe
     private Set<String> allOnline = new HashSet<>();
     private long lastAllOnline = 0;
 

@@ -60,12 +60,16 @@ public class RedisManager {
                 StaffSwitchPacket.class
         ).forEach(pidgin::registerPacket);
 
-        instance.getProxy().getScheduler().buildTask(instance, ()-> pidgin.sendPacket(new NetworkStatusPacket(proxyName, true))).delay(1, TimeUnit.SECONDS).schedule();
+        instance.getProxy().getScheduler().buildTask(instance, () -> pidgin.sendPacket(new NetworkStatusPacket(proxyName, true))).delay(1, TimeUnit.SECONDS).schedule();
         clockDifferenceTask = instance.getProxy().getScheduler().buildTask(instance, this::checkClockDifference).delay(5, TimeUnit.SECONDS).repeat(30, TimeUnit.SECONDS).schedule();
         inconsistencyProxyTask = instance.getProxy().getScheduler().buildTask(instance, this::fixPlayerProxyInconsistency).delay(10, TimeUnit.SECONDS).repeat(30, TimeUnit.SECONDS).schedule();
         updateTask = instance.getProxy().getScheduler().buildTask(instance, this::updatePlayerCounts).repeat(1, TimeUnit.SECONDS).schedule();
     }
 
+    /**
+     * Shutdowns cancels all the tasks
+     * and closes the connection pool
+     */
     public void shutdown() {
         removeProxyInstance(proxyName);
 
@@ -74,24 +78,6 @@ public class RedisManager {
         updateTask.cancel();
 
         pool.close();
-    }
-
-    public String createScript(String data) {
-        try(final Jedis jedis = getConnection()) {
-            return jedis.scriptLoad(data);
-        }
-    }
-
-    public Object executeScript(LuaScripts script, List<String> keys, List<String> args) {
-        Object data;
-        try(final Jedis jedis = getConnection()) {
-            data = jedis.evalsha(script.getHash(), keys, args);
-        } catch(JedisNoScriptException ex) {
-            try(final Jedis jedis = getConnection()) {
-                data = jedis.eval(script.getScript(), keys, args);
-            }
-        }
-        return data;
     }
 
     // TODO: migrate to redis lua script
@@ -188,6 +174,38 @@ public class RedisManager {
                 }
             }
         }
+    }
+
+
+    /**
+     * Loads a redis script into redis
+     *
+     * @param data the contents of the script
+     * @return hash of the loaded script
+     */
+    public String createScript(String data) {
+        try(final Jedis jedis = getConnection()) {
+            return jedis.scriptLoad(data);
+        }
+    }
+
+    /**
+     * Executes a redis script
+     *
+     * @param script script to be executed
+     * @param keys   keys for the script
+     * @param args   arguments for the script
+     */
+    public Object executeScript(LuaScripts script, List<String> keys, List<String> args) {
+        Object data;
+        try(final Jedis jedis = getConnection()) {
+            data = jedis.evalsha(script.getHash(), keys, args);
+        } catch(JedisNoScriptException ex) {
+            try(final Jedis jedis = getConnection()) {
+                data = jedis.eval(script.getScript(), keys, args);
+            }
+        }
+        return data;
     }
 
     /*
@@ -371,6 +389,12 @@ public class RedisManager {
         }
     }
 
+    /**
+     * Sets the ResolverResult of a username
+     *
+     * @param username The player username
+     * @param result   The resolver result
+     */
     public void setPlayerResult(String username, Resolver.Result result) {
         try(Jedis jedis = getConnection()) {
             Map<String, String> data = new HashMap<>();
