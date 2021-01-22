@@ -55,13 +55,13 @@ public class PlayerListener {
     @Subscribe
     public void onProxyPing(ProxyPingEvent event) {
         ServerPing ping = event.getPing();
-        
+
         String motd = instance.getConfig().getObject().get("proxy_motd_1").getAsString() + "\n" + instance.getConfig().getObject().get("proxy_motd_2").getAsString();
 
         event.setPing(ping.asBuilder()
-        		.description(LegacyComponentSerializer.legacyAmpersand().deserialize(motd))
-        		.onlinePlayers(instance.getRedisManager().getOnlinePlayers().get())
-        		.build());
+                .description(LegacyComponentSerializer.legacyAmpersand().deserialize(motd))
+                .onlinePlayers(instance.getRedisManager().getOnlinePlayers().get())
+                .build());
     }
 
 }

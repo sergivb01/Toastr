@@ -88,6 +88,7 @@ public class AuthListener {
     public void onLogin(LoginEvent event) {
         Player player = event.getPlayer();
 
+        // TODO: check this. Who deserves the right of using the account?
         instance.getBackendStorage().checkAccounts(player).whenComplete((result, ex) -> {
             if(ex != null) {
                 ex.printStackTrace();
@@ -117,20 +118,18 @@ public class AuthListener {
                     return;
                 }
 
+                // TODO: auto-login if previousIP == currentIP AND lastLoginTimestampDiff <= 15min
                 if(profile == null) {
                     profile = Profile.createProfile(player);
                 }
+
                 profile.setLastLogin(Timestamp.from(Instant.now()));
                 profile.setLastIP(player.getRemoteAddress().getAddress().getHostAddress());
-                // TODO: BETA change
-                //profile.setLoggedIn(player.isOnlineMode());
-
+                profile.setLoggedIn(player.isOnlineMode());
 
                 Profile.getProfiles().put(player.getUniqueId(), profile);
                 player.sendMessage(Component.text("Your profile has been loaded!").color(NamedTextColor.DARK_AQUA));
 
-                // TODO: BETA change
-                //if(player.isOnlineMode()) return;
                 if(profile.isLoggedIn()) return;
 
                 if(StringUtils.isNullOrEmpty(profile.getPassword())) {
@@ -161,11 +160,15 @@ public class AuthListener {
         pendingLogin.remove(player);
 
         final DisconnectEvent.LoginStatus loginStatus = event.getLoginStatus();
-        if(loginStatus.equals(CANCELLED_BY_PROXY) || loginStatus.equals(CANCELLED_BY_USER_BEFORE_COMPLETE) || loginStatus.equals(PRE_SERVER_JOIN)) {
+        if(loginStatus.equals(CONFLICTING_LOGIN) || loginStatus.equals(CANCELLED_BY_USER_BEFORE_COMPLETE) || loginStatus.equals(PRE_SERVER_JOIN)) {
             return;
         }
 
         final Profile profile = Profile.getProfiles().get(player.getUniqueId());
+        if(profile == null) {
+            return;
+        }
+
         instance.getBackendStorage().saveProfile(profile)
                 .whenComplete((updated, ex) -> {
                     if(ex != null) {
@@ -180,6 +183,11 @@ public class AuthListener {
     public void onPostLogin(PostLoginEvent event) {
         Player player = event.getPlayer();
 
+        if(!Profile.getProfiles().containsKey(player.getUniqueId())) {
+            player.disconnect(Component.text("Your profile could not be loaded. Contact an admin").color(NamedTextColor.RED));
+            return;
+        }
+
         if(player.isOnlineMode()) return;
 
         instance.getProxy().getScheduler().buildTask(instance, () -> {
@@ -187,12 +195,6 @@ public class AuthListener {
 
             player.disconnect(Component.text("You're in a cracked account. Kicked for security reasons").color(NamedTextColor.RED));
         }).delay(3, TimeUnit.SECONDS).schedule();
-        /*
-         * TODO: ONLY IF CRACKED:
-         *  * check if lastLoggedIn < X duration AND lastRemoteAddress == currentRemoteAddress
-         *      * true -> profile->loggedIn = true
-         *      * false -> profile->loggedIn = false
-         * */
     }
 
     @Subscribe

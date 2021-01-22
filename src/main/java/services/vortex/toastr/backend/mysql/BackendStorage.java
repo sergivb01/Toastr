@@ -28,7 +28,7 @@ public class BackendStorage {
     public BackendStorage(BackendCredentials credentials) {
         // Number of threads = Number of Available Cores * (1 + Wait time / Service time)
         int numThreads = Runtime.getRuntime().availableProcessors() * (1 + 10 / 5);
-        instance.getLogger().info("Setting a max pool of " + numThreads + " for the Executor");
+        instance.getLogger().info("Setting a max pool of " + numThreads + " for the executor");
 
         ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("Toastr Storage - %1$d")
                 .setDaemon(true).build();
@@ -118,36 +118,36 @@ public class BackendStorage {
                 query.setString(1, player.getUsername());
                 query.setQueryTimeout(3);
 
-                final ResultSet rs = query.executeQuery();
+                try(final ResultSet rs = query.executeQuery()) {
+                    // player doesn't exist in database
+                    if(!rs.next() || player.isOnlineMode()) {
+                        future.complete(Profile.CheckAccountResult.ALLOWED);
+                        return;
+                    }
 
-                // player doesn't exist in database
-                if(!rs.next() || player.isOnlineMode()) {
+                    final Profile profile = createProfileFromRS(rs);
+
+                    // cracked player trying to login with different name-case - block
+                    if(!profile.getUsername().equals(player.getUsername())) {
+                        future.complete(Profile.CheckAccountResult.DIFFERENT_NAMECASE);
+                        instance.getLogger().info("[database] [CheckAccounts] " + player.getUsername() + "(" + player.getUniqueId() + ") took " + (System.currentTimeMillis() - start) + "ms");
+                        return;
+                    }
+
+                    // cracked player logged in with nickname of an premium account (< 37d ?)
+                    long elapsedSinceLast = System.currentTimeMillis() - profile.getLastLogin().getTime();
+                    if(profile.getAccountType().equals(Profile.AccountType.PREMIUM) && elapsedSinceLast < NAMECHANGE_DELAY) {
+                        // premium account is still premium, block
+                        future.complete(Profile.CheckAccountResult.OLD_PREMIUM);
+                        instance.getLogger().info("[database] [CheckAccounts] " + player.getUsername() + "(" + player.getUniqueId() + ") took " + (System.currentTimeMillis() - start) + "ms");
+                        return;
+                    }
+
+                    // premium account is no longer premium, allow, or other cases
                     future.complete(Profile.CheckAccountResult.ALLOWED);
-                    return;
-                }
 
-                final Profile profile = createProfileFromRS(rs);
-
-                // cracked player trying to login with different name-case - block
-                if(!profile.getUsername().equals(player.getUsername())) {
-                    future.complete(Profile.CheckAccountResult.DIFFERENT_NAMECASE);
                     instance.getLogger().info("[database] [CheckAccounts] " + player.getUsername() + "(" + player.getUniqueId() + ") took " + (System.currentTimeMillis() - start) + "ms");
-                    return;
                 }
-
-                // cracked player logged in with nickname of an premium account (< 37d ?)
-                long elapsedSinceLast = System.currentTimeMillis() - profile.getLastLogin().getTime();
-                if(profile.getAccountType().equals(Profile.AccountType.PREMIUM) && elapsedSinceLast < NAMECHANGE_DELAY) {
-                    // premium account is still premium, block
-                    future.complete(Profile.CheckAccountResult.OLD_PREMIUM);
-                    instance.getLogger().info("[database] [CheckAccounts] " + player.getUsername() + "(" + player.getUniqueId() + ") took " + (System.currentTimeMillis() - start) + "ms");
-                    return;
-                }
-
-                // premium account is no longer premium, allow, or other cases
-                future.complete(Profile.CheckAccountResult.ALLOWED);
-
-                instance.getLogger().info("[database] [CheckAccounts] " + player.getUsername() + "(" + player.getUniqueId() + ") took " + (System.currentTimeMillis() - start) + "ms");
             } catch(SQLException ex) {
                 future.completeExceptionally(ex);
             }
@@ -172,14 +172,15 @@ public class BackendStorage {
                 query.setString(1, playerUUID.toString());
                 query.setQueryTimeout(3);
 
-                final ResultSet rs = query.executeQuery();
-                if(!rs.next()) {
-                    future.complete(null);
-                    return;
-                }
+                try(final ResultSet rs = query.executeQuery()) {
+                    if(!rs.next()) {
+                        future.complete(null);
+                        return;
+                    }
 
-                future.complete(createProfileFromRS(rs));
-                instance.getLogger().info("[database] [GetProfile] " + playerUUID.toString() + " took " + (System.currentTimeMillis() - start) + "ms");
+                    future.complete(createProfileFromRS(rs));
+                    instance.getLogger().info("[database] [GetProfile] " + playerUUID.toString() + " took " + (System.currentTimeMillis() - start) + "ms");
+                }
             } catch(SQLException ex) {
                 future.completeExceptionally(ex);
             }
@@ -200,6 +201,24 @@ public class BackendStorage {
 
         executor.submit(() -> {
             try(Connection connection = this.hikari.getConnection()) {
+                // TODO: change order: first update then insert (we have more UPDATEs than INSERTs)
+                try(final PreparedStatement query = connection.prepareStatement(SQLQueries.UPDATE_PROFILE_BY_UUID.getQuery())) {
+                    query.setString(1, profile.getUsername());
+                    query.setString(2, profile.getUsername());
+                    query.setString(3, profile.getLastIP());
+                    query.setTimestamp(4, profile.getLastLogin());
+                    query.setString(5, profile.getPassword());
+                    query.setString(6, profile.getSalt());
+                    query.setString(7, profile.getUniqueId().toString());
+
+                    query.setQueryTimeout(3);
+
+                    if(query.executeUpdate() != 0) {
+                        future.complete(false);
+                        instance.getLogger().info("[database] [SaveProfile] " + profile.getUniqueId() + " took " + (System.currentTimeMillis() - start) + "ms");
+                        return;
+                    }
+                }
 
                 try(final PreparedStatement query = connection.prepareStatement(SQLQueries.INSERT_PROFILE.getQuery())) {
                     query.setString(1, profile.getUniqueId().toString());
@@ -218,27 +237,8 @@ public class BackendStorage {
                     if(query.executeUpdate() == 1) {
                         future.complete(true);
                         instance.getLogger().info("[database] [InsertProfile] " + profile.getUniqueId() + " took " + (System.currentTimeMillis() - start) + "ms");
-                        return;
                     }
                 }
-
-                try(final PreparedStatement query = connection.prepareStatement(SQLQueries.UPDATE_PROFILE_BY_UUID.getQuery())) {
-                    query.setString(1, profile.getUsername());
-                    query.setString(2, profile.getUsername());
-                    query.setString(3, profile.getLastIP());
-                    query.setTimestamp(4, profile.getLastLogin());
-                    query.setString(5, profile.getPassword());
-                    query.setString(6, profile.getSalt());
-                    query.setString(7, profile.getUniqueId().toString());
-
-                    query.setQueryTimeout(3);
-
-                    query.execute();
-
-                    future.complete(false);
-                    instance.getLogger().info("[database] [SaveProfile] " + profile.getUniqueId() + " took " + (System.currentTimeMillis() - start) + "ms");
-                }
-
             } catch(SQLException ex) {
                 future.completeExceptionally(ex);
             }
