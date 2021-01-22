@@ -48,7 +48,7 @@ INSERT INTO sergi_toastr.playerdata (uuid, player_name, player_name_lower, first
 * [X] global /msg
 * [X] MOTD System (or use MiniMOTD/PistonMOTD)
 * [ ] add queue to retry failed queries
-* [ ] stafflist
+* [ ] check for auto-reconnect in Redis and MySQL
 * [ ] maintenance (proxy instance)
 * [ ] maintenance (global)
 * [ ] AntiVPN
