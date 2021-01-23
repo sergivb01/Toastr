@@ -2,14 +2,14 @@ package services.vortex.toastr.backend.packets;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import services.vortex.toastr.backend.packets.handler.IncomingPacketHandler;
-import services.vortex.toastr.backend.packets.listener.PacketListener;
-import services.vortex.toastr.backend.packets.listener.PacketListenerData;
 import org.slf4j.Logger;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPubSub;
 import services.vortex.toastr.ToastrPlugin;
+import services.vortex.toastr.backend.packets.handler.IncomingPacketHandler;
+import services.vortex.toastr.backend.packets.listener.PacketListener;
+import services.vortex.toastr.backend.packets.listener.PacketListenerData;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -43,13 +43,10 @@ public class Pidgin {
                 throw new IllegalStateException("Packet cannot generate null serialized data");
             }
 
-            logger.info("[Pidgin] Attempting to publish packet..");
             jedis.publish(this.channel, packet.id() + ";" + object.toString());
-            logger.info("[Pidgin] Successfully published packet..");
         } catch(Exception ex) {
             logger.error("[Pidgin] Failed to publish packet...", ex);
         }
-
     }
 
     public Packet buildPacket(int id) {
@@ -128,12 +125,11 @@ public class Pidgin {
         };
 
         ForkJoinPool.commonPool().execute(() -> {
-            try(Jedis jedis = this.pool.getResource()) {
+            try(final Jedis jedis = this.pool.getResource()) {
                 jedis.subscribe(this.jedisPubSub, channel);
                 logger.info("[Pidgin] Successfully subscribing to channel..");
-            } catch(Exception exception) {
-                logger.info("[Pidgin] Failed to subscribe to channel..");
-                exception.printStackTrace();
+            } catch(Exception ex) {
+                logger.error("[Pidgin] Failed to subscribe to channel..", ex);
             }
         });
     }
