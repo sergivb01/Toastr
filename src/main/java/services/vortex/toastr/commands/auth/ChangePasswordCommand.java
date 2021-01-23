@@ -41,15 +41,14 @@ public class ChangePasswordCommand implements SimpleCommand {
         profile.setSalt(salt);
         profile.setPassword(HashMethods.SHA512H(invocation.arguments()[0], salt));
 
-        instance.getBackendStorage().saveProfile(profile).whenComplete((saved, ex) -> {
-            if(ex != null) {
-                instance.getLogger().error("Error changing password for " + player.getUsername(), ex);
-                player.sendMessage(Component.text("Error changing password. Contact admin").color(NamedTextColor.RED));
-                return;
-            }
+        try {
+            instance.getBackendStorage().saveProfile(profile);
+        } catch(Exception ex) {
+            instance.getLogger().error("Error changing password for " + player.getUsername(), ex);
+            player.sendMessage(Component.text("Error changing password. Contact admin").color(NamedTextColor.RED));
+            return;
+        }
 
-            player.sendMessage(Component.text("Successfully changed password!").color(NamedTextColor.DARK_AQUA));
-        });
-
+        player.sendMessage(Component.text("Successfully changed password!").color(NamedTextColor.DARK_AQUA));
     }
 }

@@ -39,16 +39,15 @@ public class UnRegisterCommand implements SimpleCommand {
         profile.setSalt(null);
         profile.setPassword(null);
 
-        instance.getBackendStorage().saveProfile(profile).whenComplete((saved, ex) -> {
-            if(ex != null) {
-                instance.getLogger().error("Error un-registering " + player.getUsername(), ex);
-                player.sendMessage(Component.text("Error un-registering. Contact admin").color(NamedTextColor.RED));
-                return;
-            }
+        try {
+            instance.getBackendStorage().saveProfile(profile);
+        } catch(Exception ex) {
+            instance.getLogger().error("Error un-registering " + player.getUsername(), ex);
+            player.sendMessage(Component.text("Error un-registering. Contact admin").color(NamedTextColor.RED));
+            return;
+        }
 
-            AuthListener.pendingRegister.put(player, System.currentTimeMillis());
-            player.sendMessage(Component.text("Successfully un-registered!").color(NamedTextColor.DARK_AQUA));
-        });
-
+        AuthListener.pendingRegister.put(player, System.currentTimeMillis());
+        player.sendMessage(Component.text("Successfully un-registered!").color(NamedTextColor.DARK_AQUA));
     }
 }

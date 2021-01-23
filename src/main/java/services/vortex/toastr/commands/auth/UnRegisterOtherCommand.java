@@ -40,15 +40,15 @@ public class UnRegisterOtherCommand implements SimpleCommand {
             return;
         }
 
-        instance.getBackendStorage().unregister(uuid)
-                .whenComplete((ignore, ex) -> {
-                    if(ex != null) {
-                        instance.getLogger().error("Error trying to unregister " + uuid.toString(), ex);
-                        return;
-                    }
+        try {
+            instance.getBackendStorage().unregister(uuid);
+        } catch(Exception ex) {
+            instance.getLogger().error("Error trying to unregister " + uuid.toString(), ex);
+            source.sendMessage(CC.translate("Error while trying to unregister, contact admin"));
+            return;
+        }
 
-                    source.sendMessage(CC.translate("&2Successfully unregistered player if existed"));
-                });
+        source.sendMessage(CC.translate("&2Successfully unregistered player if existed"));
     }
 
     @Override
