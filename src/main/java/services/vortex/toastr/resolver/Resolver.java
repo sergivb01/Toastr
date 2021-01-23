@@ -9,9 +9,10 @@ import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.resolver.impl.IResolver;
 
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-public abstract class Resolver implements IResolver {
+public abstract class Resolver implements Callable<Resolver.Result>, IResolver {
     protected static ToastrPlugin instance = ToastrPlugin.getInstance();
     protected static OkHttpClient httpClient = new OkHttpClient.Builder()
             .connectTimeout(1, TimeUnit.SECONDS)

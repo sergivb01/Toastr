@@ -2,20 +2,23 @@ package services.vortex.toastr.resolver.impl;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.RequiredArgsConstructor;
 import okhttp3.Request;
 import okhttp3.Response;
 import services.vortex.toastr.resolver.Resolver;
 
 import java.util.UUID;
 
+@RequiredArgsConstructor
 public class PlayerDBResolver extends Resolver {
     private static final String PLAYERDB_URL = "https://playerdb.co/api/player/minecraft/";
+    private final String rawUsername;
 
     public String getSource() {
         return "PlayerDB";
     }
 
-    public Resolver.Result check(String rawUsername) throws Exception {
+    public Resolver.Result call() throws Exception {
         Request request = new Request.Builder()
                 .url(PLAYERDB_URL + rawUsername)
                 .build();

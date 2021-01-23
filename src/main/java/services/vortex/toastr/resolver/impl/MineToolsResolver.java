@@ -3,14 +3,17 @@ package services.vortex.toastr.resolver.impl;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.velocitypowered.api.util.UuidUtils;
+import lombok.RequiredArgsConstructor;
 import okhttp3.Request;
 import okhttp3.Response;
 import services.vortex.toastr.resolver.Resolver;
 
 import java.util.UUID;
 
+@RequiredArgsConstructor
 public class MineToolsResolver extends Resolver {
     private static final String MINETOOLS_URL = "https://api.minetools.eu/uuid/";
+    private final String rawUsername;
 
     @Override
     public String getSource() {
@@ -18,7 +21,7 @@ public class MineToolsResolver extends Resolver {
     }
 
     @Override
-    public Resolver.Result check(String rawUsername) throws Exception {
+    public Resolver.Result call() throws Exception {
         Request request = new Request.Builder()
                 .url(MINETOOLS_URL + rawUsername)
                 .build();
