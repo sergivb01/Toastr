@@ -33,6 +33,7 @@ public class PlayerListener {
         if(playerData != null && playerData.getLastOnline() == 0) {
             player.disconnect(Component.text("Player already online in the network, requested cross-network kick.\nPlease relog in").color(NamedTextColor.RED));
             instance.getRedisManager().getPidgin().sendPacket(new KickPacket(player.getUsername(), "&cYou have logged in from another location, contact an admin if the issue persists"));
+            instance.getRedisManager().cleanPlayer(player.getUniqueId(), playerData.getUsername());
             return;
         }
 
