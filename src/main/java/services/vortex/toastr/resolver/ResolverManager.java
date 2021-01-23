@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.AllArgsConstructor;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.resolver.impl.AshconResolver;
+import services.vortex.toastr.resolver.impl.CloudProtectedResolver;
 import services.vortex.toastr.resolver.impl.MineToolsResolver;
 import services.vortex.toastr.resolver.impl.PlayerDBResolver;
 
@@ -22,6 +23,7 @@ public class ResolverManager {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
     private final Resolver[] resolvers = new Resolver[]{
             new AshconResolver(),
+            new CloudProtectedResolver(),
             new MineToolsResolver(),
             new PlayerDBResolver()
     };
