@@ -189,6 +189,29 @@ public class BackendStorage {
         return future;
     }
 
+    // TODO: documentation
+    public CompletableFuture<Void> unregister(UUID playerUUID) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        final long start = System.currentTimeMillis();
+
+        executor.submit(() -> {
+            try(Connection connection = this.hikari.getConnection();
+                final PreparedStatement query = connection.prepareStatement(SQLQueries.UNREGISTER_BY_UUID.getQuery())) {
+                query.setString(1, playerUUID.toString());
+                query.setQueryTimeout(3);
+
+                query.execute();
+
+                future.complete(null);
+                instance.getLogger().info("[database] [Unregister] " + playerUUID.toString() + " took " + (System.currentTimeMillis() - start) + "ms");
+            } catch(SQLException ex) {
+                future.completeExceptionally(ex);
+            }
+        });
+
+        return future;
+    }
+
     /**
      * This method saves a player Profile to the database
      *

@@ -19,10 +19,10 @@ public class ClearCacheCommand implements SimpleCommand {
             return;
         }
 
-        String data = invocation.arguments()[0];
+        String username = invocation.arguments()[0];
 
-        instance.getRedisManager().getPidgin().sendPacket(new KickPacket(data, "&cRequested clearcache"));
-        instance.getRedisManager().getPidgin().sendPacket(new ClearCachePacket(data));
+        instance.getRedisManager().getPidgin().sendPacket(new KickPacket(username, "&cRequested clearcache"));
+        instance.getRedisManager().getPidgin().sendPacket(new ClearCachePacket(username));
 
         source.sendMessage(Component.text("Requested clearcache on all proxy instances").color(NamedTextColor.DARK_GREEN));
     }

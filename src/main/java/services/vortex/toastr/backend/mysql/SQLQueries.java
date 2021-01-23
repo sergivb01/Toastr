@@ -5,10 +5,11 @@ import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.utils.ResourceReader;
 
 public enum SQLQueries {
-    SELECT_PROFILE_BY_UUID,
+    CHECK_NAMECASE,
     INSERT_PROFILE,
-    UPDATE_PROFILE_BY_UUID,
-    CHECK_NAMECASE;
+    SELECT_PROFILE_BY_UUID,
+    UNREGISTER_BY_UUID,
+    UPDATE_PROFILE_BY_UUID;
 
     private static final String PATH = "sql/";
     private final @NonNull String query;

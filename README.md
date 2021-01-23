@@ -33,9 +33,7 @@ Should probably make a good description
 * Command framework
 * Auth
     * [X] clear cache from user (in-memory and redis -> invoke pubsub event)
-    * [ ] register other
-    * [ ] unregister other
-    * [ ] changepassword other
+    * [X] unregister other
 * Essentials (with cross-proxy support!)
     * [ ] send
     * [ ] warn when proxy-name is empty/null

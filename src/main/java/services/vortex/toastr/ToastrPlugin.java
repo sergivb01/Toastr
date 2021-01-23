@@ -18,10 +18,7 @@ import services.vortex.toastr.backend.mysql.BackendStorage;
 import services.vortex.toastr.backend.redis.CacheManager;
 import services.vortex.toastr.backend.redis.RedisManager;
 import services.vortex.toastr.commands.admin.*;
-import services.vortex.toastr.commands.auth.ChangePasswordCommand;
-import services.vortex.toastr.commands.auth.LoginCommand;
-import services.vortex.toastr.commands.auth.RegisterCommand;
-import services.vortex.toastr.commands.auth.UnRegisterCommand;
+import services.vortex.toastr.commands.auth.*;
 import services.vortex.toastr.commands.essentials.GListCommand;
 import services.vortex.toastr.commands.essentials.GlobalMessageCommand;
 import services.vortex.toastr.commands.essentials.LobbyCommand;
@@ -97,6 +94,7 @@ public class ToastrPlugin {
         commandManager.register("login", new LoginCommand());
         commandManager.register("register", new RegisterCommand());
         commandManager.register("unregister", new UnRegisterCommand());
+        commandManager.register("aunregister", new UnRegisterOtherCommand());
 
         commandManager.unregister("glist");
         commandManager.register("glist", new GListCommand());
