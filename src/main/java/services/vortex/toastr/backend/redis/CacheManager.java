@@ -6,10 +6,10 @@ import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.PlayerData;
 import services.vortex.toastr.resolver.Resolver;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class CacheManager {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
@@ -25,8 +25,7 @@ public class CacheManager {
             .expireAfterWrite(5, TimeUnit.MINUTES)
             .maximumSize(500)
             .build();
-    // TODO: allOnline should be concurrently safe
-    private Set<String> allOnline = new HashSet<>();
+    private final AtomicReference<Set<String>> allOnline = new AtomicReference<>();
     private long lastAllOnline = 0;
 
     /**
@@ -37,11 +36,11 @@ public class CacheManager {
     // TODO: clean this up
     public Set<String> getUsernamesOnline() {
         if((System.currentTimeMillis() - lastAllOnline) > TimeUnit.SECONDS.toMillis(5)) {
-            allOnline = instance.getRedisManager().getUsernamesOnline();
+            allOnline.set(instance.getRedisManager().getUsernamesOnline());
             lastAllOnline = System.currentTimeMillis();
         }
 
-        return allOnline;
+        return allOnline.get();
     }
 
     /**
