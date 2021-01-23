@@ -51,7 +51,7 @@ public class RegisterCommand implements SimpleCommand {
 
         instance.getBackendStorage().saveProfile(profile).whenComplete((saved, ex) -> {
             if(ex != null) {
-                ex.printStackTrace();
+                instance.getLogger().error("Error registering " + player.getUsername(), ex);
                 player.sendMessage(Component.text("Error registering. Contact admin").color(NamedTextColor.RED));
                 return;
             }

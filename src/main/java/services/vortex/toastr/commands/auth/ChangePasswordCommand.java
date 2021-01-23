@@ -43,7 +43,7 @@ public class ChangePasswordCommand implements SimpleCommand {
 
         instance.getBackendStorage().saveProfile(profile).whenComplete((saved, ex) -> {
             if(ex != null) {
-                ex.printStackTrace();
+                instance.getLogger().error("Error changing password for " + player.getUsername(), ex);
                 player.sendMessage(Component.text("Error changing password. Contact admin").color(NamedTextColor.RED));
                 return;
             }

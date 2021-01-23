@@ -16,11 +16,13 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.title.Title;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.Profile;
 import services.vortex.toastr.resolver.Resolver;
 import services.vortex.toastr.tasks.LoginTask;
 import services.vortex.toastr.tasks.RegisterTask;
+import services.vortex.toastr.utils.CC;
 import services.vortex.toastr.utils.StringUtils;
 
 import java.sql.Timestamp;
@@ -56,8 +58,8 @@ public class AuthListener {
                 event.setResult(PreLoginEvent.PreLoginComponentResult.forceOfflineMode());
             }
         } catch(Exception ex) {
+            instance.getLogger().error("Error getting result for " + event.getUsername(), ex);
             event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.text("error in backend")));
-            ex.printStackTrace();
         }
     }
 
@@ -90,7 +92,7 @@ public class AuthListener {
         // TODO: check this. Who deserves the right of using the account?
         instance.getBackendStorage().checkAccounts(player).whenComplete((result, ex) -> {
             if(ex != null) {
-                ex.printStackTrace();
+                instance.getLogger().error("Error checking namecase for " + player.getUsername(), ex);
                 player.disconnect(Component.text("Error trying to check namecase!").color(NamedTextColor.RED));
                 return;
             }
@@ -112,22 +114,29 @@ public class AuthListener {
 
             instance.getBackendStorage().getProfile(player.getUniqueId()).whenComplete((profile, ex) -> {
                 if(ex != null) {
-                    ex.printStackTrace();
+                    instance.getLogger().error("Error loading profile for " + player.getUsername(), ex);
                     player.disconnect(Component.text("Error loading your profile!").color(NamedTextColor.RED));
                     return;
                 }
 
                 // TODO: auto-login if previousIP == currentIP AND lastLoginTimestampDiff <= 15min
+                boolean autoLogin = false;
                 if(profile == null) {
                     profile = Profile.createProfile(player);
+                } else {
+                    autoLogin = profile.getLastIP().equals(player.getRemoteAddress().getAddress().getHostAddress())
+                            && (System.currentTimeMillis() - profile.getLastLogin().getTime()) < TimeUnit.MINUTES.toMillis(15);
                 }
 
                 profile.setLastLogin(Timestamp.from(Instant.now()));
                 profile.setLastIP(player.getRemoteAddress().getAddress().getHostAddress());
-                profile.setLoggedIn(player.isOnlineMode());
+                profile.setLoggedIn(player.isOnlineMode() || autoLogin);
 
                 Profile.getProfiles().put(player.getUniqueId(), profile);
                 player.sendMessage(Component.text("Your profile has been loaded!").color(NamedTextColor.DARK_AQUA));
+                if(autoLogin) {
+                    player.showTitle(Title.title(CC.translate("&2Auto logged in"), CC.translate("Recovered last session")));
+                }
 
                 if(profile.isLoggedIn()) return;
 
@@ -138,7 +147,7 @@ public class AuthListener {
                 }
             }).thenAccept((profile) -> instance.getBackendStorage().saveProfile(profile).whenComplete((saved, ex) -> {
                 if(ex != null) {
-                    ex.printStackTrace();
+                    instance.getLogger().error("Error saving profile for " + player.getUsername() + " after login", ex);
                     player.disconnect(Component.text("Failed to save your profile after login.\nContact an administrator").color(NamedTextColor.RED));
                 }
 
