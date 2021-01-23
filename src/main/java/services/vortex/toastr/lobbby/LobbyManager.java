@@ -59,9 +59,6 @@ public class LobbyManager {
         tmp.removeIf(Lobby::isDown);
         tmp_restricted.removeIf(Lobby::isDown);
 
-        lobbies.clear();
-        restrictedLobbies.clear();
-
         lobbies = tmp;
         restrictedLobbies = tmp_restricted;
 
