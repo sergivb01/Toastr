@@ -9,6 +9,8 @@ import services.vortex.toastr.profile.Profile;
 import services.vortex.toastr.utils.HashMethods;
 import services.vortex.toastr.utils.SaltGenerator;
 
+import java.util.concurrent.TimeUnit;
+
 public class ChangePasswordCommand implements SimpleCommand {
     private final ToastrPlugin instance = ToastrPlugin.getInstance();
 
@@ -42,7 +44,7 @@ public class ChangePasswordCommand implements SimpleCommand {
         profile.setPassword(HashMethods.SHA512H(invocation.arguments()[0], salt));
 
         try {
-            instance.getBackendStorage().saveProfile(profile);
+            instance.getBackendStorage().saveProfile(profile).get(3, TimeUnit.SECONDS);
         } catch(Exception ex) {
             instance.getLogger().error("Error changing password for " + player.getUsername(), ex);
             player.sendMessage(Component.text("Error changing password. Contact admin").color(NamedTextColor.RED));

@@ -92,7 +92,7 @@ public class AuthListener {
         // TODO: check this. Who deserves the right of using the account?
         final Profile.CheckAccountResult result;
         try {
-            result = instance.getBackendStorage().checkAccounts(player);
+            result = instance.getBackendStorage().checkAccounts(player).get(3, TimeUnit.SECONDS);
             if(result.equals(Profile.CheckAccountResult.DIFFERENT_NAMECASE)) {
                 player.disconnect(Component.text("Different namecase! Contact admin").color(NamedTextColor.RED));
                 instance.getLogger().warn("Player with UUID " + player.getUniqueId() + " and username " + player.getUsername() + " tried to login with different namecase " + player.getRemoteAddress().toString());
@@ -117,7 +117,7 @@ public class AuthListener {
 
         Profile profile;
         try {
-            profile = instance.getBackendStorage().getProfile(player.getUniqueId());
+            profile = instance.getBackendStorage().getProfile(player.getUniqueId()).get(3, TimeUnit.SECONDS);
         } catch(Exception ex) {
             instance.getLogger().error("Error loading profile for " + player.getUsername(), ex);
             player.disconnect(Component.text("Error loading your profile!").color(NamedTextColor.RED));
@@ -152,7 +152,7 @@ public class AuthListener {
 
         boolean newPlayer = false;
         try {
-            newPlayer = instance.getBackendStorage().saveProfile(profile);
+            newPlayer = instance.getBackendStorage().saveProfile(profile).get(3, TimeUnit.SECONDS);
         } catch(Exception ex) {
             instance.getLogger().error("Error saving profile for " + player.getUsername() + " after login", ex);
             player.disconnect(Component.text("Failed to save your profile after login.\nContact an administrator").color(NamedTextColor.RED));
@@ -180,7 +180,7 @@ public class AuthListener {
         }
 
         try {
-            instance.getBackendStorage().saveProfile(profile);
+            instance.getBackendStorage().saveProfile(profile).get(3, TimeUnit.SECONDS);
         } catch(Exception ex) {
             instance.getLogger().error("Saving " + player.getUsername() + " profile!", ex);
             return;

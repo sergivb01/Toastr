@@ -9,6 +9,8 @@ import services.vortex.toastr.listeners.AuthListener;
 import services.vortex.toastr.profile.Profile;
 import services.vortex.toastr.utils.StringUtils;
 
+import java.util.concurrent.TimeUnit;
+
 public class UnRegisterCommand implements SimpleCommand {
     private final ToastrPlugin instance = ToastrPlugin.getInstance();
 
@@ -40,7 +42,7 @@ public class UnRegisterCommand implements SimpleCommand {
         profile.setPassword(null);
 
         try {
-            instance.getBackendStorage().saveProfile(profile);
+            instance.getBackendStorage().saveProfile(profile).get(3, TimeUnit.SECONDS);
         } catch(Exception ex) {
             instance.getLogger().error("Error un-registering " + player.getUsername(), ex);
             player.sendMessage(Component.text("Error un-registering. Contact admin").color(NamedTextColor.RED));

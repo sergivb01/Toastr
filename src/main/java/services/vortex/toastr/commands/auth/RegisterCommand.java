@@ -11,6 +11,8 @@ import services.vortex.toastr.utils.HashMethods;
 import services.vortex.toastr.utils.SaltGenerator;
 import services.vortex.toastr.utils.StringUtils;
 
+import java.util.concurrent.TimeUnit;
+
 public class RegisterCommand implements SimpleCommand {
     private final ToastrPlugin instance = ToastrPlugin.getInstance();
 
@@ -50,7 +52,7 @@ public class RegisterCommand implements SimpleCommand {
         profile.setPassword(HashMethods.SHA512H(invocation.arguments()[0], salt));
 
         try {
-            instance.getBackendStorage().saveProfile(profile);
+            instance.getBackendStorage().saveProfile(profile).get(3, TimeUnit.SECONDS);
         } catch(Exception ex) {
             instance.getLogger().error("Error registering " + player.getUsername(), ex);
             player.sendMessage(Component.text("Error registering. Contact admin").color(NamedTextColor.RED));

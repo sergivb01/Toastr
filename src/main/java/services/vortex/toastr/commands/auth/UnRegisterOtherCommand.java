@@ -9,6 +9,7 @@ import services.vortex.toastr.profile.PlayerData;
 import services.vortex.toastr.utils.CC;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class UnRegisterOtherCommand implements SimpleCommand {
     private final ToastrPlugin instance = ToastrPlugin.getInstance();
@@ -41,7 +42,7 @@ public class UnRegisterOtherCommand implements SimpleCommand {
         }
 
         try {
-            instance.getBackendStorage().unregister(uuid);
+            instance.getBackendStorage().unregister(uuid).get(3, TimeUnit.SECONDS);
         } catch(Exception ex) {
             instance.getLogger().error("Error trying to unregister " + uuid.toString(), ex);
             source.sendMessage(CC.translate("Error while trying to unregister, contact admin"));
