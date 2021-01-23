@@ -7,7 +7,6 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
-import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
@@ -173,15 +172,6 @@ public class AuthListener {
                 });
 
         Profile.getProfiles().remove(player.getUniqueId());
-    }
-
-    @Subscribe
-    public void onPostLogin(PostLoginEvent event) {
-        Player player = event.getPlayer();
-
-        if(!Profile.getProfiles().containsKey(player.getUniqueId())) {
-            player.disconnect(Component.text("Your profile could not be loaded.\nThis should have never happened.\n\nContact an admin").color(NamedTextColor.RED));
-        }
     }
 
     @Subscribe
