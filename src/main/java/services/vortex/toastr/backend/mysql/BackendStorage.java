@@ -226,11 +226,12 @@ public class BackendStorage {
             try(Connection connection = this.hikari.getConnection()) {
                 try(final PreparedStatement query = connection.prepareStatement(SQLQueries.UPDATE_PROFILE_BY_UUID.getQuery())) {
                     query.setString(1, profile.getUsername());
-                    query.setString(2, profile.getLastIP());
-                    query.setTimestamp(3, profile.getLastLogin());
-                    query.setString(4, profile.getPassword());
-                    query.setString(5, profile.getSalt());
-                    query.setString(6, profile.getUniqueId().toString());
+                    query.setString(2, profile.getUsername());
+                    query.setString(3, profile.getLastIP());
+                    query.setTimestamp(4, profile.getLastLogin());
+                    query.setString(5, profile.getPassword());
+                    query.setString(6, profile.getSalt());
+                    query.setString(7, profile.getUniqueId().toString());
 
                     query.setQueryTimeout(3);
 
@@ -244,13 +245,14 @@ public class BackendStorage {
                 try(final PreparedStatement query = connection.prepareStatement(SQLQueries.INSERT_PROFILE.getQuery())) {
                     query.setString(1, profile.getUniqueId().toString());
                     query.setString(2, profile.getUsername());
-                    query.setString(3, profile.getAccountType().toString());
-                    query.setString(4, profile.getFirstIP());
-                    query.setString(5, profile.getLastIP());
-                    query.setTimestamp(6, profile.getFirstLogin());
-                    query.setTimestamp(7, profile.getLastLogin());
-                    query.setString(8, profile.getPassword());
-                    query.setString(9, profile.getSalt());
+                    query.setString(3, profile.getUsername());
+                    query.setString(4, profile.getAccountType().toString());
+                    query.setString(5, profile.getFirstIP());
+                    query.setString(6, profile.getLastIP());
+                    query.setTimestamp(7, profile.getFirstLogin());
+                    query.setTimestamp(8, profile.getLastLogin());
+                    query.setString(9, profile.getPassword());
+                    query.setString(10, profile.getSalt());
 
                     query.setQueryTimeout(3);
 
