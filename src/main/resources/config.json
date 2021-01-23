@@ -56,14 +56,14 @@
 	"profile_usage": "&cUsage: /tprofile <player>",
 	"profile_player_not_found": "&cPlayer not found",
 	"profile_player_info": [
-	  "&7<strikethrough>-------------------------",
+	  "&7&m-------------------------",
 	  "&2UUID&r: <uuid>",
 	  "&2Username&r: <username>",
 	  "&2Last Online&r: <lastonline>",
 	  "&2IP&r: <ip>",
 	  "&2Proxy&r: <proxy>",
 	  "&2Server&r: <server>",
-	  "&7<strikethrough>-------------------------"
+	  "&7&m-------------------------"
 	],
 
 	"server_id": "&2You are connected to <proxy>"
