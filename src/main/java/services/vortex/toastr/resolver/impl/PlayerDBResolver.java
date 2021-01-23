@@ -21,7 +21,7 @@ public class PlayerDBResolver extends Resolver {
                 .build();
 
         try(final Response response = httpClient.newCall(request).execute()) {
-            if(response.code() != 200 && response.code() != 500) {
+            if(response.code() != 200) {
                 throw new Exception("Invalid status code from PlayerDB " + response.code());
             }
 
