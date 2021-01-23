@@ -139,17 +139,13 @@ public class AuthListener {
                 }
             }).thenAccept((profile) -> instance.getBackendStorage().saveProfile(profile).whenComplete((saved, ex) -> {
                 if(ex != null) {
-                    // TODO: add to queue and try again in few seconds/min or exponantial backoff. Remove from queue on logout if save was successful
                     ex.printStackTrace();
-                    player.sendMessage(Component.text("Failed to save your profile after login. Will try again on logout").color(NamedTextColor.RED));
+                    player.disconnect(Component.text("Failed to save your profile after login.\nContact an administrator").color(NamedTextColor.RED));
                 }
+
+                // TODO: saved == true -> first time logging in. Implement something maybe? (:
             }));
         });
-
-        /*
-         * TODO: captcha system -> force new users to click text on book with:
-         * event.getPlayer().openBook();
-         * */
     }
 
     @Subscribe

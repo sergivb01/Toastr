@@ -201,7 +201,6 @@ public class BackendStorage {
 
         executor.submit(() -> {
             try(Connection connection = this.hikari.getConnection()) {
-                // TODO: change order: first update then insert (we have more UPDATEs than INSERTs)
                 try(final PreparedStatement query = connection.prepareStatement(SQLQueries.UPDATE_PROFILE_BY_UUID.getQuery())) {
                     query.setString(1, profile.getUsername());
                     query.setString(2, profile.getUsername());
