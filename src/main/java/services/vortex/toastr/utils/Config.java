@@ -6,7 +6,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -52,7 +51,7 @@ public class Config {
      * @return The Component
      */
     public Component getMessage(String name, String... placeholders) {
-        return MiniMessage.get().parse(object.getAsJsonObject("messages").get(name).getAsString(), placeholders);
+        return CC.translate(object.getAsJsonObject("messages").get(name).getAsString(), placeholders);
     }
 
     public Collection<Component> getMessages(String name, String... placeholders) {
@@ -60,7 +59,7 @@ public class Config {
 
         final JsonArray messages = object.getAsJsonObject("messages").get(name).getAsJsonArray();
         for(JsonElement msg : messages) {
-            res.add(MiniMessage.get().parse(msg.getAsString(), placeholders));
+            res.add(CC.translate(msg.getAsString(), placeholders));
         }
 
         return res;
