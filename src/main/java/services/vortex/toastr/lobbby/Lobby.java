@@ -4,7 +4,6 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import services.vortex.toastr.ToastrPlugin;
 
 import java.util.Optional;
@@ -18,8 +17,6 @@ public class Lobby {
     private final String name;
     private final boolean restricted;
     private final RegisteredServer server;
-
-    @Setter
     private int maxPlayers = -1;
 
     public int getOnline() {
@@ -28,7 +25,7 @@ public class Lobby {
 
     public boolean isDown() {
         try {
-            final ServerPing ping = server.ping().get(5, TimeUnit.SECONDS);
+            final ServerPing ping = server.ping().get(3, TimeUnit.SECONDS);
             Optional<ServerPing.Players> players = ping.getPlayers();
             if(!players.isPresent()) {
                 instance.getLogger().warn("Couldn't determine the max players for " + name + ", ignoring server...");
