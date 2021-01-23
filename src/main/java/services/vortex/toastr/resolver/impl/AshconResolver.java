@@ -21,7 +21,13 @@ public class AshconResolver extends Resolver {
                 .build();
 
         try(final Response response = httpClient.newCall(request).execute()) {
+            final JsonObject data = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
+
             if(response.code() == 404) {
+                if(data.get("code").getAsInt() != 404) {
+                    throw new Exception("Invalid status code from Ashcon " + response.code() + " but response-body doesn't respond 404");
+                }
+
                 return fromOffline(rawUsername);
             }
 
@@ -29,7 +35,6 @@ public class AshconResolver extends Resolver {
                 throw new Exception("Invalid status code from Ashcon " + response.code());
             }
 
-            final JsonObject data = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
 
             String username = data.get("username").getAsString();
             String rawUUID = data.get("uuid").getAsString();
