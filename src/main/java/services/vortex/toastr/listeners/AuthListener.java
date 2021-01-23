@@ -103,7 +103,7 @@ public class AuthListener {
             }
 
             if(result.equals(Profile.CheckAccountResult.OLD_PREMIUM)) {
-                player.disconnect(Component.text("This username was a premium in the past < 37 days\nPlease login with another account or contact an administrator").color(NamedTextColor.RED));
+                player.disconnect(Component.text("This username was premium in the past < 37 days\nPlease login with another account or contact an administrator").color(NamedTextColor.RED));
                 instance.getLogger().warn("Player with UUID " + player.getUniqueId() + " and username " + player.getUsername() + " tried to login with an old premium account " + player.getRemoteAddress().toString());
             }
         }).thenAccept(result -> {
@@ -184,17 +184,8 @@ public class AuthListener {
         Player player = event.getPlayer();
 
         if(!Profile.getProfiles().containsKey(player.getUniqueId())) {
-            player.disconnect(Component.text("Your profile could not be loaded. Contact an admin").color(NamedTextColor.RED));
-            return;
+            player.disconnect(Component.text("Your profile could not be loaded.\nThis should have never happened.\n\nContact an admin").color(NamedTextColor.RED));
         }
-
-        if(player.isOnlineMode()) return;
-
-        instance.getProxy().getScheduler().buildTask(instance, () -> {
-            if(!player.isActive()) return;
-
-            player.disconnect(Component.text("You're in a cracked account. Kicked for security reasons").color(NamedTextColor.RED));
-        }).delay(3, TimeUnit.SECONDS).schedule();
     }
 
     @Subscribe

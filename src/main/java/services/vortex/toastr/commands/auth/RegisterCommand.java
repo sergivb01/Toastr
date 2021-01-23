@@ -22,13 +22,12 @@ public class RegisterCommand implements SimpleCommand {
         }
 
         Player player = (Player) invocation.source();
-        Profile profile = Profile.getProfiles().get(player.getUniqueId());
-        // TODO: BETA change
-//        if(profile.getAccountType() == Profile.AccountType.PREMIUM) {
-//            player.sendMessage(Component.text("You are a premium user.").color(NamedTextColor.RED));
-//            return;
-//        }
+        if(player.isOnlineMode()) {
+            player.sendMessage(Component.text("You are a premium user.").color(NamedTextColor.RED));
+            return;
+        }
 
+        Profile profile = Profile.getProfiles().get(player.getUniqueId());
         if(!StringUtils.isNullOrEmpty(profile.getPassword())) {
             player.sendMessage(Component.text("already registered...").color(NamedTextColor.RED));
             return;
