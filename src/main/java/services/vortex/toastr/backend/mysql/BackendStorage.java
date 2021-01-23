@@ -37,8 +37,6 @@ public class BackendStorage {
         Thread monitorThread = new Thread(monitor);
         monitorThread.start();
 
-        executor.allowCoreThreadTimeOut(true);
-
         HikariConfig config = new HikariConfig();
         config.setMinimumIdle(MIN_IDLE);
         config.setPoolName("Toastr-Hikari");
