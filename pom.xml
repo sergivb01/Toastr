@@ -108,13 +108,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.minexd</groupId>
-            <artifactId>pidgin</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>3.5.0</version>

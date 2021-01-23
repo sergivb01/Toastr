@@ -5,7 +5,7 @@ import com.velocitypowered.api.command.RawCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
-import services.vortex.toastr.backend.packets.CommandPacket;
+import services.vortex.toastr.backend.packets.types.CommandPacket;
 
 public class SendToAllCommand implements RawCommand {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();

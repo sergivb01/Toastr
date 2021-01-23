@@ -1,47 +1,40 @@
-package services.vortex.toastr.backend.packets;
+package services.vortex.toastr.backend.packets.types;
 
 import com.google.gson.JsonObject;
-import com.minexd.pidgin.packet.Packet;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import services.vortex.toastr.ToastrPlugin;
+import services.vortex.toastr.backend.packets.Packet;
 
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @ToString
-public class StaffJoinPacket implements Packet {
+public class AlertPacket implements Packet {
     private String origin;
-    private String player;
-    private String server;
+    private String message;
 
-    public StaffJoinPacket(String player, String server) {
-        this.player = player;
-        this.server = server;
+    public AlertPacket(String message) {
+        this.message = message;
         this.origin = ToastrPlugin.getInstance().getRedisManager().getProxyName();
     }
 
     @Override
     public int id() {
-        return 7;
+        return 1;
     }
 
     @Override
     public JsonObject serialize() {
         JsonObject data = new JsonObject();
         data.addProperty("origin", origin);
-        data.addProperty("player", player);
-        data.addProperty("server", server);
+        data.addProperty("message", message);
         return data;
     }
 
     @Override
     public void deserialize(JsonObject data) {
         origin = data.get("origin").getAsString();
-        player = data.get("player").getAsString();
-        server = data.get("server").getAsString();
+        message = data.get("message").getAsString();
     }
-
 }

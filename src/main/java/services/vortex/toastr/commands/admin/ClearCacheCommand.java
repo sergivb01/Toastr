@@ -5,8 +5,8 @@ import com.velocitypowered.api.command.SimpleCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
-import services.vortex.toastr.backend.packets.ClearCachePacket;
-import services.vortex.toastr.backend.packets.KickPacket;
+import services.vortex.toastr.backend.packets.types.ClearCachePacket;
+import services.vortex.toastr.backend.packets.types.KickPacket;
 
 public class ClearCacheCommand implements SimpleCommand {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();

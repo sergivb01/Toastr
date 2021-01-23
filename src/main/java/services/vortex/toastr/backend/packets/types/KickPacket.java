@@ -1,12 +1,12 @@
-package services.vortex.toastr.backend.packets;
+package services.vortex.toastr.backend.packets.types;
 
 import com.google.gson.JsonObject;
-import com.minexd.pidgin.packet.Packet;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import services.vortex.toastr.ToastrPlugin;
+import services.vortex.toastr.backend.packets.Packet;
 
 @NoArgsConstructor
 @AllArgsConstructor

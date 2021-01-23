@@ -4,7 +4,7 @@ import com.velocitypowered.api.command.RawCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
-import services.vortex.toastr.backend.packets.AlertPacket;
+import services.vortex.toastr.backend.packets.types.AlertPacket;
 
 public class AlertCommand implements RawCommand {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();

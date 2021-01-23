@@ -1,7 +1,7 @@
 package services.vortex.toastr.listeners;
 
-import com.minexd.pidgin.packet.handler.IncomingPacketHandler;
-import com.minexd.pidgin.packet.listener.PacketListener;
+import services.vortex.toastr.backend.packets.handler.IncomingPacketHandler;
+import services.vortex.toastr.backend.packets.listener.PacketListener;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
@@ -13,7 +13,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import services.vortex.toastr.ToastrPlugin;
-import services.vortex.toastr.backend.packets.*;
+import services.vortex.toastr.backend.packets.types.*;
 
 public class NetworkListener implements PacketListener {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();

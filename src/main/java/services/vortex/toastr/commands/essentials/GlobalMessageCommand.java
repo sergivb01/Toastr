@@ -7,7 +7,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import services.vortex.toastr.ToastrPlugin;
-import services.vortex.toastr.backend.packets.GlobalMessagePacket;
+import services.vortex.toastr.backend.packets.types.GlobalMessagePacket;
 import services.vortex.toastr.profile.PlayerData;
 import services.vortex.toastr.utils.StringUtils;
 

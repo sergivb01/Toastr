@@ -1,14 +1,14 @@
 package services.vortex.toastr.backend.redis;
 
 import com.google.gson.JsonObject;
-import com.minexd.pidgin.Pidgin;
+import services.vortex.toastr.backend.packets.Pidgin;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import lombok.Getter;
 import redis.clients.jedis.*;
 import redis.clients.jedis.exceptions.JedisNoScriptException;
 import services.vortex.toastr.ToastrPlugin;
-import services.vortex.toastr.backend.packets.*;
+import services.vortex.toastr.backend.packets.types.*;
 import services.vortex.toastr.listeners.NetworkListener;
 import services.vortex.toastr.profile.PlayerData;
 import services.vortex.toastr.resolver.Resolver;
@@ -46,7 +46,7 @@ public class RedisManager {
 
         proxyName = instance.getConfig().getObject().get("proxy-name").getAsString();
 
-        pidgin = new Pidgin("toastr", redisConfig.get("host").getAsString(), redisConfig.get("port").getAsInt(), redisConfig.get("password").getAsString());
+        pidgin = new Pidgin("toastr", pool);
         pidgin.registerListener(new NetworkListener());
         Arrays.asList(
                 AlertPacket.class,

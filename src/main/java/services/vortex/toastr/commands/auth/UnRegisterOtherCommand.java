@@ -3,8 +3,8 @@ package services.vortex.toastr.commands.auth;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import services.vortex.toastr.ToastrPlugin;
-import services.vortex.toastr.backend.packets.ClearCachePacket;
-import services.vortex.toastr.backend.packets.KickPacket;
+import services.vortex.toastr.backend.packets.types.ClearCachePacket;
+import services.vortex.toastr.backend.packets.types.KickPacket;
 import services.vortex.toastr.profile.PlayerData;
 import services.vortex.toastr.utils.CC;
 
