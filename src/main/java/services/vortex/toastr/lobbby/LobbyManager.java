@@ -4,7 +4,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import com.velocitypowered.api.proxy.server.ServerPing;
 import lombok.Getter;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.lobbby.balancers.FirstAvailableBalancer;
@@ -51,25 +50,15 @@ public class LobbyManager {
             RegisteredServer server = optionalServer.get();
             Lobby lobby = new Lobby(name, restricted, server);
 
-            server.ping().whenComplete((ping, exception) -> {
-                if(ping == null) {
-                    instance.getLogger().warn("An error occurred while pinging " + lobby.getName(), exception);
-                    return;
-                }
-
-                Optional<ServerPing.Players> players = ping.getPlayers();
-                if(!players.isPresent())
-                    return;
-
-                lobby.setMaxPlayers(players.get().getMax());
-            });
-
             if(restricted) {
                 tmp_restricted.add(lobby);
             } else {
                 tmp.add(lobby);
             }
         }
+        tmp.removeIf(Lobby::isDown);
+        tmp_restricted.removeIf(Lobby::isDown);
+
         lobbies.clear();
         restrictedLobbies.clear();
 

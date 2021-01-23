@@ -1,10 +1,14 @@
 package services.vortex.toastr.lobbby;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.proxy.server.ServerPing;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import services.vortex.toastr.ToastrPlugin;
+
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 @Getter
@@ -20,6 +24,24 @@ public class Lobby {
 
     public int getOnline() {
         return instance.getRedisManager().getServerCount(server.getServerInfo().getName());
+    }
+
+    public boolean isDown() {
+        try {
+            final ServerPing ping = server.ping().get(5, TimeUnit.SECONDS);
+            Optional<ServerPing.Players> players = ping.getPlayers();
+            if(!players.isPresent()) {
+                instance.getLogger().warn("Couldn't determine the max players for " + name + ", ignoring server...");
+                return true;
+            }
+
+            maxPlayers = players.get().getMax();
+
+            return false;
+        } catch(Exception ex) {
+            instance.getLogger().warn("An error occurred while pinging " + name, ex);
+        }
+        return true;
     }
 
 }
