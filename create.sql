@@ -2,7 +2,7 @@ CREATE TABLE playerdata
 (
     uuid              char(36) character set ascii  NOT NULL,
     player_name       varchar(16)                   NOT NULL,
-    player_name_lower varchar(16)                   NOT NULL,
+    player_name_lower varchar(16) generated always AS (lower(player_name)),
     first_address     int unsigned                  NOT NULL comment 'ipv4 address stored as an unsigned int',
     last_address      int unsigned                  NOT NULL comment 'ipv4 address stored as an unsigned int',
     first_login       timestamp                     NOT NULL,
