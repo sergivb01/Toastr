@@ -18,7 +18,7 @@ import java.util.concurrent.*;
 
 public class BackendStorage {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
-    private static final int MIN_IDLE = 8;
+    private static final int MIN_IDLE = 8, MAX_CONNS = 14;
     private static final long NAMECHANGE_DELAY = TimeUnit.DAYS.toMillis(37);
 
     private final Executor executor;
@@ -48,6 +48,7 @@ public class BackendStorage {
 
         HikariConfig config = new HikariConfig();
         config.setMinimumIdle(MIN_IDLE);
+        config.setMaximumPoolSize(MAX_CONNS);
         config.setPoolName("Toastr-Hikari");
         config.setDataSourceClassName("com.mysql.cj.jdbc.MysqlDataSource");
 
