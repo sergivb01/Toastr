@@ -1,6 +1,7 @@
 package services.vortex.toastr.utils;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 public class StringUtils {
@@ -9,6 +10,14 @@ public class StringUtils {
         if(list.size() < start) return "";
 
         return String.join(delimiter, list.subList(start - 1, list.size()));
+    }
+
+    public static String joinArray(CharSequence... array) {
+        return String.join(", ", array);
+    }
+
+    public static String joinArray(Collection<String> array) {
+        return String.join(", ", array);
     }
 
     public static String joinArray(String[] array, String delimiter, int start) {
