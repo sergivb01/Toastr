@@ -20,7 +20,6 @@ Should probably make a good description
 
 <hr>
 
-* [ ] add queue to retry failed queries
 * [ ] check for auto-reconnect in Redis and MySQL
 * [ ] maintenance (proxy instance)
 * [ ] maintenance (global)
