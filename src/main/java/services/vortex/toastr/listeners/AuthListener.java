@@ -30,13 +30,15 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import static com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus.*;
 
 public class AuthListener {
+    private final ToastrPlugin instance = ToastrPlugin.getInstance();
     public static final ConcurrentHashMap<Player, Long> pendingRegister = new ConcurrentHashMap<>();
     public static final ConcurrentHashMap<Player, Long> pendingLogin = new ConcurrentHashMap<>();
-    private final ToastrPlugin instance = ToastrPlugin.getInstance();
+    private static final Pattern validUsername = Pattern.compile("^[a-zA-Z0-9_]{1,16}$");
 
     public AuthListener() {
         instance.getProxy().getScheduler().buildTask(instance, new RegisterTask(pendingRegister)).repeat(5, TimeUnit.SECONDS).schedule();
@@ -45,6 +47,11 @@ public class AuthListener {
 
     @Subscribe(order = PostOrder.FIRST)
     public void onPlayerPreLogin(PreLoginEvent event) {
+        if(!validUsername.matcher(event.getUsername()).matches()) {
+            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.text("Invalid username\nPlease contact administrator").color(NamedTextColor.RED)));
+            return;
+        }
+
         try {
             Resolver.Result result = instance.getResolverManager().resolveUsername(event.getUsername());
             if(!result.getUsername().equals(event.getUsername())) {
