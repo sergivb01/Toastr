@@ -10,11 +10,10 @@ public class UnRegisterOtherCommand implements SimpleCommand {
 
     @Override
     public void execute(SimpleCommand.Invocation invocation) {
-        // TODO: add support for username
         final String[] args = invocation.arguments();
         final CommandSource source = invocation.source();
         if(args.length != 1) {
-            source.sendMessage(CC.translate("&cUsage: /aunregister <uuid>"));
+            source.sendMessage(CC.translate("&cUsage: /aunregister <username>"));
             return;
         }
 

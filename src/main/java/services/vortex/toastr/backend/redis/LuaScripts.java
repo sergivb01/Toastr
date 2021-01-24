@@ -5,7 +5,9 @@ import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.utils.ResourceReader;
 
 public enum LuaScripts {
-    SERVER_TO_PLAYERS;
+    GET_ONLINE_USERNAMES,
+    GET_PLAYER_COUNT,
+    REMOVE_PROXY;
 
     private static final String PATH = "lua/";
     private final @NonNull String script;
@@ -14,10 +16,10 @@ public enum LuaScripts {
     LuaScripts() {
         final ToastrPlugin instance = ToastrPlugin.getInstance();
 
+        instance.getLogger().info("[Lua] Loading script " + this.toString() + "(" + PATH + this.toString().toLowerCase().replace("_", "-") + ".lua)");
+
         this.script = ResourceReader.readResource(PATH + this.toString().toLowerCase().replace("_", "-") + ".lua");
         this.hash = instance.getRedisManager().createScript(script);
-
-        instance.getLogger().info("Loading query " + this.toString() + "(" + PATH + this.toString().toLowerCase().replace("_", "-") + ".lua)");
     }
 
     /**

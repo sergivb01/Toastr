@@ -81,7 +81,6 @@ public class PluginMessageListener {
                 break;
             }
 
-
             case "SERVERPLAYERS": {
                 instance.getLogger().error(event.getSource().toString() + " tried to send a \"ServerPlayers\" plugin message, but feature is not implemented yet!");
                 instance.getLogger().error("Data: " + Arrays.toString(event.getData()));
@@ -101,7 +100,7 @@ public class PluginMessageListener {
 //                output.writeUTF("PlayerList");
 //                output.writeUTF(server);
 //                output.writeUTF(sb.toString());
-                instance.getLogger().error(event.getSource().toString() + " tried to send a \"ServerPlayers\" plugin message, but feature is not implemented yet!");
+                instance.getLogger().error(event.getSource().toString() + " tried to send a \"PlayerList\" plugin message, but feature is not implemented yet!");
                 instance.getLogger().error("Data: " + Arrays.toString(event.getData()));
                 break;
             }

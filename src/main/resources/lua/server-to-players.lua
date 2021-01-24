@@ -1,5 +1,4 @@
 local call = redis.call
-local ipairs = ipairs
 
 local serverToData = {}
 

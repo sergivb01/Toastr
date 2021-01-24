@@ -15,7 +15,7 @@ public enum SQLQueries {
     private final @NonNull String query;
 
     SQLQueries() {
-        ToastrPlugin.getInstance().getLogger().info("Loading query " + this.toString() + "(" + PATH + this.toString().toLowerCase().replace("_", "-") + ".sql)");
+        ToastrPlugin.getInstance().getLogger().info("[MySQL] Loading query " + this.toString() + "(" + PATH + this.toString().toLowerCase().replace("_", "-") + ".sql)");
         this.query = ResourceReader.readResource(PATH + this.toString().toLowerCase().replace("_", "-") + ".sql");
     }
 

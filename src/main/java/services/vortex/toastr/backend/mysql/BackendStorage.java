@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 public class BackendStorage {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
-    private static final int MIN_IDLE = 8, MAX_CONNS = 14;
+    private static final int MIN_IDLE = 10, MAX_CONNS = 16;
     private static final long NAMECHANGE_DELAY = TimeUnit.DAYS.toMillis(37);
 
     private final HikariDataSource hikari;
@@ -143,7 +143,12 @@ public class BackendStorage {
         }
     }
 
-    // TODO: documentation
+    /**
+     * This method unregisters a cracked player
+     *
+     * @param username The username to unregister
+     * @return True if a player was un-registred
+     * */
     public boolean unregisterPlayer(String username) throws Exception {
         final long start = System.currentTimeMillis();
 

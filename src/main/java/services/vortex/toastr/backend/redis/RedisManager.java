@@ -1,9 +1,14 @@
 package services.vortex.toastr.backend.redis;
 
+import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.scheduler.ScheduledTask;
+import com.velocitypowered.api.scheduler.Scheduler;
 import lombok.Getter;
-import redis.clients.jedis.*;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.exceptions.JedisNoScriptException;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.backend.BackendCredentials;
@@ -26,12 +31,10 @@ public class RedisManager {
     private static final int PROFILE_TTL = (int) TimeUnit.DAYS.toSeconds(7);
 
     private final JedisPool pool;
-    private final ScheduledTask updateTask, inconsistencyProxyTask, clockDifferenceTask;
+    private final ScheduledTask updateTask, consistencyCheckTask;
 
     @Getter
     private final AtomicInteger onlinePlayers = new AtomicInteger(0);
-    @Getter
-    private final Set<String> knownProxies = new HashSet<>();
     @Getter
     private final String proxyName;
     @Getter
@@ -39,7 +42,8 @@ public class RedisManager {
 
     public RedisManager(final BackendCredentials credentials) {
         final JedisPoolConfig poolConfig = new JedisPoolConfig();
-        poolConfig.setMaxTotal(14);
+        poolConfig.setMinIdle(10);
+        poolConfig.setMaxTotal(16);
         poolConfig.setMaxWaitMillis(TimeUnit.SECONDS.toMillis(3)); // max time to get a connection before Exception
 
         if(StringUtils.isNullOrEmpty(credentials.getPassword())) {
@@ -64,10 +68,16 @@ public class RedisManager {
                 StaffSwitchPacket.class
         ).forEach(pidgin::registerPacket);
 
-        instance.getProxy().getScheduler().buildTask(instance, () -> pidgin.sendPacket(new NetworkStatusPacket(proxyName, true))).delay(1, TimeUnit.SECONDS).schedule();
-        clockDifferenceTask = instance.getProxy().getScheduler().buildTask(instance, this::checkClockDifference).delay(5, TimeUnit.SECONDS).repeat(30, TimeUnit.SECONDS).schedule();
-        inconsistencyProxyTask = instance.getProxy().getScheduler().buildTask(instance, this::fixPlayerProxyInconsistency).delay(10, TimeUnit.SECONDS).repeat(30, TimeUnit.SECONDS).schedule();
-        updateTask = instance.getProxy().getScheduler().buildTask(instance, this::updatePlayerCounts).repeat(1, TimeUnit.SECONDS).schedule();
+        final Scheduler scheduler = instance.getProxy().getScheduler();
+
+        scheduler.buildTask(instance, () -> pidgin.sendPacket(new NetworkStatusPacket(proxyName, true)))
+                .delay(1, TimeUnit.SECONDS).schedule();
+
+        consistencyCheckTask = scheduler.buildTask(instance, this::checkInconsistency)
+                .delay(10, TimeUnit.SECONDS).repeat(1, TimeUnit.MINUTES).schedule();
+
+        updateTask = scheduler.buildTask(instance, this::updatePlayerCounts)
+                .repeat(1, TimeUnit.SECONDS).schedule();
     }
 
     /**
@@ -77,67 +87,27 @@ public class RedisManager {
     public void shutdown() {
         removeProxyInstance(proxyName);
 
-        clockDifferenceTask.cancel();
-        inconsistencyProxyTask.cancel();
+        consistencyCheckTask.cancel();
         updateTask.cancel();
 
         pool.close();
     }
 
-    // TODO: migrate to redis lua script
     private void removeProxyInstance(String proxy) {
         final long start = System.currentTimeMillis();
-        try(Jedis jedis = getConnection()) {
-            final Map<String, String> onlines = jedis.hgetAll("proxy:" + proxy + ":onlines");
-            knownProxies.remove(proxy.toLowerCase());
 
-            try(final Pipeline pipe = jedis.pipelined()) {
-                pipe.hdel("proxies", proxy);
-                pipe.del("proxy:" + proxy + ":onlines");
-
-                for(RegisteredServer server : instance.getProxy().getAllServers()) {
-                    pipe.srem("server:" + server.getServerInfo().getName(), onlines.values().toArray(new String[0]));
-                }
-                for(String rawUUID : onlines.keySet()) {
-                    pipe.hset("player:" + rawUUID, "lastOnline", Long.toString(System.currentTimeMillis()));
-                }
-                pipe.sync();
-            }
-        }
+        executeScript(LuaScripts.REMOVE_PROXY, Collections.singletonList(proxy), null);
         pidgin.sendPacket(new NetworkStatusPacket(proxy, false));
-        instance.getLogger().info("Removed current proxy instance in " + (System.currentTimeMillis() - start) + "ms");
+
+        instance.getLogger().info("Removed proxy {} instance in {}ms", proxy, System.currentTimeMillis() - start);
     }
 
     private void updatePlayerCounts() {
-        int online = 0;
-
-        try(Jedis jedis = getConnection()) {
-            Map<String, String> proxies = jedis.hgetAll("proxies");
-            for(Map.Entry<String, String> entry : proxies.entrySet()) {
-                final String proxy = entry.getKey();
-                if(System.currentTimeMillis() - Long.parseLong(entry.getValue()) > TimeUnit.SECONDS.toMillis(15)) {
-                    removeProxyInstance(proxy);
-                    instance.getLogger().warn("No heartbeat from " + proxy + " in 15 seconds, removing proxy.");
-                    continue;
-                }
-
-                if(System.currentTimeMillis() - Long.parseLong(entry.getValue()) > TimeUnit.SECONDS.toMillis(5)) {
-                    instance.getLogger().warn("No heartbeat from " + proxy + " in 5 seconds, ignoring players.");
-                    knownProxies.remove(proxy.toLowerCase());
-                    continue;
-                }
-
-                knownProxies.add(proxy.toLowerCase());
-                online += jedis.hlen("proxy:" + proxy + ":onlines");
-            }
-
-            jedis.hset("proxies", proxyName, Long.toString(System.currentTimeMillis()));
-        }
-
-        onlinePlayers.set(online);
+        onlinePlayers.set((Integer) executeScript(LuaScripts.GET_PLAYER_COUNT, Collections.singletonList(proxyName), null));
     }
 
-    private void fixPlayerProxyInconsistency() {
+    // TODO: migrate to Lua script
+    private void checkInconsistency() {
         long start = System.currentTimeMillis();
         int count = 0;
 
@@ -167,20 +137,6 @@ public class RedisManager {
         instance.getLogger().warn("Removed " + count + " players due to inconsistency between in-game and redis in " + (System.currentTimeMillis() - start) + "ms");
     }
 
-    private void checkClockDifference() {
-        try(Jedis jedis = getConnection()) {
-            final Map<String, String> proxies = jedis.hgetAll("proxies");
-            for(String proxy : proxies.keySet()) {
-                long heartbeat = Long.parseLong(proxies.get(proxy));
-                final long diff = Math.abs(System.currentTimeMillis() - heartbeat);
-                if(diff > TimeUnit.SECONDS.toMillis(4)) {
-                    instance.getLogger().warn("Time difference of " + diff + "ms exceeds the 4s margin between proxies");
-                }
-            }
-        }
-    }
-
-
     /**
      * Loads a redis script into redis
      *
@@ -201,6 +157,10 @@ public class RedisManager {
      * @param args   arguments for the script
      */
     public Object executeScript(LuaScripts script, List<String> keys, List<String> args) {
+        if(keys == null) keys = ImmutableList.of();
+
+        if(args == null) args = ImmutableList.of();
+
         Object data;
         try(final Jedis jedis = getConnection()) {
             data = jedis.evalsha(script.getHash(), keys, args);
@@ -211,17 +171,6 @@ public class RedisManager {
         }
         return data;
     }
-
-    /*
-     * Implement another anti inconsistency
-     *
-     * For all servers in redis:
-     *   * INTERSECT (https://redis.io/commands/sinter) each server pair
-     *
-     *   * OR look through each server and make a UNION (https://redis.io/commands/sunion)
-     *   of everything except current server. Check if it exists.
-     *   and remove players that are repeated
-     * */
 
     /**
      * This method creates a new uuid and sets all the info
@@ -241,12 +190,8 @@ public class RedisManager {
         proxyData.put(uuid.toString(), username);
 
         try(final Jedis jedis = getConnection()) {
-            final Transaction tx = jedis.multi();
-
-            tx.hmset("proxy:" + proxyName + ":onlines", proxyData);
-            tx.hmset("player:" + uuid, playerData);
-
-            tx.exec();
+            jedis.hmset("proxy:" + proxyName + ":onlines", proxyData);
+            jedis.hmset("player:" + uuid, playerData);
         }
     }
 
@@ -257,6 +202,7 @@ public class RedisManager {
      * @param username  The Player's username
      * @param newServer The server
      */
+    // TODO: migrate to lua
     public void setPlayerServer(UUID uuid, String username, String newServer) {
         try(final Jedis jedis = getConnection(); final Pipeline pipe = jedis.pipelined()) {
             for(RegisteredServer server : instance.getProxy().getAllServers()) {
@@ -298,6 +244,7 @@ public class RedisManager {
      *
      * @param uuid The UUID of the Player
      */
+    // TODO: migrate to lua
     public void cleanPlayer(UUID uuid, String username) {
         try(final Jedis jedis = getConnection(); final Pipeline pipe = jedis.pipelined()) {
             for(RegisteredServer server : instance.getProxy().getAllServers()) {
@@ -319,7 +266,7 @@ public class RedisManager {
      * @return The UUID, null if not found
      */
     public UUID getPlayerUUID(String player) {
-        try(Jedis jedis = getConnection()) {
+        try(final Jedis jedis = getConnection()) {
             String s = jedis.get("playeruuid:" + player.toLowerCase());
             if(s == null) {
                 try {
@@ -342,20 +289,7 @@ public class RedisManager {
      * @return A Set of Strings with all the Players from all the proxies, null if proxy not found
      */
     public Set<String> getUsernamesOnline() {
-        List<Response<List<String>>> results = new ArrayList<>(knownProxies.size());
-        try(final Jedis jedis = getConnection(); final Pipeline pipe = jedis.pipelined()) {
-            for(String proxy : knownProxies) {
-                results.add(pipe.hvals("proxy:" + proxy + ":onlines"));
-            }
-            pipe.sync();
-        }
-
-        Set<String> onlines = new HashSet<>();
-        for(Response<List<String>> result : results) {
-            onlines.addAll(result.get());
-        }
-
-        return onlines;
+        return new HashSet<>((List<String>) executeScript(LuaScripts.GET_ONLINE_USERNAMES, null, null));
     }
 
     /**
@@ -365,7 +299,7 @@ public class RedisManager {
      * @return The player count, null if proxy not found
      */
     public Long getProxyCount(String proxy) {
-        try(Jedis jedis = getConnection()) {
+        try(final Jedis jedis = getConnection()) {
             return jedis.hlen("proxy:" + proxy + ":onlines");
         }
     }
@@ -377,7 +311,7 @@ public class RedisManager {
      * @return A list of the players in the server (UUID)
      */
     public Set<String> getServerUsernames(String server) {
-        try(Jedis jedis = getConnection()) {
+        try(final Jedis jedis = getConnection()) {
             return jedis.smembers("server:" + server);
         }
     }
@@ -389,7 +323,7 @@ public class RedisManager {
      * @return The player count, null if server not found
      */
     public int getServerCount(String server) {
-        try(Jedis jedis = getConnection()) {
+        try(final Jedis jedis = getConnection()) {
             return Math.toIntExact(jedis.scard("server:" + server));
         }
     }
@@ -401,13 +335,13 @@ public class RedisManager {
      * @param result   The resolver result
      */
     public void setPlayerResult(String username, Resolver.Result result) {
-        try(Jedis jedis = getConnection()) {
-            Map<String, String> data = new HashMap<>();
-            data.put("username", username);
-            data.put("uuid", result.getUniqueId().toString());
-            data.put("premium", String.valueOf(result.isPremium()));
-            data.put("source", result.getSource());
+        Map<String, String> data = new HashMap<>();
+        data.put("username", username);
+        data.put("uuid", result.getUniqueId().toString());
+        data.put("premium", String.valueOf(result.isPremium()));
+        data.put("source", result.getSource());
 
+        try(final Jedis jedis = getConnection()) {
             jedis.hset("resolver:" + username.toLowerCase(), data);
             jedis.expire("resolver:" + username.toLowerCase(), RESOLVER_TTL);
 
@@ -416,7 +350,7 @@ public class RedisManager {
     }
 
     public Resolver.Result getPlayerResult(String username) {
-        try(Jedis jedis = getConnection()) {
+        try(final Jedis jedis = getConnection()) {
             final Map<String, String> result = jedis.hgetAll("resolver:" + username.toLowerCase());
 
             if(result == null || result.isEmpty()) {
@@ -429,7 +363,7 @@ public class RedisManager {
     }
 
     public void clearCache(String username) {
-        try(Jedis jedis = getConnection()) {
+        try(final Jedis jedis = getConnection()) {
             jedis.del("resolver:" + username.toLowerCase());
             jedis.del("playeruuid:" + username.toLowerCase());
         }

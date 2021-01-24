@@ -3,8 +3,6 @@ package services.vortex.toastr.commands.essentials;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
 
 import java.util.Set;
@@ -26,10 +24,11 @@ public class GListCommand implements SimpleCommand {
         }
 
         String proxy = args[0];
-        if(!proxy.equalsIgnoreCase("ALL") && !instance.getRedisManager().getKnownProxies().contains(proxy)) {
+        // TODO: reimplement this
+        /*if(!proxy.equalsIgnoreCase("ALL") && !instance.getRedisManager().getKnownProxies().contains(proxy)) {
             source.sendMessage(Component.text("Unknown proxy").color(NamedTextColor.RED));
             return;
-        }
+        }*/
 
         final Long online = instance.getRedisManager().getProxyCount(proxy);
         if(online == null || proxy.equalsIgnoreCase("ALL")) {
@@ -37,9 +36,10 @@ public class GListCommand implements SimpleCommand {
                 final Set<String> players = instance.getRedisManager().getServerUsernames(server.getServerInfo().getName());
                 source.sendMessage(instance.getMessage("glist_per_server", "server", server.getServerInfo().getName(), "online", Long.toString(players.size()), "players", String.join(", ", players)));
             }
-            for(String knownProxy : instance.getRedisManager().getKnownProxies()) {
-                source.sendMessage(instance.getMessage("glist_per_proxy", "proxy", knownProxy, "online", Long.toString(instance.getRedisManager().getProxyCount(knownProxy))));
-            }
+            // TODO: reimplement this
+//            for(String knownProxy : instance.getRedisManager().getKnownProxies()) {
+//                source.sendMessage(instance.getMessage("glist_per_proxy", "proxy", knownProxy, "online", Long.toString(instance.getRedisManager().getProxyCount(knownProxy))));
+//            }
             source.sendMessage(instance.getMessage("glist_global", "online", Integer.toString(global)));
             return;
         }
