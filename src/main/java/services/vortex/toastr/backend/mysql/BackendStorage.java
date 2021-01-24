@@ -90,7 +90,7 @@ public class BackendStorage {
         try(Connection connection = this.hikari.getConnection();
             final PreparedStatement query = connection.prepareStatement(SQLQueries.CHECK_NAMECASE.getQuery())) {
             query.setString(1, player.getUsername());
-            query.setQueryTimeout(3);
+            query.setQueryTimeout(1);
 
             try(final ResultSet rs = query.executeQuery()) {
                 while(rs.next()) {
@@ -129,7 +129,7 @@ public class BackendStorage {
         try(Connection connection = this.hikari.getConnection();
             final PreparedStatement query = connection.prepareStatement(SQLQueries.SELECT_PROFILE_BY_UUID.getQuery())) {
             query.setString(1, playerUUID.toString());
-            query.setQueryTimeout(3);
+            query.setQueryTimeout(1);
 
             try(final ResultSet rs = query.executeQuery()) {
                 if(!rs.next()) {
@@ -150,7 +150,7 @@ public class BackendStorage {
         try(Connection connection = this.hikari.getConnection();
             final PreparedStatement query = connection.prepareStatement(SQLQueries.UNREGISTER_BY_UUID.getQuery())) {
             query.setString(1, playerUUID.toString());
-            query.setQueryTimeout(3);
+            query.setQueryTimeout(1);
 
             query.execute();
         } finally {
@@ -176,7 +176,7 @@ public class BackendStorage {
                 query.setString(5, profile.getSalt());
                 query.setString(6, profile.getUniqueId().toString());
 
-                query.setQueryTimeout(3);
+                query.setQueryTimeout(1);
 
                 if(query.executeUpdate() == 1) {
                     return false;
@@ -194,7 +194,7 @@ public class BackendStorage {
                 query.setString(8, profile.getPassword());
                 query.setString(9, profile.getSalt());
 
-                query.setQueryTimeout(3);
+                query.setQueryTimeout(1);
 
                 query.execute();
 
