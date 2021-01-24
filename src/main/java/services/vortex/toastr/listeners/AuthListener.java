@@ -9,6 +9,7 @@ import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
@@ -37,6 +38,8 @@ public class AuthListener {
     public static final ConcurrentHashMap<Player, Long> pendingRegister = new ConcurrentHashMap<>();
     public static final ConcurrentHashMap<Player, Long> pendingLogin = new ConcurrentHashMap<>();
     private static final Pattern validUsername = Pattern.compile("^[a-zA-Z0-9_]{1,16}$");
+    private static final int MIN_VERSION = ProtocolVersion.MINECRAFT_1_7_2.getProtocol();
+    private static final int MAX_VERSION = ProtocolVersion.MINECRAFT_1_8.getProtocol();
 
     public AuthListener() {
         instance.getProxy().getScheduler().buildTask(instance, new RegisterTask(pendingRegister)).repeat(5, TimeUnit.SECONDS).schedule();
@@ -45,6 +48,12 @@ public class AuthListener {
 
     @Subscribe(order = PostOrder.FIRST)
     public void onPlayerPreLogin(PreLoginEvent event) {
+        final ProtocolVersion version = event.getConnection().getProtocolVersion();
+        if(version.isUnknown() || version.getProtocol() < MIN_VERSION || version.getProtocol() > MAX_VERSION) {
+            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CC.translate("&CUnsupported version\nPlease use clients 1.7.X or 1.8.X")));
+            return;
+        }
+
         if(!validUsername.matcher(event.getUsername()).matches()) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.text("Invalid username\nPlease contact administrator").color(NamedTextColor.RED)));
             return;
@@ -198,7 +207,7 @@ public class AuthListener {
         if(!(event.getCommandSource() instanceof Player))
             return;
 
-        if(instance.getConfig().getStringList("auth.allowed_commands").contains(event.getCommand().toLowerCase())){
+        if(instance.getConfig().getStringList("auth.allowed_commands").contains(event.getCommand().toLowerCase())) {
             return;
         }
 
