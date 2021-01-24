@@ -24,11 +24,6 @@ public class GlobalMessagePacket implements Packet {
     }
 
     @Override
-    public int id() {
-        return 4;
-    }
-
-    @Override
     public JsonObject serialize() {
         JsonObject data = new JsonObject();
         data.addProperty("origin", origin);

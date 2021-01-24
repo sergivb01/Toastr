@@ -23,8 +23,8 @@ public class Pidgin {
     private final String channel;
     private final JedisPool pool;
     private final List<PacketListenerData> packetListeners;
-    private final Map<Integer, Class> idToType = new HashMap<>();
-    private final Map<Class, Integer> typeToId = new HashMap<>();
+    private final Map<String, Class> idToType = new HashMap<>();
+    private final Map<Class, String> typeToId = new HashMap<>();
     private JedisPubSub jedisPubSub;
 
     public Pidgin(String channel, final JedisPool pool) {
@@ -43,13 +43,18 @@ public class Pidgin {
                 throw new IllegalStateException("Packet cannot generate null serialized data");
             }
 
-            jedis.publish(this.channel, packet.id() + ";" + object.toString());
+            final String id = typeToId.get(packet.getClass());
+            if(id == null) {
+                throw new IllegalStateException("Packet does not have an id");
+            }
+
+            jedis.publish(this.channel, id + ";" + object.toString());
         } catch(Exception ex) {
             logger.error("[Pidgin] Failed to publish packet...", ex);
         }
     }
 
-    public Packet buildPacket(int id) {
+    public Packet buildPacket(String id) {
         if(!idToType.containsKey(id)) {
             throw new IllegalStateException("A packet with that ID does not exist");
         }
@@ -65,8 +70,7 @@ public class Pidgin {
 
     public void registerPacket(Class clazz) {
         try {
-            int id = (int) clazz.getDeclaredMethod("id").invoke(clazz.newInstance(), null);
-
+            final String id = clazz.getSimpleName();
             if(idToType.containsKey(id) || typeToId.containsKey(clazz)) {
                 throw new IllegalStateException("A packet with that ID has already been registered");
             }
@@ -106,7 +110,7 @@ public class Pidgin {
 
                 try {
                     String[] args = message.split(";");
-                    Integer id = Integer.valueOf(args[0]);
+                    String id = args[0];
                     Packet packet = buildPacket(id);
 
                     if(packet != null) {

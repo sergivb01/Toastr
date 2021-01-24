@@ -24,11 +24,6 @@ public class StaffJoinPacket implements Packet {
     }
 
     @Override
-    public int id() {
-        return 7;
-    }
-
-    @Override
     public JsonObject serialize() {
         JsonObject data = new JsonObject();
         data.addProperty("origin", origin);

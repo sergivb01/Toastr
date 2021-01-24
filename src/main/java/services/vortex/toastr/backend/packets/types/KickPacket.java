@@ -24,11 +24,6 @@ public class KickPacket implements Packet {
     }
 
     @Override
-    public int id() {
-        return 5;
-    }
-
-    @Override
     public JsonObject serialize() {
         JsonObject data = new JsonObject();
         data.addProperty("origin", origin);

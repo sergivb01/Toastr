@@ -20,11 +20,6 @@ public class AlertPacket implements Packet {
     }
 
     @Override
-    public int id() {
-        return 1;
-    }
-
-    @Override
     public JsonObject serialize() {
         JsonObject data = new JsonObject();
         data.addProperty("origin", origin);

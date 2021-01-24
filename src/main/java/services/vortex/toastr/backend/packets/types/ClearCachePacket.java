@@ -20,11 +20,6 @@ public class ClearCachePacket implements Packet {
     }
 
     @Override
-    public int id() {
-        return 2;
-    }
-
-    @Override
     public JsonObject serialize() {
         JsonObject data = new JsonObject();
         data.addProperty("origin", origin);

@@ -24,11 +24,6 @@ public class NetworkStatusPacket implements Packet {
     }
 
     @Override
-    public int id() {
-        return 6;
-    }
-
-    @Override
     public JsonObject serialize() {
         JsonObject data = new JsonObject();
         data.addProperty("origin", origin);

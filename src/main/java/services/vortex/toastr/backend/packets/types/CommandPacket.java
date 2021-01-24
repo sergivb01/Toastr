@@ -20,11 +20,6 @@ public class CommandPacket implements Packet {
     }
 
     @Override
-    public int id() {
-        return 3;
-    }
-
-    @Override
     public JsonObject serialize() {
         JsonObject data = new JsonObject();
         data.addProperty("origin", origin);
