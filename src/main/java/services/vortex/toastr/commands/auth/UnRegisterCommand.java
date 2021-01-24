@@ -42,7 +42,7 @@ public class UnRegisterCommand implements SimpleCommand {
         profile.setPassword(null);
 
         try {
-            instance.getBackendStorage().saveProfile(profile).get(3, TimeUnit.SECONDS);
+            instance.getBackendStorage().saveProfile(profile);
         } catch(Exception ex) {
             instance.getLogger().error("Error un-registering " + player.getUsername(), ex);
             player.sendMessage(Component.text("Error un-registering. Contact admin").color(NamedTextColor.RED));

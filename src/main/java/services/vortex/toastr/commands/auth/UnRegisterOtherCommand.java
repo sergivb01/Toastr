@@ -42,7 +42,7 @@ public class UnRegisterOtherCommand implements SimpleCommand {
         }
 
         try {
-            instance.getBackendStorage().unregister(uuid).get(3, TimeUnit.SECONDS);
+            instance.getBackendStorage().unregister(uuid);
         } catch(Exception ex) {
             instance.getLogger().error("Error trying to unregister " + uuid.toString(), ex);
             source.sendMessage(CC.translate("Error while trying to unregister, contact admin"));

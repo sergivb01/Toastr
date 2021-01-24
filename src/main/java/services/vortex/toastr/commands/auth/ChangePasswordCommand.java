@@ -44,7 +44,7 @@ public class ChangePasswordCommand implements SimpleCommand {
         profile.setPassword(HashMethods.SHA512H(invocation.arguments()[0], salt));
 
         try {
-            instance.getBackendStorage().saveProfile(profile).get(3, TimeUnit.SECONDS);
+            instance.getBackendStorage().saveProfile(profile);
         } catch(Exception ex) {
             instance.getLogger().error("Error changing password for " + player.getUsername(), ex);
             player.sendMessage(Component.text("Error changing password. Contact admin").color(NamedTextColor.RED));

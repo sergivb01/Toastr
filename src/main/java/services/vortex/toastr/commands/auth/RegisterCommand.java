@@ -52,7 +52,7 @@ public class RegisterCommand implements SimpleCommand {
         profile.setPassword(HashMethods.SHA512H(invocation.arguments()[0], salt));
 
         try {
-            instance.getBackendStorage().saveProfile(profile).get(3, TimeUnit.SECONDS);
+            instance.getBackendStorage().saveProfile(profile);
         } catch(Exception ex) {
             instance.getLogger().error("Error registering " + player.getUsername(), ex);
             player.sendMessage(Component.text("Error registering. Contact admin").color(NamedTextColor.RED));
