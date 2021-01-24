@@ -103,7 +103,7 @@ public class RedisManager {
     }
 
     private void updatePlayerCounts() {
-        onlinePlayers.set((Integer) executeScript(LuaScripts.GET_PLAYER_COUNT, Collections.singletonList(proxyName), null));
+        onlinePlayers.set(((Long) executeScript(LuaScripts.GET_PLAYER_COUNT, Collections.singletonList(proxyName), null)).intValue());
     }
 
     // TODO: migrate to Lua script
