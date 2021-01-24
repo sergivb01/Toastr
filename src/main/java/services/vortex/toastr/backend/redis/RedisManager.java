@@ -38,10 +38,14 @@ public class RedisManager {
     private final Pidgin pidgin;
 
     public RedisManager(final BackendCredentials credentials) {
+        final JedisPoolConfig poolConfig = new JedisPoolConfig();
+        poolConfig.setMaxTotal(14);
+        poolConfig.setMaxWaitMillis(TimeUnit.SECONDS.toMillis(3)); // max time to get a connection before Exception
+
         if(StringUtils.isNullOrEmpty(credentials.getPassword())) {
-            pool = new JedisPool(new JedisPoolConfig(), credentials.getHostname(), credentials.getPort());
+            pool = new JedisPool(poolConfig, credentials.getHostname(), credentials.getPort());
         } else {
-            pool = new JedisPool(new JedisPoolConfig(), credentials.getHostname(), credentials.getPort(), 2000, credentials.getPassword());
+            pool = new JedisPool(poolConfig, credentials.getHostname(), credentials.getPort(), 2000, credentials.getPassword());
         }
 
         proxyName = instance.getConfig().getString("proxy-name");

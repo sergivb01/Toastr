@@ -26,6 +26,7 @@ public class BackendStorage {
         HikariConfig config = new HikariConfig();
         config.setMinimumIdle(MIN_IDLE);
         config.setMaximumPoolSize(MAX_CONNS);
+        config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(3)); // max time to get a connection before Exception
         config.setPoolName("Toastr-Hikari");
         config.setDataSourceClassName("com.mysql.cj.jdbc.MysqlDataSource");
 
