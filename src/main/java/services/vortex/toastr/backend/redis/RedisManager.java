@@ -20,8 +20,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RedisManager {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
 
-    private static final int CACHE_RESOLVER = 3600 * 2;
-    private static final int CACHE_UUID = 3600 * 24 * 5;
+    private static final int RESOLVER_TTL = (int) TimeUnit.DAYS.toSeconds(2);
+    private static final int UUID_TTL = (int) TimeUnit.DAYS.toSeconds(7);
+    private static final int PROFILE_TTL = (int) TimeUnit.DAYS.toSeconds(7);
 
     private final JedisPool pool;
     private final ScheduledTask updateTask, inconsistencyProxyTask, clockDifferenceTask;
@@ -302,6 +303,7 @@ public class RedisManager {
 
             pipe.hdel("proxy:" + proxyName + ":onlines", uuid.toString());
             pipe.hset("player:" + uuid, "lastOnline", Long.toString(System.currentTimeMillis()));
+            pipe.expire("player:" + uuid, PROFILE_TTL);
 
             pipe.sync();
         }
@@ -404,9 +406,9 @@ public class RedisManager {
             data.put("source", result.getSource());
 
             jedis.hset("resolver:" + username.toLowerCase(), data);
-            jedis.expire("resolver:" + username.toLowerCase(), CACHE_RESOLVER);
+            jedis.expire("resolver:" + username.toLowerCase(), RESOLVER_TTL);
 
-            jedis.setex("playeruuid:" + username.toLowerCase(), CACHE_UUID, result.getUniqueId().toString());
+            jedis.setex("playeruuid:" + username.toLowerCase(), UUID_TTL, result.getUniqueId().toString());
         }
     }
 
