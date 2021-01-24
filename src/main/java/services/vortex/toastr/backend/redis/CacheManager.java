@@ -115,6 +115,10 @@ public class CacheManager {
     }
 
     public void clearCache(String username) {
+        final UUID playerUUID = uuids.getIfPresent(username);
+        if(playerUUID != null) {
+            players.invalidate(playerUUID);
+        }
         uuids.invalidate(username);
         resolver.invalidate(username);
     }
