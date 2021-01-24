@@ -91,15 +91,15 @@ public class ToastrPlugin {
         commandManager.register("serverid", new ServerIDCommand());
 
         commandManager.register("changepassword", new ChangePasswordCommand());
-        commandManager.register("login", new LoginCommand());
-        commandManager.register("register", new RegisterCommand());
+        commandManager.register("login", new LoginCommand(), "l");
+        commandManager.register("register", new RegisterCommand(), "reg");
         commandManager.register("unregister", new UnRegisterCommand());
         commandManager.register("aunregister", new UnRegisterOtherCommand());
 
         commandManager.unregister("glist");
         commandManager.register("glist", new GListCommand());
         commandManager.register("gmsg", new GlobalMessageCommand());
-        commandManager.register("lobby", new LobbyCommand());
+        commandManager.register("lobby", new LobbyCommand(), "hub");
         commandManager.register("tprofile", new ProfileCommand());
 
         Arrays.asList(
