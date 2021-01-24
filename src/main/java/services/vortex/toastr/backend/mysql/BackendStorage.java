@@ -91,11 +91,6 @@ public class BackendStorage {
             query.setQueryTimeout(3);
 
             try(final ResultSet rs = query.executeQuery()) {
-                // cracked player doesn't exist in database
-                if(!rs.next()) {
-                    return Profile.CheckAccountResult.ALLOWED;
-                }
-
                 while(rs.next()) {
                     final Profile profile = createProfileFromRS(rs);
 
@@ -112,7 +107,7 @@ public class BackendStorage {
                     }
                 }
 
-                // premium account is no longer premium, allow, or other cases
+                // player doesn't exist in database, old premium account is no longer premium...
                 return Profile.CheckAccountResult.ALLOWED;
             }
         } finally {
