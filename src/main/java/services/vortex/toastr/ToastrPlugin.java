@@ -1,6 +1,5 @@
 package services.vortex.toastr;
 
-import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.Subscribe;
@@ -12,8 +11,12 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import net.kyori.adventure.text.Component;
+import net.md_5.bungee.config.Configuration;
+import net.md_5.bungee.config.ConfigurationProvider;
+import net.md_5.bungee.config.YamlConfiguration;
 import org.slf4j.Logger;
-import services.vortex.toastr.backend.mysql.BackendCredentials;
+import services.vortex.toastr.backend.BackendCredentials;
 import services.vortex.toastr.backend.mysql.BackendStorage;
 import services.vortex.toastr.backend.redis.CacheManager;
 import services.vortex.toastr.backend.redis.RedisManager;
@@ -26,12 +29,16 @@ import services.vortex.toastr.commands.essentials.ProfileCommand;
 import services.vortex.toastr.listeners.*;
 import services.vortex.toastr.lobbby.LobbyManager;
 import services.vortex.toastr.resolver.ResolverManager;
-import services.vortex.toastr.utils.Config;
+import services.vortex.toastr.utils.CC;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.File;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 @Plugin(
         id = "toastr",
@@ -49,7 +56,7 @@ public class ToastrPlugin {
     private final ProxyServer proxy;
     private final Logger logger;
     private final Path dataDirector;
-    private Config config;
+    private Configuration config;
 
     private ResolverManager resolverManager;
     private BackendStorage backendStorage;
@@ -69,18 +76,20 @@ public class ToastrPlugin {
     public void onProxyInitialization(ProxyInitializeEvent event) {
         instance = this;
 
-        if(!registerConfigs()) return;
+        if(!loadConfig()) return;
 
         resolverManager = new ResolverManager();
         lobbyManager = new LobbyManager();
         lobbyManager.loadLobbies();
 
-        redisManager = new RedisManager();
+        final Configuration redisConfig = config.getSection("database.redis");
+        redisManager = new RedisManager(new BackendCredentials(redisConfig.getString("host"), redisConfig.getInt("port"),
+                null, redisConfig.getString("password"), null));
         cacheManager = new CacheManager();
 
-        final JsonObject dbConfig = config.getObject().getAsJsonObject("database");
-
-        backendStorage = new BackendStorage(new BackendCredentials(dbConfig.get("host").getAsString(), dbConfig.get("port").getAsInt(), dbConfig.get("username").getAsString(), dbConfig.get("password").getAsString(), dbConfig.get("database").getAsString()));
+        final Configuration mysqlConfig = config.getSection("database.mysql");
+        backendStorage = new BackendStorage(new BackendCredentials(mysqlConfig.getString("host"), mysqlConfig.getInt("port"),
+                mysqlConfig.getString("username"), mysqlConfig.getString("password"), mysqlConfig.getString("database")));
 
         CommandManager commandManager = proxy.getCommandManager();
 
@@ -122,14 +131,13 @@ public class ToastrPlugin {
 
     @Subscribe
     public void onProxyReload(ProxyReloadEvent event) {
-        try {
-            config.reload();
-            lobbyManager.loadLobbies();
-
-            logger.info("reloaded config after proxy-reload");
-        } catch(FileNotFoundException e) {
-            instance.getLogger().error("Error trying to reload config after proxy-reload!", e);
+        if(!loadConfig() || config == null) {
+            logger.error("Can not reload config");
+            return;
         }
+        lobbyManager.loadLobbies();
+
+        logger.info("reloaded config after proxy-reload");
     }
 
     /**
@@ -137,15 +145,43 @@ public class ToastrPlugin {
      *
      * @return True if loaded successfully
      */
-    private boolean registerConfigs() {
+    public boolean loadConfig() {
+        File config = new File(dataDirector.toFile(), "config.yml");
+        config.getParentFile().mkdir();
         try {
-            config = new Config(this, dataDirector, "config");
-            return true;
-        } catch(IOException e) {
-            e.printStackTrace();
-            logger.error("An error occurred while loading the config file");
+            if(!config.exists()) {
+                try(InputStream in = getClass().getClassLoader().getResourceAsStream("config.yml")) {
+                    Files.copy(in, config.toPath());
+                }
+            }
+            this.config = ConfigurationProvider.getProvider(YamlConfiguration.class).load(config);
+        } catch(Exception ex) {
+            logger.error("Can not load or save config", ex);
             return false;
         }
+        return true;
+    }
+
+    /**
+     * This method loads a Component using MiniMessage
+     *
+     * @param name         The message name
+     * @param placeholders The placeholders
+     * @return The Component
+     */
+    public Component getMessage(String name, String... placeholders) {
+        return CC.translate(config.getString("messages." + name), placeholders);
+    }
+
+    public Collection<Component> getMessages(String name, String... placeholders) {
+        Collection<Component> res = new ArrayList<>();
+
+        final List<String> messages = config.getStringList("messages." + name);
+        for(String msg : messages) {
+            res.add(CC.translate(msg, placeholders));
+        }
+
+        return res;
     }
 
 }

@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import services.vortex.toastr.ToastrPlugin;
+import services.vortex.toastr.backend.BackendCredentials;
 import services.vortex.toastr.profile.Profile;
 
 import java.sql.Connection;
@@ -21,7 +22,7 @@ public class BackendStorage {
 
     private final HikariDataSource hikari;
 
-    public BackendStorage(BackendCredentials credentials) {
+    public BackendStorage(final BackendCredentials credentials) {
         HikariConfig config = new HikariConfig();
         config.setMinimumIdle(MIN_IDLE);
         config.setMaximumPoolSize(MAX_CONNS);

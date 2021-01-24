@@ -1,7 +1,5 @@
 package services.vortex.toastr.listeners;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
@@ -200,11 +198,8 @@ public class AuthListener {
         if(!(event.getCommandSource() instanceof Player))
             return;
 
-        final JsonArray allowedCommands = instance.getConfig().getObject().getAsJsonObject("auth").getAsJsonArray("allowed_commands");
-        for(JsonElement allowed : allowedCommands) {
-            if(event.getCommand().toLowerCase().contains(allowed.getAsString())) {
-                return;
-            }
+        if(instance.getConfig().getStringList("auth.allowed_commands").contains(event.getCommand().toLowerCase())){
+            return;
         }
 
         Player player = (Player) event.getCommandSource();

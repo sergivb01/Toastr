@@ -1,4 +1,4 @@
-package services.vortex.toastr.backend.mysql;
+package services.vortex.toastr.backend;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

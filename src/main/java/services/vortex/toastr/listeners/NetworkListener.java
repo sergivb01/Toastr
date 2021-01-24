@@ -51,7 +51,7 @@ public class NetworkListener implements PacketListener {
 
     @IncomingPacketHandler
     public void onAlert(AlertPacket packet) {
-        final Component alert = instance.getConfig().getMessage("alert")
+        final Component alert = instance.getMessage("alert")
                 .append(LegacyComponentSerializer.legacyAmpersand().deserialize(packet.getMessage()));
         instance.getProxy().getAllPlayers().forEach(player -> player.sendMessage(alert));
         instance.getProxy().getConsoleCommandSource().sendMessage(alert);

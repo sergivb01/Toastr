@@ -5,22 +5,17 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import services.vortex.toastr.ToastrPlugin;
 
-import java.io.FileNotFoundException;
-
 public class ReloadCommand implements SimpleCommand {
     private final ToastrPlugin instance = ToastrPlugin.getInstance();
 
     @Override
     public void execute(Invocation invocation) {
-        try {
-            instance.getConfig().reload();
-            instance.getLobbyManager().loadLobbies();
-
-            invocation.source().sendMessage(Component.text("Reloaded!").color(NamedTextColor.GREEN));
-        } catch(FileNotFoundException e) {
-            instance.getLogger().error("Error trying to reload config!", e);
+        if(!instance.loadConfig() || instance.getConfig() == null) {
             invocation.source().sendMessage(Component.text("Error reloading, check console!").color(NamedTextColor.RED));
+            return;
         }
+        instance.getLobbyManager().loadLobbies();
+        invocation.source().sendMessage(Component.text("Reloaded!").color(NamedTextColor.GREEN));
     }
 
     @Override

@@ -9,7 +9,6 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.backend.packets.types.KickPacket;
 import services.vortex.toastr.profile.PlayerData;
@@ -57,10 +56,10 @@ public class PlayerListener {
     public void onProxyPing(ProxyPingEvent event) {
         ServerPing ping = event.getPing();
 
-        String motd = instance.getConfig().getObject().get("proxy_motd_1").getAsString() + "\n" + instance.getConfig().getObject().get("proxy_motd_2").getAsString();
+        final Component motd = instance.getMessage("motd.line1").append(Component.text("\n")).append(instance.getMessage("motd.line2"));
 
         event.setPing(ping.asBuilder()
-                .description(LegacyComponentSerializer.legacyAmpersand().deserialize(motd))
+                .description(motd)
                 .onlinePlayers(instance.getRedisManager().getOnlinePlayers().get())
                 .build());
     }

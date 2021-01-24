@@ -14,8 +14,8 @@ public class UpdateTabTask implements Runnable {
         Component header, footer;
         for(Player player : instance.getProxy().getAllPlayers()) {
             String server = player.getCurrentServer().isPresent() ? player.getCurrentServer().get().getServerInfo().getName() : "unknown";
-            header = instance.getConfig().getMessage("header", "proxy", instance.getRedisManager().getProxyName(), "online", Integer.toString(online), "server", server);
-            footer = instance.getConfig().getMessage("footer", "proxy", instance.getRedisManager().getProxyName(), "online", Integer.toString(online), "server", server);
+            header = instance.getMessage("header", "proxy", instance.getRedisManager().getProxyName(), "online", Integer.toString(online), "server", server);
+            footer = instance.getMessage("footer", "proxy", instance.getRedisManager().getProxyName(), "online", Integer.toString(online), "server", server);
 
             player.getTabList().setHeaderAndFooter(header, footer);
         }

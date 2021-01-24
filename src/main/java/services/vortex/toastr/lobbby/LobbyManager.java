@@ -1,20 +1,16 @@
 package services.vortex.toastr.lobbby;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import lombok.Getter;
+import net.md_5.bungee.config.Configuration;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.lobbby.balancers.FirstAvailableBalancer;
 import services.vortex.toastr.lobbby.balancers.LowestBalancer;
 import services.vortex.toastr.lobbby.balancers.RandomBalancer;
 import services.vortex.toastr.lobbby.balancers.SequentialBalancer;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class LobbyManager {
@@ -34,12 +30,12 @@ public class LobbyManager {
         List<Lobby> tmp = Collections.synchronizedList(new ArrayList<>());
         List<Lobby> tmp_restricted = Collections.synchronizedList(new ArrayList<>());
 
-        final JsonObject config = instance.getConfig().getObject().get("lobby").getAsJsonObject();
+        final Configuration config = instance.getConfig().getSection("lobby");
+        final List<Map<String, Object>> servers = (List<Map<String, Object>>) config.getList("servers");
 
-        for(JsonElement element : config.getAsJsonArray("servers")) {
-            JsonObject object = element.getAsJsonObject();
-            String name = object.get("name").getAsString();
-            boolean restricted = object.get("restricted").getAsBoolean();
+        for(Map<String, Object> server : servers) {
+            String name = (String) server.get("name");
+            boolean restricted = (boolean) server.get("restricted");
 
             Optional<RegisteredServer> optionalServer = instance.getProxy().getServer(name);
             if(!optionalServer.isPresent()) {
@@ -47,8 +43,11 @@ public class LobbyManager {
                 continue;
             }
 
-            RegisteredServer server = optionalServer.get();
-            Lobby lobby = new Lobby(name, restricted, server);
+            final RegisteredServer registeredServer = optionalServer.get();
+            Lobby lobby = new Lobby(name, restricted, registeredServer);
+            if(lobby.isDown()) {
+                continue;
+            }
 
             if(restricted) {
                 tmp_restricted.add(lobby);
@@ -56,8 +55,6 @@ public class LobbyManager {
                 tmp.add(lobby);
             }
         }
-        tmp.removeIf(Lobby::isDown);
-        tmp_restricted.removeIf(Lobby::isDown);
 
         lobbies = tmp;
         restrictedLobbies = tmp_restricted;
@@ -65,8 +62,8 @@ public class LobbyManager {
         instance.getLogger().info("Loaded " + lobbies.size() + " regular lobbies.");
         instance.getLogger().info("Loaded " + restrictedLobbies.size() + " restricted lobbies.");
 
-        balancer = getBalancer(config.get("load-balancer").getAsString());
-        sendPlayerToHubOnClose = config.get("send-on-close").getAsBoolean();
+        balancer = getBalancer(config.getString("load-balancer"));
+        sendPlayerToHubOnClose = config.getBoolean("send-on-close");
     }
 
     public boolean isLobby(RegisteredServer server) {

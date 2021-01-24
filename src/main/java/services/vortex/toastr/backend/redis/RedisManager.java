@@ -1,17 +1,18 @@
 package services.vortex.toastr.backend.redis;
 
-import com.google.gson.JsonObject;
-import services.vortex.toastr.backend.packets.Pidgin;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import lombok.Getter;
 import redis.clients.jedis.*;
 import redis.clients.jedis.exceptions.JedisNoScriptException;
 import services.vortex.toastr.ToastrPlugin;
+import services.vortex.toastr.backend.BackendCredentials;
+import services.vortex.toastr.backend.packets.Pidgin;
 import services.vortex.toastr.backend.packets.types.*;
 import services.vortex.toastr.listeners.NetworkListener;
 import services.vortex.toastr.profile.PlayerData;
 import services.vortex.toastr.resolver.Resolver;
+import services.vortex.toastr.utils.StringUtils;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -36,16 +37,14 @@ public class RedisManager {
     @Getter
     private final Pidgin pidgin;
 
-    public RedisManager() {
-        JsonObject redisConfig = instance.getConfig().getObject().getAsJsonObject("redis");
-
-        if(redisConfig.get("password").getAsString().isEmpty()) {
-            pool = new JedisPool(new JedisPoolConfig(), redisConfig.get("host").getAsString(), redisConfig.get("port").getAsInt());
+    public RedisManager(final BackendCredentials credentials) {
+        if(StringUtils.isNullOrEmpty(credentials.getPassword())) {
+            pool = new JedisPool(new JedisPoolConfig(), credentials.getHostname(), credentials.getPort());
         } else {
-            pool = new JedisPool(new JedisPoolConfig(), redisConfig.get("host").getAsString(), redisConfig.get("port").getAsInt(), 2000, redisConfig.get("password").getAsString());
+            pool = new JedisPool(new JedisPoolConfig(), credentials.getHostname(), credentials.getPort(), 2000, credentials.getPassword());
         }
 
-        proxyName = instance.getConfig().getObject().get("proxy-name").getAsString();
+        proxyName = instance.getConfig().getString("proxy-name");
 
         pidgin = new Pidgin("toastr", pool);
         pidgin.registerListener(new NetworkListener());

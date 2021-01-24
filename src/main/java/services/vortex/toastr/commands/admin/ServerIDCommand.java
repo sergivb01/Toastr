@@ -9,7 +9,7 @@ public class ServerIDCommand implements SimpleCommand {
 
     @Override
     public void execute(Invocation invocation) {
-        invocation.source().sendMessage(instance.getConfig().getMessage("server_id", "proxy", instance.getRedisManager().getProxyName()));
+        invocation.source().sendMessage(instance.getMessage("server_id", "proxy", instance.getRedisManager().getProxyName()));
     }
 
 }
