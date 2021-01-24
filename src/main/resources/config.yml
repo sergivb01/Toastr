@@ -26,7 +26,7 @@ messages:
   motd:
     line1: '&6Another server running Toastr'
     line2: '&7Check us out on GitHub'
-  header: '&3Vortex Services &8┃ &rCurrently connected to &b&l<proxy> &rProxy'
+  header: '&3Sergi Services &8┃ &rCurrently connected to &b&l<proxy> &rProxy'
   footer: >-
     There are &l&3<online> &ronline users in the Network &8┃ &rConnected to
     &b&l<server>
