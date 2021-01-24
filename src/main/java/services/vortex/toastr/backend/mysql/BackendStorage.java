@@ -96,18 +96,20 @@ public class BackendStorage {
                     return Profile.CheckAccountResult.ALLOWED;
                 }
 
-                final Profile profile = createProfileFromRS(rs);
+                while(rs.next()) {
+                    final Profile profile = createProfileFromRS(rs);
 
-                // cracked player trying to login with different name-case - block
-                if(!profile.getUsername().equals(player.getUsername())) {
-                    return Profile.CheckAccountResult.DIFFERENT_NAMECASE;
-                }
+                    // cracked player trying to login with different name-case - block
+                    if(!profile.getUsername().equals(player.getUsername())) {
+                        return Profile.CheckAccountResult.DIFFERENT_NAMECASE;
+                    }
 
-                // cracked player logged in with nickname of an premium account (< 37d ?)
-                long elapsedSinceLast = System.currentTimeMillis() - profile.getLastLogin().getTime();
-                if(profile.getAccountType().equals(Profile.AccountType.PREMIUM) && elapsedSinceLast < NAMECHANGE_DELAY) {
-                    // premium account is still premium, block
-                    return Profile.CheckAccountResult.OLD_PREMIUM;
+                    // cracked player logged in with nickname of an premium account (< 37d ?)
+                    long elapsedSinceLast = System.currentTimeMillis() - profile.getLastLogin().getTime();
+                    if(profile.getAccountType().equals(Profile.AccountType.PREMIUM) && elapsedSinceLast < NAMECHANGE_DELAY) {
+                        // premium account is still premium, block
+                        return Profile.CheckAccountResult.OLD_PREMIUM;
+                    }
                 }
 
                 // premium account is no longer premium, allow, or other cases
