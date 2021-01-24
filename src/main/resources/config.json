@@ -51,7 +51,7 @@
 	"glist_global": "&2There are <online> online players on the network",
 	"glist_proxy": "&2There are <online> online players on the <proxy> proxy.",
 	"glist_per_server": "&e&l * &r&2<server>&r: &7(<online>)&r <players>",
-	"glist_per_proxy": "&e&l * &r&2<proxy> &7(Proxy) &r: <online>)",
+	"glist_per_proxy": "&e&l * &r&2<proxy> &7(Proxy) &r: <online>",
 
 	"profile_usage": "&cUsage: /tprofile <player>",
 	"profile_player_not_found": "&cPlayer not found",

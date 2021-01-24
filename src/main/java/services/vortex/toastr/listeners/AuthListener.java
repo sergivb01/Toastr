@@ -90,13 +90,9 @@ public class AuthListener {
         Player player = event.getPlayer();
 
         // TODO: check this. Who deserves the right of using the account?
-        instance.getBackendStorage().checkAccounts(player).whenComplete((result, ex) -> {
-            if(ex != null) {
-                instance.getLogger().error("Error checking namecase for " + player.getUsername(), ex);
-                player.disconnect(Component.text("Error trying to check namecase!").color(NamedTextColor.RED));
-                return;
-            }
-
+        final Profile.CheckAccountResult result;
+        try {
+            result = instance.getBackendStorage().checkAccounts(player);
             if(result.equals(Profile.CheckAccountResult.DIFFERENT_NAMECASE)) {
                 player.disconnect(Component.text("Different namecase! Contact admin").color(NamedTextColor.RED));
                 instance.getLogger().warn("Player with UUID " + player.getUniqueId() + " and username " + player.getUsername() + " tried to login with different namecase " + player.getRemoteAddress().toString());
@@ -106,54 +102,64 @@ public class AuthListener {
             if(result.equals(Profile.CheckAccountResult.OLD_PREMIUM)) {
                 player.disconnect(Component.text("This username was premium in the past < 37 days\nPlease login with another account or contact an administrator").color(NamedTextColor.RED));
                 instance.getLogger().warn("Player with UUID " + player.getUniqueId() + " and username " + player.getUsername() + " tried to login with an old premium account " + player.getRemoteAddress().toString());
-            }
-        }).thenAccept(result -> {
-            if(!result.equals(Profile.CheckAccountResult.ALLOWED)) {
                 return;
             }
+        } catch(Exception ex) {
+            instance.getLogger().error("Error checking namecase for " + player.getUsername(), ex);
+            player.disconnect(Component.text("Error trying to check namecase!").color(NamedTextColor.RED));
+            return;
+        }
 
-            instance.getBackendStorage().getProfile(player.getUniqueId()).whenComplete((profile, ex) -> {
-                if(ex != null) {
-                    instance.getLogger().error("Error loading profile for " + player.getUsername(), ex);
-                    player.disconnect(Component.text("Error loading your profile!").color(NamedTextColor.RED));
-                    return;
-                }
 
-                // TODO: auto-login if previousIP == currentIP AND lastLoginTimestampDiff <= 15min
-                boolean autoLogin = false;
-                if(profile == null) {
-                    profile = Profile.createProfile(player);
-                } else {
-                    autoLogin = profile.getLastIP().equals(player.getRemoteAddress().getAddress().getHostAddress())
-                            && (System.currentTimeMillis() - profile.getLastLogin().getTime()) < TimeUnit.MINUTES.toMillis(15);
-                }
+        if(!result.equals(Profile.CheckAccountResult.ALLOWED)) {
+            return;
+        }
 
-                profile.setLastLogin(Timestamp.from(Instant.now()));
-                profile.setLastIP(player.getRemoteAddress().getAddress().getHostAddress());
-                profile.setLoggedIn(player.isOnlineMode() || autoLogin);
+        Profile profile;
+        try {
+            profile = instance.getBackendStorage().getProfile(player.getUniqueId());
+        } catch(Exception ex) {
+            instance.getLogger().error("Error loading profile for " + player.getUsername(), ex);
+            player.disconnect(Component.text("Error loading your profile!").color(NamedTextColor.RED));
+            return;
+        }
 
-                Profile.getProfiles().put(player.getUniqueId(), profile);
-                player.sendMessage(Component.text("Your profile has been loaded!").color(NamedTextColor.DARK_AQUA));
-                if(autoLogin) {
-                    player.showTitle(Title.title(CC.translate("&2Auto logged in"), CC.translate("Recovered last session")));
-                }
+        boolean autoLogin = false;
+        if(profile == null) {
+            profile = Profile.createProfile(player);
+        } else {
+            autoLogin = profile.getLastIP().equals(player.getRemoteAddress().getAddress().getHostAddress())
+                    && (System.currentTimeMillis() - profile.getLastLogin().getTime()) < TimeUnit.MINUTES.toMillis(15);
+        }
 
-                if(profile.isLoggedIn()) return;
+        profile.setLastLogin(Timestamp.from(Instant.now()));
+        profile.setLastIP(player.getRemoteAddress().getAddress().getHostAddress());
+        profile.setLoggedIn(player.isOnlineMode() || autoLogin);
 
-                if(StringUtils.isNullOrEmpty(profile.getPassword())) {
-                    pendingRegister.put(player, System.currentTimeMillis());
-                } else {
-                    pendingLogin.put(player, System.currentTimeMillis());
-                }
-            }).thenAccept((profile) -> instance.getBackendStorage().saveProfile(profile).whenComplete((saved, ex) -> {
-                if(ex != null) {
-                    instance.getLogger().error("Error saving profile for " + player.getUsername() + " after login", ex);
-                    player.disconnect(Component.text("Failed to save your profile after login.\nContact an administrator").color(NamedTextColor.RED));
-                }
+        Profile.getProfiles().put(player.getUniqueId(), profile);
+        player.sendMessage(Component.text("Your profile has been loaded!").color(NamedTextColor.DARK_AQUA));
+        if(autoLogin) {
+            player.showTitle(Title.title(CC.translate("&2Auto logged in"), CC.translate("Recovered last session")));
+        }
 
-                // TODO: saved == true -> first time logging in. Implement something maybe? (:
-            }));
-        });
+        if(profile.isLoggedIn()) return;
+
+        if(StringUtils.isNullOrEmpty(profile.getPassword())) {
+            pendingRegister.put(player, System.currentTimeMillis());
+        } else {
+            pendingLogin.put(player, System.currentTimeMillis());
+        }
+
+        boolean newPlayer = false;
+        try {
+            newPlayer = instance.getBackendStorage().saveProfile(profile);
+        } catch(Exception ex) {
+            instance.getLogger().error("Error saving profile for " + player.getUsername() + " after login", ex);
+            player.disconnect(Component.text("Failed to save your profile after login.\nContact an administrator").color(NamedTextColor.RED));
+            return;
+        }
+
+        // TODO: first time logging in. Implement something maybe? (:
     }
 
     @Subscribe
@@ -173,12 +179,12 @@ public class AuthListener {
             return;
         }
 
-        instance.getBackendStorage().saveProfile(profile)
-                .whenComplete((updated, ex) -> {
-                    if(ex != null) {
-                        instance.getLogger().error("Saving " + player.getUsername() + " profile!", ex);
-                    }
-                });
+        try {
+            instance.getBackendStorage().saveProfile(profile);
+        } catch(Exception ex) {
+            instance.getLogger().error("Saving " + player.getUsername() + " profile!", ex);
+            return;
+        }
 
         Profile.getProfiles().remove(player.getUniqueId());
     }
