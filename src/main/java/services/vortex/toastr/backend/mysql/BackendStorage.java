@@ -3,7 +3,6 @@ package services.vortex.toastr.backend.mysql;
 import com.velocitypowered.api.proxy.Player;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.NonNull;
 import lombok.SneakyThrows;
 import services.vortex.toastr.ToastrPlugin;
 import services.vortex.toastr.profile.Profile;
@@ -13,7 +12,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
-import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 public class BackendStorage {
@@ -52,7 +50,7 @@ public class BackendStorage {
     }
 
     /**
-     * This method shutdowns the executor pool, monitor thread and HikariCP
+     * This method shutdowns HikariCP
      */
     @SneakyThrows
     public void shutdown() {
@@ -207,13 +205,6 @@ public class BackendStorage {
             }
         } finally {
             instance.getLogger().info("[database] [Insert/SaveProfile] " + profile.getUniqueId() + " took " + (System.currentTimeMillis() - start) + "ms");
-        }
-    }
-
-    static class CustomExecutor implements Executor {
-        @Override
-        public void execute(@NonNull Runnable command) {
-            command.run();
         }
     }
 
