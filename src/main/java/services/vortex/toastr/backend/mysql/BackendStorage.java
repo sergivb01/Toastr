@@ -62,7 +62,7 @@ public class BackendStorage {
     private Profile createProfileFromRS(final ResultSet rs) throws SQLException {
         return new Profile(
                 UUID.fromString(rs.getString("uuid")),
-                rs.getString("player_name"),
+                rs.getString("username"),
                 Profile.AccountType.valueOf(rs.getString("account_type")),
                 rs.getString("first_address"),
                 rs.getString("last_address"),
@@ -144,17 +144,17 @@ public class BackendStorage {
     }
 
     // TODO: documentation
-    public void unregister(UUID playerUUID) throws Exception {
+    public boolean unregisterPlayer(String username) throws Exception {
         final long start = System.currentTimeMillis();
 
         try(Connection connection = this.hikari.getConnection();
-            final PreparedStatement query = connection.prepareStatement(SQLQueries.UNREGISTER_BY_UUID.getQuery())) {
-            query.setString(1, playerUUID.toString());
+            final PreparedStatement query = connection.prepareStatement(SQLQueries.UNREGISTER_BY_USERNAME.getQuery())) {
+            query.setString(1, username);
             query.setQueryTimeout(1);
 
-            query.execute();
+            return query.executeUpdate() == 1;
         } finally {
-            instance.getLogger().info("[database] [Unregister] " + playerUUID.toString() + " took " + (System.currentTimeMillis() - start) + "ms");
+            instance.getLogger().info("[database] [Unregister] " + username + " took " + (System.currentTimeMillis() - start) + "ms");
         }
     }
 

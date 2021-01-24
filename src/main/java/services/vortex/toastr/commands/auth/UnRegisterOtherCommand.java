@@ -3,13 +3,7 @@ package services.vortex.toastr.commands.auth;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import services.vortex.toastr.ToastrPlugin;
-import services.vortex.toastr.backend.packets.types.ClearCachePacket;
-import services.vortex.toastr.backend.packets.types.KickPacket;
-import services.vortex.toastr.profile.PlayerData;
 import services.vortex.toastr.utils.CC;
-
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 public class UnRegisterOtherCommand implements SimpleCommand {
     private final ToastrPlugin instance = ToastrPlugin.getInstance();
@@ -24,32 +18,18 @@ public class UnRegisterOtherCommand implements SimpleCommand {
             return;
         }
 
-        String rawUUID = args[0];
-        final UUID uuid;
+        final String username = args[0];
         try {
-            uuid = UUID.fromString(rawUUID);
+            if(instance.getBackendStorage().unregisterPlayer(username)){
+                source.sendMessage(CC.translate("&2Successfully unregistered " + username));
+                return;
+            }
+            source.sendMessage(CC.translate("&cThe player does not exist or is premium"));
         } catch(Exception ex) {
-            source.sendMessage(CC.translate("Invalid UUID"));
-            return;
-        }
-
-        final PlayerData playerData = instance.getCacheManager().getPlayerData(uuid);
-        if(playerData != null && playerData.getLastOnline() == 0) {
-            instance.getRedisManager().getPidgin().sendPacket(new KickPacket(playerData.getUsername(), "&cUnregistering account"));
-            instance.getRedisManager().getPidgin().sendPacket(new ClearCachePacket(playerData.getUsername()));
-            source.sendMessage(CC.translate("&cThe player is currently online, a cross-network kick has been requested. Retry in few seconds."));
-            return;
-        }
-
-        try {
-            instance.getBackendStorage().unregister(uuid);
-        } catch(Exception ex) {
-            instance.getLogger().error("Error trying to unregister " + uuid.toString(), ex);
+            instance.getLogger().error("Error trying to unregister " + username, ex);
             source.sendMessage(CC.translate("Error while trying to unregister, contact admin"));
             return;
         }
-
-        source.sendMessage(CC.translate("&2Successfully unregistered player if existed"));
     }
 
     @Override

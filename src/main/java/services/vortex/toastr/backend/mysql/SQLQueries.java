@@ -8,7 +8,7 @@ public enum SQLQueries {
     CHECK_NAMECASE,
     INSERT_PROFILE,
     SELECT_PROFILE_BY_UUID,
-    UNREGISTER_BY_UUID,
+    UNREGISTER_BY_USERNAME,
     UPDATE_PROFILE_BY_UUID;
 
     private static final String PATH = "sql/";
