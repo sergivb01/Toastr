@@ -81,6 +81,10 @@ public class BackendStorage {
      * @return CompletableFuture<Boolean> that can return a SQLException
      */
     public Profile.CheckAccountResult checkAccounts(final Player player) throws Exception {
+        // premium user has the privilege to use the account
+        if(player.isOnlineMode()) {
+            return Profile.CheckAccountResult.ALLOWED;
+        }
         final long start = System.currentTimeMillis();
 
         try(Connection connection = this.hikari.getConnection();
@@ -89,8 +93,8 @@ public class BackendStorage {
             query.setQueryTimeout(3);
 
             try(final ResultSet rs = query.executeQuery()) {
-                // player doesn't exist in database
-                if(!rs.next() || player.isOnlineMode()) {
+                // cracked player doesn't exist in database
+                if(!rs.next()) {
                     return Profile.CheckAccountResult.ALLOWED;
                 }
 
