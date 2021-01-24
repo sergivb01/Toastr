@@ -149,14 +149,6 @@ public class AuthListener {
             player.showTitle(Title.title(CC.translate("&2Auto logged in"), CC.translate("Recovered last session")));
         }
 
-        if(profile.isLoggedIn()) return;
-
-        if(StringUtils.isNullOrEmpty(profile.getPassword())) {
-            pendingRegister.put(player, System.currentTimeMillis());
-        } else {
-            pendingLogin.put(player, System.currentTimeMillis());
-        }
-
         boolean newPlayer = false;
         try {
             newPlayer = instance.getBackendStorage().saveProfile(profile);
@@ -165,8 +157,15 @@ public class AuthListener {
             player.disconnect(Component.text("Failed to save your profile after login.\nContact an administrator").color(NamedTextColor.RED));
             return;
         }
-
         // TODO: first time logging in. Implement something maybe? (:
+
+        if(profile.isLoggedIn()) return;
+
+        if(StringUtils.isNullOrEmpty(profile.getPassword())) {
+            pendingRegister.put(player, System.currentTimeMillis());
+        } else {
+            pendingLogin.put(player, System.currentTimeMillis());
+        }
     }
 
     @Subscribe
