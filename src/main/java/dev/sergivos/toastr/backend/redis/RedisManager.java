@@ -324,7 +324,7 @@ public class RedisManager {
      */
     public int getServerCount(String server) {
         try(final Jedis jedis = getConnection()) {
-            return Math.toIntExact(jedis.scard("server:" + server));
+            return jedis.scard("server:" + server).intValue();
         }
     }
 
