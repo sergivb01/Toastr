@@ -11,9 +11,11 @@ import dev.sergivos.toastr.ToastrPlugin;
 import dev.sergivos.toastr.backend.packets.types.KickPacket;
 import dev.sergivos.toastr.profile.PlayerData;
 import dev.sergivos.toastr.tasks.UpdateTabTask;
+import dev.sergivos.toastr.utils.CC;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
+import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
 public class PlayerListener {
@@ -28,6 +30,13 @@ public class PlayerListener {
     public void onPlayerJoin(PostLoginEvent event) {
         Player player = event.getPlayer();
 
+        final InetSocketAddress address = player.getRemoteAddress();
+        if(address == null || address.isUnresolved()) {
+            player.disconnect(CC.translate("&cNull address detected\nContact administrator or try again later"));
+            instance.getLogger().warn("Player {} with UUID {} tried to join with a null or unresolved address", player.getUsername(), player.getUniqueId().toString());
+            return;
+        }
+
         final PlayerData playerData = instance.getRedisManager().getPlayer(player.getUniqueId());
         if(playerData != null && playerData.getLastOnline() == 0) {
             player.disconnect(Component.text("Player already online in the network, requested cross-network kick.\nPlease relog in").color(NamedTextColor.RED));
@@ -36,7 +45,7 @@ public class PlayerListener {
             return;
         }
 
-        instance.getRedisManager().createPlayer(player.getUniqueId(), player.getUsername(), player.getRemoteAddress().getAddress().getHostAddress());
+        instance.getRedisManager().createPlayer(player.getUniqueId(), player.getUsername(), address.getAddress().getHostAddress());
     }
 
     @Subscribe
