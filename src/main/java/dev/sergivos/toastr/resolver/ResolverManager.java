@@ -3,11 +3,8 @@ package dev.sergivos.toastr.resolver;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import dev.sergivos.toastr.ToastrPlugin;
 import dev.sergivos.toastr.resolver.impl.AshconResolver;
-import dev.sergivos.toastr.resolver.impl.CloudProtectedResolver;
-import dev.sergivos.toastr.resolver.impl.MineToolsResolver;
-import dev.sergivos.toastr.resolver.impl.PlayerDBResolver;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -28,11 +25,12 @@ public class ResolverManager {
             return result;
         }
 
-        result = executor.invokeAny(Arrays.asList(
-                new AshconResolver(username),
-                new CloudProtectedResolver(username),
-                new MineToolsResolver(username),
-                new PlayerDBResolver(username)
+        // TODO: add other Resolvers
+        result = executor.invokeAny(Collections.singletonList(
+                new AshconResolver(username)
+//                new CloudProtectedResolver(username),
+//                new MineToolsResolver(username),
+//                new PlayerDBResolver(username)
         ), 1500, TimeUnit.MILLISECONDS);
 
         instance.getRedisManager().setPlayerResult(username, result);
