@@ -260,30 +260,6 @@ public class RedisManager {
     }
 
     /**
-     * This method gets the UUID of a Player
-     *
-     * @param player The Player name
-     * @return The UUID, null if not found
-     */
-    public UUID getPlayerUUID(String player) {
-        try(final Jedis jedis = getConnection()) {
-            String s = jedis.get("playeruuid:" + player.toLowerCase());
-            if(s == null) {
-                try {
-                    final Resolver.Result result = instance.getResolverManager().resolveUsername(player);
-                    if(result != null) {
-                        return result.getUniqueId();
-                    }
-                } catch(Exception ignore) {
-                }
-                return null;
-            }
-
-            return UUID.fromString(s);
-        }
-    }
-
-    /**
      * This method gets all the online players in <strong>all the online proxies</strong>
      *
      * @return A Set of Strings with all the Players from all the proxies, null if proxy not found
@@ -344,8 +320,6 @@ public class RedisManager {
         try(final Jedis jedis = getConnection()) {
             jedis.hset("resolver:" + username.toLowerCase(), data);
             jedis.expire("resolver:" + username.toLowerCase(), RESOLVER_TTL);
-
-            jedis.setex("playeruuid:" + username.toLowerCase(), UUID_TTL, result.getUniqueId().toString());
         }
     }
 
@@ -365,7 +339,6 @@ public class RedisManager {
     public void clearCache(String username) {
         try(final Jedis jedis = getConnection()) {
             jedis.del("resolver:" + username.toLowerCase());
-            jedis.del("playeruuid:" + username.toLowerCase());
         }
     }
 

@@ -13,17 +13,12 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class CacheManager {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
-    private final Cache<String, UUID> uuids = CacheBuilder.newBuilder()
-            .expireAfterWrite(1, TimeUnit.HOURS)
-            .maximumSize(500)
-            .build();
-    private final Cache<UUID, PlayerData> players = CacheBuilder.newBuilder()
-            .expireAfterWrite(10, TimeUnit.SECONDS)
-            .maximumSize(50)
-            .build();
     private final Cache<String, Resolver.Result> resolver = CacheBuilder.newBuilder()
-            .expireAfterWrite(5, TimeUnit.MINUTES)
-            .maximumSize(500)
+            .concurrencyLevel(Runtime.getRuntime().availableProcessors())
+            .expireAfterWrite(15, TimeUnit.MINUTES)
+            .expireAfterAccess(15, TimeUnit.MINUTES)
+            .initialCapacity(750)
+            .maximumSize(1000)
             .build();
     private final AtomicReference<Set<String>> allOnline = new AtomicReference<>();
     private long lastAllOnline = 0;
@@ -65,25 +60,6 @@ public class CacheManager {
     /**
      * This method gets a PlayerData of a Player from the Cache, if not cached it gets the data from redis
      *
-     * @param uuid The UUID of the Player
-     * @return The PlayerData, null if not found
-     */
-    public PlayerData getPlayerData(UUID uuid) {
-        PlayerData data = players.getIfPresent(uuid);
-        if(data == null) {
-            data = instance.getRedisManager().getPlayer(uuid);
-            if(data == null)
-                return null;
-
-            players.put(uuid, data);
-        }
-
-        return data;
-    }
-
-    /**
-     * This method gets a PlayerData of a Player from the Cache, if not cached it gets the data from redis
-     *
      * @param name The name of the Player
      * @return The PlayerData, null if not found
      */
@@ -92,34 +68,27 @@ public class CacheManager {
         if(uuid == null)
             return null;
 
-        return getPlayerData(uuid);
+        return instance.getRedisManager().getPlayer(uuid);
     }
 
     /**
      * This method gets the UUID of a Player from the Cache, if not cached it gets the data from redis
      *
-     * @param name The name of the Player
+     * @param username The username of the Player
      * @return The UUID, null if not found
      */
-    private UUID getUUID(String name) {
-        UUID uuid = uuids.getIfPresent(name);
-        if(uuid == null) {
-            uuid = instance.getRedisManager().getPlayerUUID(name);
-            if(uuid == null)
+    private UUID getUUID(String username) {
+        Resolver.Result result = getPlayerResult(username);
+        if(result == null) {
+            result = instance.getRedisManager().getPlayerResult(username);
+            if(result == null)
                 return null;
-
-            uuids.put(name.toLowerCase(), uuid);
         }
 
-        return uuid;
+        return result.getUniqueId();
     }
 
     public void clearCache(String username) {
-        final UUID playerUUID = uuids.getIfPresent(username);
-        if(playerUUID != null) {
-            players.invalidate(playerUUID);
-        }
-        uuids.invalidate(username);
         resolver.invalidate(username);
     }
 
