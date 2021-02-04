@@ -3,9 +3,9 @@ local call = redis.call
 local proxy = KEYS[1]
 local curr_time = call("TIME")[1]
 
-local servers = call("KEYS", "server:*")
-local uuids = call("HKEYS", "proxy:" .. proxy .. ":onlines")
-local usernames = call("HVALS", "proxy:" .. proxy .. ":onlines")
+local servers = call("KEYS", "toastr:server:*")
+local uuids = call("HKEYS", "toastr:proxy:" .. proxy .. ":onlines")
+local usernames = call("HVALS", "toastr:proxy:" .. proxy .. ":onlines")
 
 if (servers == nil or usernames == nil or uuids == nil) then
     return
@@ -20,8 +20,8 @@ for _, user in ipairs(usernames) do
 end
 
 for _, uuid in ipairs(uuids) do
-    call("HSET", "player:" .. uuid, "lastOnline", curr_time)
+    call("HSET", "toastr:player:" .. uuid, "lastOnline", curr_time)
 end
 
-call("HDEL", "proxies", proxy)
-call("DEL", "proxy:" .. proxy .. ":onlines")
+call("HDEL", "toastr:proxies", proxy)
+call("DEL", "toastr:proxy:" .. proxy .. ":onlines")

@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RedisManager {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
 
+    private static final String PREFIX = "toastr:";
     private static final int RESOLVER_TTL = (int) TimeUnit.DAYS.toSeconds(2);
     private static final int PROFILE_TTL = (int) TimeUnit.DAYS.toSeconds(7);
 
@@ -111,18 +112,18 @@ public class RedisManager {
         int count = 0;
 
         try(Jedis jedis = getConnection()) {
-            final Map<String, String> onlines = jedis.hgetAll("proxy:" + proxyName + ":onlines");
+            final Map<String, String> onlines = jedis.hgetAll(PREFIX + "proxy:" + proxyName + ":onlines");
 
             try(final Pipeline pipe = jedis.pipelined()) {
                 for(Map.Entry<String, String> entry : onlines.entrySet()) {
                     final UUID uuid = UUID.fromString(entry.getKey());
                     if(!instance.getProxy().getPlayer(uuid).isPresent()) {
                         for(RegisteredServer server : instance.getProxy().getAllServers()) {
-                            pipe.srem("server:" + server.getServerInfo().getName(), entry.getValue());
+                            pipe.srem(PREFIX + "server:" + server.getServerInfo().getName(), entry.getValue());
                         }
 
-                        pipe.hdel("proxy:" + proxyName + ":onlines", uuid.toString());
-                        pipe.hset("player:" + uuid, "lastOnline", Long.toString(System.currentTimeMillis()));
+                        pipe.hdel(PREFIX + "proxy:" + proxyName + ":onlines", uuid.toString());
+                        pipe.hset(PREFIX + "player:" + uuid, "lastOnline", Long.toString(System.currentTimeMillis()));
 
                         instance.getLogger().warn("Removing " + entry.getKey() + " because it's stored in redis but not online");
                         count++;
@@ -189,8 +190,8 @@ public class RedisManager {
         proxyData.put(uuid.toString(), username);
 
         try(final Jedis jedis = getConnection()) {
-            jedis.hmset("proxy:" + proxyName + ":onlines", proxyData);
-            jedis.hmset("player:" + uuid, playerData);
+            jedis.hmset(PREFIX + "proxy:" + proxyName + ":onlines", proxyData);
+            jedis.hmset(PREFIX + "player:" + uuid, playerData);
         }
     }
 
@@ -213,7 +214,7 @@ public class RedisManager {
      */
     public PlayerData getPlayer(UUID uuid) {
         try(final Jedis jedis = getConnection()) {
-            Map<String, String> data = jedis.hgetAll("player:" + uuid);
+            Map<String, String> data = jedis.hgetAll(PREFIX + "player:" + uuid);
             if(data == null || data.isEmpty())
                 return null;
 
@@ -238,9 +239,9 @@ public class RedisManager {
 
         // TODO: migrate to lua
         try(final Jedis jedis = getConnection(); final Pipeline pipe = jedis.pipelined()) {
-            pipe.hdel("proxy:" + proxyName + ":onlines", uuid.toString());
-            pipe.hset("player:" + uuid, "lastOnline", Long.toString(System.currentTimeMillis()));
-            pipe.expire("player:" + uuid, PROFILE_TTL);
+            pipe.hdel(PREFIX + "proxy:" + proxyName + ":onlines", uuid.toString());
+            pipe.hset(PREFIX + "player:" + uuid, "lastOnline", Long.toString(System.currentTimeMillis()));
+            pipe.expire(PREFIX + "player:" + uuid, PROFILE_TTL);
 
             pipe.sync();
         }
@@ -263,7 +264,7 @@ public class RedisManager {
      */
     public Long getProxyCount(String proxy) {
         try(final Jedis jedis = getConnection()) {
-            return jedis.hlen("proxy:" + proxy + ":onlines");
+            return jedis.hlen(PREFIX + "proxy:" + proxy + ":onlines");
         }
     }
 
@@ -275,7 +276,7 @@ public class RedisManager {
      */
     public Set<String> getServerUsernames(String server) {
         try(final Jedis jedis = getConnection()) {
-            return jedis.smembers("server:" + server);
+            return jedis.smembers(PREFIX + "server:" + server);
         }
     }
 
@@ -287,7 +288,7 @@ public class RedisManager {
      */
     public int getServerCount(String server) {
         try(final Jedis jedis = getConnection()) {
-            return jedis.scard("server:" + server).intValue();
+            return jedis.scard(PREFIX + "server:" + server).intValue();
         }
     }
 
@@ -305,14 +306,14 @@ public class RedisManager {
         data.put("source", result.getSource());
 
         try(final Jedis jedis = getConnection()) {
-            jedis.hset("resolver:" + username.toLowerCase(), data);
-            jedis.expire("resolver:" + username.toLowerCase(), RESOLVER_TTL);
+            jedis.hset(PREFIX + "resolver:" + username.toLowerCase(), data);
+            jedis.expire(PREFIX + "resolver:" + username.toLowerCase(), RESOLVER_TTL);
         }
     }
 
     public Resolver.Result getPlayerResult(String username) {
         try(final Jedis jedis = getConnection()) {
-            final Map<String, String> result = jedis.hgetAll("resolver:" + username.toLowerCase());
+            final Map<String, String> result = jedis.hgetAll(PREFIX + "resolver:" + username.toLowerCase());
 
             if(result == null || result.isEmpty()) {
                 return null;
@@ -325,7 +326,7 @@ public class RedisManager {
 
     public void clearCache(String username) {
         try(final Jedis jedis = getConnection()) {
-            jedis.del("resolver:" + username.toLowerCase());
+            jedis.del(PREFIX + "resolver:" + username.toLowerCase());
         }
     }
 
