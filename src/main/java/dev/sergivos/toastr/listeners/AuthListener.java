@@ -37,8 +37,6 @@ public class AuthListener {
     public static final ConcurrentHashMap<Player, Long> pendingRegister = new ConcurrentHashMap<>();
     public static final ConcurrentHashMap<Player, Long> pendingLogin = new ConcurrentHashMap<>();
     private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{1,16}$");
-    private static final int MIN_VERSION = ProtocolVersion.MINECRAFT_1_7_2.getProtocol();
-    private static final int MAX_VERSION = ProtocolVersion.MINECRAFT_1_8.getProtocol();
     private final ToastrPlugin instance = ToastrPlugin.getInstance();
 
     public AuthListener() {
@@ -46,11 +44,13 @@ public class AuthListener {
         instance.getProxy().getScheduler().buildTask(instance, new LoginTask(pendingLogin)).repeat(5, TimeUnit.SECONDS).schedule();
     }
 
-    @Subscribe(order = PostOrder.FIRST)
+    @Subscribe(order = PostOrder.LAST)
     public void onPlayerPreLogin(PreLoginEvent event) {
+        if(!event.getResult().isAllowed()) return;
+
         final ProtocolVersion version = event.getConnection().getProtocolVersion();
-        if(version.isUnknown() || version.getProtocol() < MIN_VERSION || version.getProtocol() > MAX_VERSION) {
-            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CC.translate("&CUnsupported version\nPlease use clients 1.7.X or 1.8.X")));
+        if(version.isUnknown() || version.getProtocol() < instance.getConfig().getInt("version.min") || version.getProtocol() > instance.getConfig().getInt("version.max")) {
+            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CC.translate("&CUnsupported version\nContact an administrator")));
             return;
         }
 

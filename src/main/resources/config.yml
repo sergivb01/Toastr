@@ -12,6 +12,10 @@ database:
 
 proxy-name: changeme
 
+version:
+  min: 4
+  max: 47
+
 lobby:
   load-balancer: LOWEST
   send-on-close: true
