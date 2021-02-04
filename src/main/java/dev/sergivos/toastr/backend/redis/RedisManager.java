@@ -27,7 +27,6 @@ public class RedisManager {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
 
     private static final int RESOLVER_TTL = (int) TimeUnit.DAYS.toSeconds(2);
-    private static final int UUID_TTL = (int) TimeUnit.DAYS.toSeconds(7);
     private static final int PROFILE_TTL = (int) TimeUnit.DAYS.toSeconds(7);
 
     private final JedisPool pool;
@@ -202,18 +201,8 @@ public class RedisManager {
      * @param username  The Player's username
      * @param newServer The server
      */
-    // TODO: migrate to lua
     public void setPlayerServer(UUID uuid, String username, String newServer) {
-        try(final Jedis jedis = getConnection(); final Pipeline pipe = jedis.pipelined()) {
-            for(RegisteredServer server : instance.getProxy().getAllServers()) {
-                pipe.srem("server:" + server.getServerInfo().getName(), username);
-            }
-
-            pipe.hset("player:" + uuid, "server", newServer);
-            pipe.sadd("server:" + newServer, username);
-
-            pipe.sync();
-        }
+        executeScript(LuaScripts.SET_PLAYER_SERVER, null, Arrays.asList(uuid.toString(), username, newServer));
     }
 
     /**
@@ -244,13 +233,11 @@ public class RedisManager {
      *
      * @param uuid The UUID of the Player
      */
-    // TODO: migrate to lua
     public void cleanPlayer(UUID uuid, String username) {
-        try(final Jedis jedis = getConnection(); final Pipeline pipe = jedis.pipelined()) {
-            for(RegisteredServer server : instance.getProxy().getAllServers()) {
-                pipe.srem("server:" + server.getServerInfo().getName(), username);
-            }
+        executeScript(LuaScripts.CLEAN_PLAYER, null, Collections.singletonList(username));
 
+        // TODO: migrate to lua
+        try(final Jedis jedis = getConnection(); final Pipeline pipe = jedis.pipelined()) {
             pipe.hdel("proxy:" + proxyName + ":onlines", uuid.toString());
             pipe.hset("player:" + uuid, "lastOnline", Long.toString(System.currentTimeMillis()));
             pipe.expire("player:" + uuid, PROFILE_TTL);

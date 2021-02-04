@@ -7,7 +7,9 @@ import lombok.NonNull;
 public enum LuaScripts {
     GET_ONLINE_USERNAMES,
     GET_PLAYER_COUNT,
-    REMOVE_PROXY;
+    CLEAN_PLAYER,
+    REMOVE_PROXY,
+    SET_PLAYER_SERVER;
 
     private static final String PATH = "lua/";
     private final @NonNull String script;

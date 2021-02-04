@@ -60,15 +60,25 @@ public class CacheManager {
     /**
      * This method gets a PlayerData of a Player from the Cache, if not cached it gets the data from redis
      *
-     * @param name The name of the Player
+     * @param username The username of the Player
      * @return The PlayerData, null if not found
      */
-    public PlayerData getPlayerData(String name) {
-        UUID uuid = getUUID(name);
+    public PlayerData getPlayerData(String username) {
+        UUID uuid = getUUID(username);
         if(uuid == null)
             return null;
 
         return instance.getRedisManager().getPlayer(uuid);
+    }
+
+    /**
+     * This method gets a PlayerData of a Player from the Cache, if not cached it gets the data from redis
+     *
+     * @param playerUUID The name of the Player
+     * @return The PlayerData, null if not found
+     */
+    public PlayerData getPlayerData(UUID playerUUID) {
+        return instance.getRedisManager().getPlayer(playerUUID);
     }
 
     /**
