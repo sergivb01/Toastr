@@ -36,7 +36,7 @@ import static com.velocitypowered.api.event.connection.DisconnectEvent.LoginStat
 public class AuthListener {
     public static final ConcurrentHashMap<Player, Long> pendingRegister = new ConcurrentHashMap<>();
     public static final ConcurrentHashMap<Player, Long> pendingLogin = new ConcurrentHashMap<>();
-    private static final Pattern validUsername = Pattern.compile("^[a-zA-Z0-9_]{1,16}$");
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{1,16}$");
     private static final int MIN_VERSION = ProtocolVersion.MINECRAFT_1_7_2.getProtocol();
     private static final int MAX_VERSION = ProtocolVersion.MINECRAFT_1_8.getProtocol();
     private final ToastrPlugin instance = ToastrPlugin.getInstance();
@@ -54,7 +54,7 @@ public class AuthListener {
             return;
         }
 
-        if(!validUsername.matcher(event.getUsername()).matches()) {
+        if(!USERNAME_PATTERN.matcher(event.getUsername()).matches()) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.text("Invalid username\nPlease contact administrator").color(NamedTextColor.RED)));
             return;
         }
