@@ -4,8 +4,8 @@ local proxy = KEYS[1]
 local curr_time = call("TIME")[1]
 
 local servers = call("KEYS", "server:*")
-local usernames = call("HVALS", "proxy:" .. proxy .. ":onlines")
 local uuids = call("HKEYS", "proxy:" .. proxy .. ":onlines")
+local usernames = call("HVALS", "proxy:" .. proxy .. ":onlines")
 
 if (servers == nil or usernames == nil or uuids == nil) then
     return
