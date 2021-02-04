@@ -10,13 +10,15 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
 
-// TODO: implement lookup by UUID
 public class ProfileCommand implements SimpleCommand {
 
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
     private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+    private static final Pattern UUID_PATTERN = Pattern.compile("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})");
 
     @Override
     public void execute(Invocation invocation) {
@@ -28,7 +30,15 @@ public class ProfileCommand implements SimpleCommand {
             return;
         }
 
-        PlayerData data = instance.getCacheManager().getPlayerData(args[0]);
+        PlayerData data;
+        if(UUID_PATTERN.matcher(args[0]).matches()) {
+            data = instance.getCacheManager().getPlayerData(UUID.fromString(args[0]));
+            instance.getLogger().warn("uuid");
+        } else {
+            data = instance.getCacheManager().getPlayerData(args[0]);
+            instance.getLogger().warn("username");
+        }
+
         if(data == null) {
             source.sendMessage(instance.getMessage("profile_player_not_found"));
             return;
@@ -36,7 +46,7 @@ public class ProfileCommand implements SimpleCommand {
 
         String lastOnline = data.getLastOnline() == 0 ? "Online" : format.format(new Date(data.getLastOnline()));
         String ip = invocation.source().hasPermission("toastr.command.tprofile.viewip") ? data.getIp() : "private";
-        for(Component info : instance.getMessages("profile_player_info", "uuid", data.getUuid().toString(), "username", args[0], "lastonline", lastOnline, "ip", ip, "proxy", data.getProxy(), "server", data.getServer())) {
+        for(Component info : instance.getMessages("profile_player_info", "uuid", data.getUuid().toString(), "username", data.getUsername(), "lastonline", lastOnline, "ip", ip, "proxy", data.getProxy(), "server", data.getServer())) {
             source.sendMessage(info);
         }
     }

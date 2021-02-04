@@ -24,22 +24,12 @@ public class GListCommand implements SimpleCommand {
         }
 
         String proxy = args[0];
-        // TODO: reimplement this
-        /*if(!proxy.equalsIgnoreCase("ALL") && !instance.getRedisManager().getKnownProxies().contains(proxy)) {
-            source.sendMessage(Component.text("Unknown proxy").color(NamedTextColor.RED));
-            return;
-        }*/
-
         final Long online = instance.getRedisManager().getProxyCount(proxy);
         if(online == null || proxy.equalsIgnoreCase("ALL")) {
             for(RegisteredServer server : instance.getProxy().getAllServers()) {
                 final Set<String> players = instance.getRedisManager().getServerUsernames(server.getServerInfo().getName());
                 source.sendMessage(instance.getMessage("glist_per_server", "server", server.getServerInfo().getName(), "online", Long.toString(players.size()), "players", String.join(", ", players)));
             }
-            // TODO: reimplement this
-//            for(String knownProxy : instance.getRedisManager().getKnownProxies()) {
-//                source.sendMessage(instance.getMessage("glist_per_proxy", "proxy", knownProxy, "online", Long.toString(instance.getRedisManager().getProxyCount(knownProxy))));
-//            }
             source.sendMessage(instance.getMessage("glist_global", "online", Integer.toString(global)));
             return;
         }
