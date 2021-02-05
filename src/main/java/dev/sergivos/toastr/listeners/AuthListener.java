@@ -126,6 +126,7 @@ public class AuthListener {
 
 
         if(!result.equals(Profile.CheckAccountResult.ALLOWED)) {
+            player.disconnect(CC.translate("&cUnknown error #1\nContact admin"));
             return;
         }
 
@@ -207,7 +208,8 @@ public class AuthListener {
         if(!(event.getCommandSource() instanceof Player))
             return;
 
-        if(instance.getConfig().getStringList("auth.allowed_commands").contains(event.getCommand().toLowerCase())) {
+        final String[] args = event.getCommand().toLowerCase().split(" ");
+        if(instance.getConfig().getStringList("auth.allowed_commands").contains(args[0])) {
             return;
         }
 

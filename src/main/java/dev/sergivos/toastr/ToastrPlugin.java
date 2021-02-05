@@ -123,8 +123,8 @@ public class ToastrPlugin {
     @SneakyThrows
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent event) {
-        final Thread shutdown = new Thread(() -> redisManager.shutdown(), "Redis shutdown");
-        shutdown.start();
+        new Thread(() -> resolverManager.shutdown(), "Resolver shutdown").start();
+        new Thread(() -> redisManager.shutdown(), "Redis shutdown").start();
 
         backendStorage.shutdown();
     }

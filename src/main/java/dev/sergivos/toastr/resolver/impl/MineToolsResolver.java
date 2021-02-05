@@ -32,7 +32,7 @@ public class MineToolsResolver extends Resolver {
             }
 
             final JsonObject data = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
-            if(data.get("id").isJsonNull()) {
+            if(data.get("id").isJsonNull() && data.get("status").getAsString().equals("ERR")) {
                 return fromOffline(rawUsername);
             }
 

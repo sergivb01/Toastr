@@ -29,8 +29,12 @@ public class PlayerDBResolver extends Resolver {
             }
 
             final JsonObject data = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
+            if(data.get("code").getAsString().equals("minecraft.api_failure")) {
+                return fromOffline(rawUsername);
+            }
+
             if(!data.get("code").getAsString().equals("player.found")) {
-                throw new Exception("Player not found but API can't verify player exists");
+                throw new Exception("Player not found but " + getSource() + " can't verify player exists");
             }
 
             final JsonObject meta = data.get("data").getAsJsonObject().get("player").getAsJsonObject();

@@ -241,7 +241,9 @@ public class RedisManager {
         try(final Jedis jedis = getConnection(); final Pipeline pipe = jedis.pipelined()) {
             pipe.hdel(PREFIX + "proxy:" + proxyName + ":onlines", uuid.toString());
             pipe.hset(PREFIX + "player:" + uuid, "lastOnline", Long.toString(System.currentTimeMillis()));
+
             pipe.expire(PREFIX + "player:" + uuid, PROFILE_TTL);
+            pipe.expire(PREFIX + "resolver:" + username.toLowerCase(), RESOLVER_TTL);
 
             pipe.sync();
         }
@@ -307,7 +309,6 @@ public class RedisManager {
 
         try(final Jedis jedis = getConnection()) {
             jedis.hset(PREFIX + "resolver:" + username.toLowerCase(), data);
-            jedis.expire(PREFIX + "resolver:" + username.toLowerCase(), RESOLVER_TTL);
         }
     }
 

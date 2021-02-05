@@ -119,6 +119,13 @@
         </dependency>
 
         <dependency>
+            <groupId>org.zalando</groupId>
+            <artifactId>flatjson</artifactId>
+            <version>1.1.0</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
             <groupId>net.md-5</groupId>
             <artifactId>bungeecord-config</artifactId>
             <version>1.16-R0.4</version>
