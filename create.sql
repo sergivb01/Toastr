@@ -1,15 +1,15 @@
 CREATE TABLE playerdata
 (
-    uuid           char(36) character set ascii NOT NULL,
-    username       varchar(16)                  NOT NULL,
+    uuid           binary(16)                 NOT NULL,
+    username       varchar(16)                NOT NULL,
     username_lower varchar(16) GENERATED ALWAYS AS (lower(username)) STORED,
-    first_address  int unsigned                 NOT NULL comment 'ipv4 address stored as an unsigned int',
-    last_address   int unsigned                 NOT NULL comment 'ipv4 address stored as an unsigned int',
-    first_login    timestamp                    NOT NULL,
-    last_login     timestamp                    NOT NULL,
-    password       varchar(256)                 NULL,
-    salt           varchar(10)                  NULL,
-    account_type   ENUM ('PREMIUM','CRACKED')   NOT NULL,
+    first_address  int unsigned               NOT NULL comment 'ipv4 address stored as an unsigned int',
+    last_address   int unsigned               NOT NULL comment 'ipv4 address stored as an unsigned int',
+    first_login    timestamp                  NOT NULL,
+    last_login     timestamp                  NOT NULL,
+    password       varchar(256)               NULL,
+    salt           varchar(10)                NULL,
+    account_type   ENUM ('PREMIUM','CRACKED') NOT NULL,
     CONSTRAINT playerdata_uuid_uindex
         UNIQUE (uuid)
 ) COMMENT 'describes the essential data from a player';
@@ -49,5 +49,32 @@ BEGIN
             SET MESSAGE_TEXT = 'Invalid account_type';
     END IF;
 END$$
+
+CREATE FUNCTION UUID_TO_BIN(_uuid BINARY(36))
+    RETURNS BINARY(16)
+    LANGUAGE SQL DETERMINISTIC
+    CONTAINS SQL SQL SECURITY INVOKER
+    RETURN
+        UNHEX(CONCAT(
+                SUBSTR(_uuid, 15, 4),
+                SUBSTR(_uuid, 10, 4),
+                SUBSTR(_uuid, 1, 8),
+                SUBSTR(_uuid, 20, 4),
+                SUBSTR(_uuid, 25)));
+$$
+
+CREATE FUNCTION UUID_FROM_BIN(_bin BINARY(16))
+    RETURNS BINARY(36)
+    LANGUAGE SQL DETERMINISTIC
+    CONTAINS SQL SQL SECURITY INVOKER
+    RETURN
+        LCASE(CONCAT_WS('-',
+                        HEX(SUBSTR(_bin, 5, 4)),
+                        HEX(SUBSTR(_bin, 3, 2)),
+                        HEX(SUBSTR(_bin, 1, 2)),
+                        HEX(SUBSTR(_bin, 9, 2)),
+                        HEX(SUBSTR(_bin, 11))
+            ));
+$$
 
 DELIMITER ;
