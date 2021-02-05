@@ -50,7 +50,7 @@ public class AuthListener {
 
         final ProtocolVersion version = event.getConnection().getProtocolVersion();
         if(version.isUnknown() || version.getProtocol() < instance.getConfig().getInt("version.min") || version.getProtocol() > instance.getConfig().getInt("version.max")) {
-            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CC.translate("&CUnsupported version\nContact an administrator")));
+            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CC.translate("&cUnsupported version\nContact an administrator")));
             return;
         }
 
