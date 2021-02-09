@@ -18,7 +18,7 @@ public enum LuaScripts {
     LuaScripts() {
         final ToastrPlugin instance = ToastrPlugin.getInstance();
 
-        instance.getLogger().info("[Lua] Loading script " + this.toString() + "(" + PATH + this.toString().toLowerCase().replace("_", "-") + ".lua)");
+        instance.getLogger().debug("[Lua] Loading script " + this.toString() + "(" + PATH + this.toString().toLowerCase().replace("_", "-") + ".lua)");
 
         this.script = ResourceReader.readResource(PATH + this.toString().toLowerCase().replace("_", "-") + ".lua");
         this.hash = instance.getRedisManager().createScript(script);

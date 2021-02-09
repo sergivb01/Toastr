@@ -101,7 +101,7 @@ public class Pidgin {
     }
 
     private void setupPubSub() {
-        logger.info("[Pidgin] Setting up PubSup..");
+        logger.debug("[Pidgin] Setting up PubSup..");
 
         this.jedisPubSub = new JedisPubSub() {
             @Override
@@ -131,7 +131,7 @@ public class Pidgin {
         ForkJoinPool.commonPool().execute(() -> {
             try(final Jedis jedis = this.pool.getResource()) {
                 jedis.subscribe(this.jedisPubSub, channel);
-                logger.info("[Pidgin] Successfully subscribing to channel..");
+                logger.debug("[Pidgin] Successfully subscribing to channel..");
             } catch(Exception ex) {
                 logger.error("[Pidgin] Failed to subscribe to channel..", ex);
             }

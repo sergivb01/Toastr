@@ -113,7 +113,7 @@ public class BackendStorage {
                 return Profile.CheckAccountResult.ALLOWED;
             }
         } finally {
-            instance.getLogger().info("[database] [CheckAccounts] " + player.getUsername() + "(" + player.getUniqueId() + ") took " + (System.currentTimeMillis() - start) + "ms");
+            instance.getLogger().debug("[database] [CheckAccounts] " + player.getUsername() + "(" + player.getUniqueId() + ") took " + (System.currentTimeMillis() - start) + "ms");
         }
     }
 
@@ -139,7 +139,7 @@ public class BackendStorage {
                 return createProfileFromRS(rs);
             }
         } finally {
-            instance.getLogger().info("[database] [GetProfile] " + playerUUID.toString() + " took " + (System.currentTimeMillis() - start) + "ms");
+            instance.getLogger().debug("[database] [GetProfile] " + playerUUID.toString() + " took " + (System.currentTimeMillis() - start) + "ms");
         }
     }
 
@@ -159,7 +159,7 @@ public class BackendStorage {
 
             return query.executeUpdate() == 1;
         } finally {
-            instance.getLogger().info("[database] [Unregister] " + username + " took " + (System.currentTimeMillis() - start) + "ms");
+            instance.getLogger().debug("[database] [Unregister] " + username + " took " + (System.currentTimeMillis() - start) + "ms");
         }
     }
 
@@ -206,7 +206,7 @@ public class BackendStorage {
                 return true;
             }
         } finally {
-            instance.getLogger().info("[database] [Insert/SaveProfile] " + profile.getUniqueId() + " took " + (System.currentTimeMillis() - start) + "ms");
+            instance.getLogger().debug("[database] [Insert/SaveProfile] " + profile.getUniqueId() + " took " + (System.currentTimeMillis() - start) + "ms");
         }
     }
 

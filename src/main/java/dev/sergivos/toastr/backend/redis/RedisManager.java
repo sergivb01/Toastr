@@ -99,7 +99,7 @@ public class RedisManager {
         executeScript(LuaScripts.REMOVE_PROXY, Collections.singletonList(proxy), null);
         pidgin.sendPacket(new NetworkStatusPacket(proxy, false));
 
-        instance.getLogger().info("Removed proxy {} instance in {}ms", proxy, System.currentTimeMillis() - start);
+        instance.getLogger().debug("Removed proxy {} instance in {}ms", proxy, System.currentTimeMillis() - start);
     }
 
     private void updatePlayerCounts() {
