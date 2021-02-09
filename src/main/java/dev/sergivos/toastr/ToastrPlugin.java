@@ -117,7 +117,8 @@ public class ToastrPlugin {
                 new LobbyListener(),
                 new NetworkListener(),
                 new PlayerListener(),
-                new PluginMessageListener()
+                new PluginMessageListener(),
+                new RateLimitListener()
         ).forEach(listener -> proxy.getEventManager().register(this, listener));
     }
 
