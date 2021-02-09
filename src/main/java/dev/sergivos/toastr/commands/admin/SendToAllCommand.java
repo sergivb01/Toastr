@@ -18,8 +18,8 @@ public class SendToAllCommand implements RawCommand {
             return;
         }
 
-        final String[] args = invocation.arguments().split(" ");
-        if(args[0].equalsIgnoreCase("end") || args[0].equalsIgnoreCase("shutdown") || args[0].equalsIgnoreCase("sendtoall")) {
+        final String args = invocation.arguments().trim().toLowerCase();
+        if(args.startsWith("end") || args.startsWith("shutdown") || args.startsWith("sendtoall")) {
             source.sendMessage(Component.text("Don't do that please :(").color(NamedTextColor.RED));
             return;
         }

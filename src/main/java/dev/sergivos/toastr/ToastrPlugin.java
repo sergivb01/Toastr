@@ -96,6 +96,7 @@ public class ToastrPlugin {
         commandManager.register("alert", new AlertCommand());
         commandManager.register("clearcache", new ClearCacheCommand());
         commandManager.register("toastrl", new ReloadCommand());
+        commandManager.register("send", new SendCommand());
         commandManager.register("sendtoall", new SendToAllCommand());
         commandManager.register("serverid", new ServerIDCommand());
 
