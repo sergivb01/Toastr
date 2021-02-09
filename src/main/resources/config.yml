@@ -12,6 +12,9 @@ database:
 
 proxy-name: changeme
 
+antibot:
+  ratelimit: 12
+
 version:
   min: 4
   max: 47
@@ -22,10 +25,12 @@ lobby:
   servers:
     - name: lobby
       restricted: false
+
 auth:
   allowed_commands:
     - login
     - register
+
 messages:
   motd:
     line1: '&6Another server running Toastr'

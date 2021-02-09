@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class RateLimitListener {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
-    private static final int MAX_LOGIN_SEC = 12;
     private final AtomicInteger loginsSec = new AtomicInteger(0);
 
     public RateLimitListener() {
@@ -23,7 +22,8 @@ public class RateLimitListener {
 
     @Subscribe(order = PostOrder.FIRST)
     public void onPreLogin(PreLoginEvent event) {
-        if(loginsSec.get() >= MAX_LOGIN_SEC) {
+        final int limit = instance.getConfig().getInt("antibot.ratelimit", 12);
+        if(limit >= 0 && loginsSec.get() >= limit) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.denied(CC.translate("&cRate limit reached\n please try again in few seconds")));
         }
     }
