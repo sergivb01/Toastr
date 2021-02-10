@@ -15,8 +15,10 @@ public class RateLimitListener {
     private final AtomicInteger loginsSec = new AtomicInteger(0);
 
     public RateLimitListener() {
-        instance.getProxy().getScheduler()
-                .buildTask(instance, () -> loginsSec.set(0)).repeat(1, TimeUnit.SECONDS)
+        instance.getProxy().getScheduler().buildTask(instance, () -> {
+            // TODO: implement action-bar message to staff about req/second
+            loginsSec.set(0);
+        }).repeat(1, TimeUnit.SECONDS)
                 .schedule();
     }
 
