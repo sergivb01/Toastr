@@ -211,7 +211,6 @@ public class AuthListener {
             player.disconnect(CC.translate("&cYou are typing to chat too fast!\nPlease slow down"));
             event.setResult(PlayerChatEvent.ChatResult.denied());
         }
-        instance.getLogger().info("time= " + (System.currentTimeMillis() - profile.getLastLogin().getTime()));
     }
 
     @Subscribe
@@ -226,7 +225,6 @@ public class AuthListener {
             event.setResult(CommandExecuteEvent.CommandResult.denied());
             return;
         }
-        instance.getLogger().info("time= " + (System.currentTimeMillis() - profile.getLastLogin().getTime()));
 
         final String[] args = event.getCommand().toLowerCase().split(" ");
         if(instance.getConfig().getStringList("auth.allowed_commands").contains(args[0])) {

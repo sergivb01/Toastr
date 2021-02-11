@@ -18,8 +18,7 @@ public class RateLimitListener {
         instance.getProxy().getScheduler().buildTask(instance, () -> {
             // TODO: implement action-bar message to staff about req/second
             loginsSec.set(0);
-        }).repeat(1, TimeUnit.SECONDS)
-                .schedule();
+        }).repeat(1, TimeUnit.SECONDS).schedule();
     }
 
     @Subscribe(order = PostOrder.FIRST)
