@@ -17,15 +17,12 @@ import java.util.concurrent.TimeUnit;
 
 public class BackendStorage {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
-    private static final int MIN_IDLE = 10, MAX_CONNS = 16;
     private static final long NAMECHANGE_DELAY = TimeUnit.DAYS.toMillis(37);
 
     private final HikariDataSource hikari;
 
     public BackendStorage(final BackendCredentials credentials) {
         HikariConfig config = new HikariConfig();
-        config.setMinimumIdle(MIN_IDLE);
-        config.setMaximumPoolSize(MAX_CONNS);
         config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(3)); // max time to get a connection before Exception
         config.setPoolName("Toastr-Hikari");
         config.setDataSourceClassName("com.mysql.cj.jdbc.MysqlDataSource");

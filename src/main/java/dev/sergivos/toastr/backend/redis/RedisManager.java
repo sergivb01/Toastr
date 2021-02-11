@@ -42,8 +42,6 @@ public class RedisManager {
 
     public RedisManager(final BackendCredentials credentials) {
         final JedisPoolConfig poolConfig = new JedisPoolConfig();
-        poolConfig.setMinIdle(10);
-        poolConfig.setMaxTotal(16);
         poolConfig.setMaxWaitMillis(TimeUnit.SECONDS.toMillis(3)); // max time to get a connection before Exception
 
         if(StringUtils.isNullOrEmpty(credentials.getPassword())) {
