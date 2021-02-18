@@ -13,6 +13,7 @@ import dev.sergivos.toastr.backend.BackendCredentials;
 import dev.sergivos.toastr.backend.mysql.BackendStorage;
 import dev.sergivos.toastr.backend.redis.CacheManager;
 import dev.sergivos.toastr.backend.redis.RedisManager;
+import dev.sergivos.toastr.commands.BetaCommand;
 import dev.sergivos.toastr.commands.admin.*;
 import dev.sergivos.toastr.commands.auth.*;
 import dev.sergivos.toastr.commands.essentials.GListCommand;
@@ -111,6 +112,7 @@ public class ToastrPlugin {
         commandManager.register("gmsg", new GlobalMessageCommand());
         commandManager.register("lobby", new LobbyCommand(), "hub");
         commandManager.register("tprofile", new ProfileCommand());
+        commandManager.register("beta", new BetaCommand());
 
         Arrays.asList(
                 new AuthListener(),
