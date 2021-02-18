@@ -204,19 +204,35 @@ public class AuthListener {
     }
 
     @Subscribe
+    public void onFastChat(PlayerChatEvent event) {
+        final Player player = event.getPlayer();
+        final Profile profile = Profile.getProfiles().get(player.getUniqueId());
+        if(System.currentTimeMillis() - profile.getLastLogin().getTime() <= TimeUnit.MILLISECONDS.toMillis(750)) {
+            player.disconnect(CC.translate("&cYou are typing to chat too fast!\nPlease slow down"));
+            event.setResult(PlayerChatEvent.ChatResult.denied());
+        }
+    }
+
+    @Subscribe
     public void onPlayerCommand(CommandExecuteEvent event) {
         if(!(event.getCommandSource() instanceof Player))
             return;
+
+        Player player = (Player) event.getCommandSource();
+        final Profile profile = Profile.getProfiles().get(player.getUniqueId());
+        if(System.currentTimeMillis() - profile.getLastLogin().getTime() <= TimeUnit.MILLISECONDS.toMillis(750)) {
+            player.disconnect(CC.translate("&cYou are trying to execute commands too fast!\nPlease slow down"));
+            event.setResult(CommandExecuteEvent.CommandResult.denied());
+            return;
+        }
 
         final String[] args = event.getCommand().toLowerCase().split(" ");
         if(instance.getConfig().getStringList("auth.allowed_commands").contains(args[0])) {
             return;
         }
 
-        Player player = (Player) event.getCommandSource();
-        Profile profile = Profile.getProfiles().get(player.getUniqueId());
 
-        if(profile != null && profile.isLoggedIn()) return;
+        if(profile.isLoggedIn()) return;
 
         player.sendMessage(Component.text("You may not execute this command without being logging in!").color(NamedTextColor.RED));
         event.setResult(CommandExecuteEvent.CommandResult.denied());
