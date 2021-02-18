@@ -35,24 +35,34 @@ messages:
   motd:
     line1: '&6Another server running Toastr'
     line2: '&7Check us out on GitHub'
-  header: '&3Sergi Services &8┃ &rCurrently connected to &b&l<proxy> &rProxy'
-  footer: >-
-    There are &l&3<online> &ronline users in the Network &8┃ &rConnected to
-    &b&l<server>
+
+  tab:
+    header: '&3Sergi Services &8┃ &rCurrently connected to &b&l<proxy> &rProxy'
+    footer: >-
+      There are &l&3<online> &ronline users on the Network &8┃ &rConnected to &b&l<server>
+
   alert: '&8[&4Alert&8] &r'
-  glist_global: '&2There are <online> online players on the network'
-  glist_proxy: '&2There are <online> online players on the <proxy> proxy.'
-  glist_per_server: '&e&l * &r&2<server>&r: &7(<online>)&r <players>'
-  glist_per_proxy: '&e&l * &r&2<proxy> &7(Proxy) &r: <online>'
-  profile_usage: '&cUsage: /tprofile <username/uuid>'
-  profile_player_not_found: '&cPlayer not found'
-  profile_player_info:
-    - '&7&m-------------------------'
-    - '&2UUID&r: <uuid>'
-    - '&2Username&r: <username>'
-    - '&2Last Online&r: <lastonline>'
-    - '&2IP&r: <ip>'
-    - '&2Proxy&r: <proxy>'
-    - '&2Server&r: <server>'
-    - '&7&m-------------------------'
   server_id: '&2You are connected to <proxy>'
+
+  staff:
+    join: "&8[&2+&8] &3<player> &rjoined the network on &b<server> &7(<proxy>)"
+    quit: "&8[&4-&8] &3<player> &rquit the network from &b<server> &7(<proxy>)"
+    switch: "&8[&d*&8] &3<player> &rswitched from  &b<from> &rto  &3<to> &7(<proxy>)"
+
+  glist:
+    global: '&2There are <online> online players on the network'
+    proxy: '&2There are <online> online players on the <proxy> proxy.'
+    per_server: '&e&l * &r&2<server>&r: &7(<online>)&r <players>'
+
+  profile:
+    usage: '&cUsage: /tprofile <username/uuid>'
+    player_not_found: '&cPlayer not found'
+    player_info:
+      - '&7&m-------------------------'
+      - '&2UUID&r: <uuid>'
+      - '&2Username&r: <username>'
+      - '&2Last Online&r: <lastonline>'
+      - '&2IP&r: <ip>'
+      - '&2Proxy&r: <proxy>'
+      - '&2Server&r: <server>'
+      - '&7&m-------------------------'

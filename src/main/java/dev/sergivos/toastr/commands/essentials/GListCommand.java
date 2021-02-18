@@ -19,7 +19,7 @@ public class GListCommand implements SimpleCommand {
 
         int global = instance.getRedisManager().getOnlinePlayers().get();
         if(args.length == 0) {
-            source.sendMessage(instance.getMessage("glist_global", "online", Integer.toString(global)));
+            source.sendMessage(instance.getMessage("glist.global", "online", Integer.toString(global)));
             return;
         }
 
@@ -28,13 +28,13 @@ public class GListCommand implements SimpleCommand {
         if(online == null || proxy.equalsIgnoreCase("ALL")) {
             for(RegisteredServer server : instance.getProxy().getAllServers()) {
                 final Set<String> players = instance.getRedisManager().getServerUsernames(server.getServerInfo().getName());
-                source.sendMessage(instance.getMessage("glist_per_server", "server", server.getServerInfo().getName(), "online", Long.toString(players.size()), "players", String.join(", ", players)));
+                source.sendMessage(instance.getMessage("glist.per_server", "server", server.getServerInfo().getName(), "online", Long.toString(players.size()), "players", String.join(", ", players)));
             }
-            source.sendMessage(instance.getMessage("glist_global", "online", Integer.toString(global)));
+            source.sendMessage(instance.getMessage("glist.global", "online", Integer.toString(global)));
             return;
         }
 
-        source.sendMessage(instance.getMessage("glist_proxy", "proxy", proxy, "online", Long.toString(online)));
+        source.sendMessage(instance.getMessage("glist.proxy", "proxy", proxy, "online", Long.toString(online)));
     }
 
     @Override

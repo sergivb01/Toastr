@@ -26,7 +26,7 @@ public class ProfileCommand implements SimpleCommand {
         final CommandSource source = invocation.source();
 
         if(args.length == 0) {
-            source.sendMessage(instance.getMessage("profile_usage"));
+            source.sendMessage(instance.getMessage("profile.usage"));
             return;
         }
 
@@ -40,13 +40,13 @@ public class ProfileCommand implements SimpleCommand {
         }
 
         if(data == null) {
-            source.sendMessage(instance.getMessage("profile_player_not_found"));
+            source.sendMessage(instance.getMessage("profile.player_not_found"));
             return;
         }
 
         String lastOnline = data.getLastOnline() == 0 ? "Online" : format.format(new Date(data.getLastOnline()));
         String ip = invocation.source().hasPermission("toastr.command.tprofile.viewip") ? data.getIp() : "private";
-        for(Component info : instance.getMessages("profile_player_info", "uuid", data.getUuid().toString(), "username", data.getUsername(), "lastonline", lastOnline, "ip", ip, "proxy", data.getProxy(), "server", data.getServer())) {
+        for(Component info : instance.getMessages("profile.player_info", "uuid", data.getUuid().toString(), "username", data.getUsername(), "lastonline", lastOnline, "ip", ip, "proxy", data.getProxy(), "server", data.getServer())) {
             source.sendMessage(info);
         }
     }

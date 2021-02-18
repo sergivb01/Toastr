@@ -53,8 +53,7 @@ public class NetworkListener implements PacketListener {
     public void onAlert(AlertPacket packet) {
         final Component alert = instance.getMessage("alert")
                 .append(LegacyComponentSerializer.legacyAmpersand().deserialize(packet.getMessage()));
-        instance.getProxy().getAllPlayers().forEach(player -> player.sendMessage(alert));
-        instance.getProxy().getConsoleCommandSource().sendMessage(alert);
+        instance.getProxy().sendMessage(alert);
 
         instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Sent alert: " + packet.getMessage());
     }
@@ -87,7 +86,7 @@ public class NetworkListener implements PacketListener {
     @IncomingPacketHandler
     public void onKick(KickPacket packet) {
         instance.getProxy().getPlayer(packet.getUsername()).ifPresent(player -> {
-            final TextComponent reason = Component.text("Cross network kick requested from " + packet.getOrigin() + ":")
+            final TextComponent reason = Component.text("Cross network kick requested from " + packet.getOrigin() + ":\n")
                     .color(NamedTextColor.RED)
                     .append(LegacyComponentSerializer.legacyAmpersand().deserialize(packet.getReason()));
             player.disconnect(reason);
@@ -98,30 +97,37 @@ public class NetworkListener implements PacketListener {
 
     @IncomingPacketHandler
     public void onNetworkStatus(NetworkStatusPacket packet) {
-        instance.getProxy().getAllPlayers().forEach(player -> player.sendMessage(Component.text(packet.toString())));
-
         instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Proxy " + packet.getOrigin() + " is now " + (packet.isUp() ? "online" : "offline"));
     }
 
     @IncomingPacketHandler
     public void onStaffJoin(StaffJoinPacket packet) {
-        instance.getProxy().getAllPlayers().forEach(player -> player.sendMessage(Component.text(packet.toString())));
+        broadcastStaff(instance.getMessage("staff.join", "player", packet.getPlayer(),
+                "server", packet.getServer(), "proxy", packet.getOrigin()));
 
         instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Staff " + packet.getPlayer() + " joined the network");
     }
 
     @IncomingPacketHandler
     public void onStaffQuit(StaffQuitPacket packet) {
-        instance.getProxy().getAllPlayers().forEach(player -> player.sendMessage(Component.text(packet.toString())));
+        broadcastStaff(instance.getMessage("staff.quit", "player", packet.getPlayer(),
+                "server", packet.getServer(), "proxy", packet.getOrigin()));
 
         instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Staff " + packet.getPlayer() + " quit the network");
     }
 
     @IncomingPacketHandler
     public void onStaffSwitch(StaffSwitchPacket packet) {
-        instance.getProxy().getAllPlayers().forEach(player -> player.sendMessage(Component.text(packet.toString())));
+        broadcastStaff(instance.getMessage("staff.switch", "player", packet.getPlayer(),
+                "proxy", packet.getOrigin(), "from", packet.getFrom(), "to", packet.getTo(), "proxy", packet.getOrigin()));
 
         instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Staff " + packet.getPlayer() + " switched from " + packet.getFrom() + " to " + packet.getTo());
+    }
+
+    private void broadcastStaff(Component... components) {
+        // TODO: broadcast to staff only
+        for(Component component : components)
+            instance.getProxy().sendMessage(component);
     }
 
 }
