@@ -25,3 +25,5 @@ end
 
 call("HDEL", "toastr:proxies", proxy)
 call("DEL", "toastr:proxy:" .. proxy .. ":onlines")
+
+redis.log(redis.LOG_NOTICE, "[Toastr] removed proxy \"" .. proxy .. "\" because it has been shutdown")

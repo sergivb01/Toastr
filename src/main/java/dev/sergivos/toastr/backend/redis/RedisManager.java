@@ -75,7 +75,7 @@ public class RedisManager {
                 .delay(10, TimeUnit.SECONDS).repeat(1, TimeUnit.MINUTES).schedule();
 
         updateTask = scheduler.buildTask(instance, this::updatePlayerCounts)
-                .repeat(500, TimeUnit.MILLISECONDS).schedule();
+                .repeat(1, TimeUnit.SECONDS).schedule();
     }
 
     /**

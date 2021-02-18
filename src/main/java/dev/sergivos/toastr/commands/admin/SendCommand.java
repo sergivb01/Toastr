@@ -88,9 +88,9 @@ public class SendCommand implements SimpleCommand {
         final String sender = source instanceof Player ? ((Player) source).getUsername() : "CONSOLE";
         playersToSend.forEach(targetPlayer -> {
             targetPlayer.createConnectionRequest(target).fireAndForget();
-            targetPlayer.sendMessage(CC.translate("&fYou have been sent to &b" + target.getServerInfo().getName() + " &fby &3" + sender));
+            targetPlayer.sendMessage(CC.translate("&fYou have been sent to &b" + target.getServerInfo().getName() + " &fby &3" + sender + "&f."));
         });
-        source.sendMessage(CC.translate("You have sent &b" + playersToSend.size() + "players &rto the server &3" + target.getServerInfo().getName()));
+        source.sendMessage(CC.translate("You have sent &b" + playersToSend.size() + " players &rto the server &3" + target.getServerInfo().getName() + "&f."));
     }
 
     @Override
@@ -98,17 +98,19 @@ public class SendCommand implements SimpleCommand {
         CompletableFuture<List<String>> future = new CompletableFuture<>();
 
         instance.getProxy().getScheduler().buildTask(instance, () -> {
-            if(invocation.arguments().length > 2) return;
+            final String[] args = invocation.arguments();
+            if(args.length > 2) return;
 
-            if(invocation.arguments().length == 2) {
+            if(args.length == 2) {
                 future.complete(instance.getProxy().getAllServers().stream()
                         .map(server -> server.getServerInfo().getName())
+                        .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
                         .collect(Collectors.toList()));
                 return;
             }
 
             final List<String> res = new ArrayList<>();
-            if(invocation.arguments().length == 0) {
+            if(args.length == 0) {
                 res.add("all");
                 res.add("current");
                 res.addAll(instance.getProxy().getAllServers().stream()
@@ -117,7 +119,7 @@ public class SendCommand implements SimpleCommand {
             }
 
             for(String online : instance.getCacheManager().getUsernamesOnline()) {
-                if(invocation.arguments().length == 0 || online.startsWith(invocation.arguments()[0]))
+                if(args.length == 0 || online.startsWith(args[0]))
                     res.add(online);
             }
             future.complete(res);
