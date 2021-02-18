@@ -22,7 +22,6 @@ import dev.sergivos.toastr.utils.CC;
 import dev.sergivos.toastr.utils.StringUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.title.Title;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -139,22 +138,22 @@ public class AuthListener {
             return;
         }
 
-        boolean autoLogin = false;
+        boolean autoLogin = player.isOnlineMode();
         if(profile == null) {
             profile = Profile.createProfile(player);
-        } else {
+        } else if(!autoLogin) {
             autoLogin = profile.getLastIP().equals(player.getRemoteAddress().getAddress().getHostAddress())
                     && (System.currentTimeMillis() - profile.getLastLogin().getTime()) < TimeUnit.MINUTES.toMillis(15);
         }
 
         profile.setLastLogin(Timestamp.from(Instant.now()));
         profile.setLastIP(player.getRemoteAddress().getAddress().getHostAddress());
-        profile.setLoggedIn(player.isOnlineMode() || autoLogin);
+        profile.setLoggedIn(autoLogin);
 
         Profile.getProfiles().put(player.getUniqueId(), profile);
         player.sendMessage(Component.text("Your profile has been loaded!").color(NamedTextColor.DARK_AQUA));
         if(autoLogin) {
-            player.showTitle(Title.title(CC.translate("&2Auto logged in"), CC.translate("Recovered last session")));
+            player.sendActionBar(CC.translate("You have been &b&llogged in &fautomatically"));
         }
 
         boolean newPlayer = false;

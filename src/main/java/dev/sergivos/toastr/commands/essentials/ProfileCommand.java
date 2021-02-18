@@ -4,6 +4,8 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import dev.sergivos.toastr.ToastrPlugin;
 import dev.sergivos.toastr.profile.PlayerData;
+import dev.sergivos.toastr.profile.Profile;
+import lombok.SneakyThrows;
 import net.kyori.adventure.text.Component;
 
 import java.text.SimpleDateFormat;
@@ -20,6 +22,7 @@ public class ProfileCommand implements SimpleCommand {
     private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
     private static final Pattern UUID_PATTERN = Pattern.compile("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})");
 
+    @SneakyThrows
     @Override
     public void execute(Invocation invocation) {
         final String[] args = invocation.arguments();
@@ -33,10 +36,8 @@ public class ProfileCommand implements SimpleCommand {
         PlayerData data;
         if(UUID_PATTERN.matcher(args[0]).matches()) {
             data = instance.getCacheManager().getPlayerData(UUID.fromString(args[0]));
-            instance.getLogger().warn("uuid");
         } else {
             data = instance.getCacheManager().getPlayerData(args[0]);
-            instance.getLogger().warn("username");
         }
 
         if(data == null) {
@@ -44,9 +45,26 @@ public class ProfileCommand implements SimpleCommand {
             return;
         }
 
+        Profile profile = instance.getBackendStorage().getProfile(data.getUuid());
+        if(profile == null) {
+            source.sendMessage(instance.getMessage("profile.player_not_found"));
+            return;
+        }
+
         String lastOnline = data.getLastOnline() == 0 ? "Online" : format.format(new Date(data.getLastOnline()));
-        String ip = invocation.source().hasPermission("toastr.command.tprofile.viewip") ? data.getIp() : "private";
-        for(Component info : instance.getMessages("profile.player_info", "uuid", data.getUuid().toString(), "username", data.getUsername(), "lastonline", lastOnline, "ip", ip, "proxy", data.getProxy(), "server", data.getServer())) {
+        String firstIP = invocation.source().hasPermission("toastr.command.tprofile.viewip") ? profile.getFirstIP() : "private";
+        String lastIP = invocation.source().hasPermission("toastr.command.tprofile.viewip") ? profile.getLastIP() : "private";
+        for(Component info : instance.getMessages("profile.player_info",
+                "uuid", data.getUuid().toString(),
+                "username", data.getUsername(),
+                "last_online", lastOnline,
+                "proxy", data.getProxy(),
+                "server", data.getServer(),
+                "account_type", profile.getAccountType().toString(),
+                "first_ip", firstIP,
+                "last_ip", lastIP,
+                "first_login", format.format(profile.getFirstLogin()),
+                "last_login", format.format(profile.getLastLogin()))) {
             source.sendMessage(info);
         }
     }

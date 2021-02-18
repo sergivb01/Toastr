@@ -50,19 +50,23 @@ messages:
     switch: "&8[&d*&8] &3<player> &rswitched from  &b<from> &rto  &3<to> &7(<proxy>)"
 
   glist:
-    global: '&2There are <online> online players on the network'
-    proxy: '&2There are <online> online players on the <proxy> proxy.'
-    per_server: '&e&l * &r&2<server>&r: &7(<online>)&r <players>'
+    global: 'There are &b<online> online players &fon the network'
+    proxy: 'There are &b<online> online players &fon the <proxy> proxy.'
+    per_server: '&e&l * &3<server>&r: &7(<online>)&r <players>'
 
   profile:
     usage: '&cUsage: /tprofile <username/uuid>'
     player_not_found: '&cPlayer not found'
     player_info:
       - '&7&m-------------------------'
-      - '&2UUID&r: <uuid>'
-      - '&2Username&r: <username>'
-      - '&2Last Online&r: <lastonline>'
-      - '&2IP&r: <ip>'
-      - '&2Proxy&r: <proxy>'
-      - '&2Server&r: <server>'
+      - '&3UUID&r: <uuid>'
+      - '&3Username&r: <username>'
+      - '&3Last Online&r: <last_online>'
+      - '&3Proxy&r: <proxy>'
+      - '&3Server&r: <server>'
+      - '&3Account Type&r: <account_type>'
+      - '&3First IP&r: <first_ip>'
+      - '&3Last IP&r: <last_ip>'
+      - '&3First Login&r: <first_login>'
+      - '&3Last Login&r: <last_login>'
       - '&7&m-------------------------'

@@ -88,9 +88,9 @@ public class SendCommand implements SimpleCommand {
         final String sender = source instanceof Player ? ((Player) source).getUsername() : "CONSOLE";
         playersToSend.forEach(targetPlayer -> {
             targetPlayer.createConnectionRequest(target).fireAndForget();
-            targetPlayer.sendMessage(CC.translate("&2You have been sent to &f" + target.getServerInfo().getName() + " &2by " + sender));
+            targetPlayer.sendMessage(CC.translate("&fYou have been sent to &b" + target.getServerInfo().getName() + " &fby &3" + sender));
         });
-        source.sendMessage(CC.translate("&2You have sent &f" + playersToSend.size() + " &2to the server &f" + target.getServerInfo().getName()));
+        source.sendMessage(CC.translate("You have sent &b" + playersToSend.size() + "players &rto the server &3" + target.getServerInfo().getName()));
     }
 
     @Override
