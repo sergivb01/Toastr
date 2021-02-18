@@ -5,3 +5,5 @@ INSERT IGNORE INTO toastr.playerdata (uuid, username, first_address, last_addres
            ELSE "CRACKED"
            END
 FROM water_auth.playerdata old;
+
+UPDATE toastr.playerdata SET salt = NULL, password = NULL WHERE password = 'null';
