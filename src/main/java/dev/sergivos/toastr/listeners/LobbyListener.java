@@ -36,13 +36,18 @@ public class LobbyListener {
             return;
 
         String json = GsonComponentSerializer.gson().serialize(kickReason.get());
-        if(!json.toLowerCase().contains("server closed"))
+        if(!json.toLowerCase().contains("server closed")) {
+            final TextComponent res = Component.text("Kicked from " + event.getServer().getServerInfo().getName() + ":\n")
+                    .color(NamedTextColor.RED).append(kickReason.get());
+            event.setResult(KickedFromServerEvent.DisconnectPlayer.create(res));
             return;
+        }
 
         Lobby lobby = instance.getLobbyManager().getLobby(event.getPlayer());
         if(lobby == null) {
-            final TextComponent res = Component.text("No lobby available\n").color(NamedTextColor.RED);
-            event.getServerKickReason().ifPresent(res::append);
+            final TextComponent res = Component.text("No lobby available:\n")
+                    .color(NamedTextColor.RED)
+                    .append(kickReason.get());
             event.setResult(KickedFromServerEvent.DisconnectPlayer.create(res));
             return;
         }
