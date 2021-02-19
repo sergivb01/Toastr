@@ -4,7 +4,7 @@ local uuid = ARGV[1]
 local username = ARGV[2]
 local newServer = ARGV[3]
 
-local servers = call("KEYS", "toastr:server:*")
+local servers = call("SCAN", "0", "MATCH", "toastr:server:*")[2]
 if (servers == nil) then
     return
 end

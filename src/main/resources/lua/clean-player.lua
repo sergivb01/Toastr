@@ -2,7 +2,7 @@ local call = redis.call
 
 local username = ARGV[1]
 
-local servers = call("KEYS", "toastr:server:*")
+local servers = call("SCAN", "0", "MATCH", "toastr:server:*")[2]
 if (servers == nil) then
     return
 end

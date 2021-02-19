@@ -3,7 +3,7 @@ local call = redis.call
 local proxy = KEYS[1]
 local curr_time = call("TIME")[1]
 
-local servers = call("KEYS", "toastr:server:*")
+local servers = call("SCAN", "0", "MATCH", "toastr:server:*")[2]
 local uuids = call("HKEYS", "toastr:proxy:" .. proxy .. ":onlines")
 local usernames = call("HVALS", "toastr:proxy:" .. proxy .. ":onlines")
 
