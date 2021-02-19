@@ -3,9 +3,10 @@ package dev.sergivos.toastr.listeners;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
-import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
+import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ServerConnection;
 import dev.sergivos.toastr.ToastrPlugin;
 import dev.sergivos.toastr.backend.packets.handler.IncomingPacketHandler;
 import dev.sergivos.toastr.backend.packets.listener.PacketListener;
@@ -18,25 +19,26 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 public class NetworkListener implements PacketListener {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
 
-    // TODO: broadcast packets to staff only
-
     @Subscribe(order = PostOrder.LAST)
-    public void onInitialServerSelect(PlayerChooseInitialServerEvent event) {
-        if(!event.getInitialServer().isPresent()) return;
-
+    public void onInitialServerSelect(PostLoginEvent event) {
         final Player player = event.getPlayer();
+        final ServerConnection server = player.getCurrentServer().orElse(null);
+
         if(!player.hasPermission("toastr.utils.staff")) return;
 
-        instance.getRedisManager().getPidgin().sendPacket(new StaffJoinPacket(player.getUsername(), event.getInitialServer().get().getServerInfo().getName()));
+        instance.getRedisManager().getPidgin().sendPacket(new StaffJoinPacket(player.getUsername(), server == null ?
+                "Unknown" : server.getServerInfo().getName()));
     }
 
     @Subscribe
     public void onStaffQuit(DisconnectEvent event) {
         final Player player = event.getPlayer();
+        final ServerConnection server = player.getCurrentServer().orElse(null);
 
-        if(!player.hasPermission("toastr.utils.staff") || !player.getCurrentServer().isPresent()) return;
+        if(!player.hasPermission("toastr.utils.staff")) return;
 
-        instance.getRedisManager().getPidgin().sendPacket(new StaffQuitPacket(player.getUsername(), player.getCurrentServer().get().getServerInfo().getName()));
+        instance.getRedisManager().getPidgin().sendPacket(new StaffQuitPacket(player.getUsername(), server == null ?
+                "Unknown" : server.getServerInfo().getName()));
     }
 
     @Subscribe
@@ -46,7 +48,8 @@ public class NetworkListener implements PacketListener {
         final Player player = event.getPlayer();
         if(!player.hasPermission("toastr.utils.staff")) return;
 
-        instance.getRedisManager().getPidgin().sendPacket(new StaffSwitchPacket(player.getUsername(), event.getPreviousServer().get().getServerInfo().getName(), event.getServer().getServerInfo().getName()));
+        instance.getRedisManager().getPidgin().sendPacket(new StaffSwitchPacket(player.getUsername(),
+                event.getPreviousServer().get().getServerInfo().getName(), event.getServer().getServerInfo().getName()));
     }
 
     @IncomingPacketHandler
@@ -79,7 +82,8 @@ public class NetworkListener implements PacketListener {
             final TextComponent message = LegacyComponentSerializer.legacyAmpersand().deserialize("&8[&b&l" + packet.getOrigin() + "&8] &3" + packet.getSender() + " &6-> &3You&r: ");
             target.sendMessage(message.append(Component.text(packet.getMessage())));
 
-            instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Sending message from " + packet.getSender() + " to " + packet.getReceiver() + ": " + packet.getMessage());
+            instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Sending message from " + packet.getSender() +
+                    " to " + packet.getReceiver() + ": " + packet.getMessage());
         });
     }
 
@@ -92,12 +96,14 @@ public class NetworkListener implements PacketListener {
             player.disconnect(reason);
         });
 
-        instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Requested cross-network kick for " + packet.getUsername() + ": " + packet.getReason());
+        instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Requested cross-network kick for " +
+                packet.getUsername() + ": " + packet.getReason());
     }
 
     @IncomingPacketHandler
     public void onNetworkStatus(NetworkStatusPacket packet) {
-        instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Proxy " + packet.getOrigin() + " is now " + (packet.isUp() ? "online" : "offline"));
+        instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Proxy " + packet.getOrigin() + " is now " +
+                (packet.isUp() ? "online" : "offline"));
     }
 
     @IncomingPacketHandler
@@ -121,13 +127,16 @@ public class NetworkListener implements PacketListener {
         broadcastStaff(instance.getMessage("staff.switch", "player", packet.getPlayer(),
                 "proxy", packet.getOrigin(), "from", packet.getFrom(), "to", packet.getTo(), "proxy", packet.getOrigin()));
 
-        instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Staff " + packet.getPlayer() + " switched from " + packet.getFrom() + " to " + packet.getTo());
+        instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Staff " + packet.getPlayer() + " switched from " +
+                packet.getFrom() + " to " + packet.getTo());
     }
 
-    private void broadcastStaff(Component... components) {
-        // TODO: broadcast to staff only
-        for(Component component : components)
-            instance.getProxy().sendMessage(component);
+    private void broadcastStaff(Component component) {
+        for(Player player : instance.getProxy().getAllPlayers()) {
+            if(player.hasPermission("toastr.utils.staff"))
+                player.sendMessage(component);
+        }
+        instance.getProxy().getConsoleCommandSource().sendMessage(component);
     }
 
 }
