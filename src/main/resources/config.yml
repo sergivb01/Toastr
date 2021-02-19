@@ -47,7 +47,7 @@ messages:
   staff:
     join: "&8[&2+&8] &3<player> &rjoined the network on &b<server> &7(<proxy>)"
     quit: "&8[&4-&8] &3<player> &rquit the network from &b<server> &7(<proxy>)"
-    switch: "&8[&d*&8] &3<player> &rswitched from &b<from> &rto  &3<to> &7(<proxy>)"
+    switch: "&8[&d*&8] &3<player> &rswitched from &b<from> &rto &3<to> &7(<proxy>)"
 
   glist:
     global: 'There are &b<online> online players &fon the network'
