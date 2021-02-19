@@ -132,11 +132,12 @@ public class NetworkListener implements PacketListener {
     }
 
     private void broadcastStaff(Component component) {
-        for(Player player : instance.getProxy().getAllPlayers()) {
-            if(player.hasPermission("toastr.utils.staff"))
-                player.sendMessage(component);
-        }
         instance.getProxy().getConsoleCommandSource().sendMessage(component);
+
+        instance.getProxy().getAllPlayers()
+                .parallelStream()
+                .filter(player -> player.hasPermission("toastr.utils.staff"))
+                .forEach(player -> player.sendMessage(component));
     }
 
 }
