@@ -1,7 +1,7 @@
 package dev.sergivos.toastr.backend.packets;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import dev.sergivos.toastr.ToastrPlugin;
 import dev.sergivos.toastr.backend.packets.handler.IncomingPacketHandler;
 import dev.sergivos.toastr.backend.packets.listener.PacketListener;
@@ -20,6 +20,7 @@ import java.util.concurrent.ForkJoinPool;
 
 public class Pidgin {
     private static final Logger logger = ToastrPlugin.getInstance().getLogger();
+    private static final Gson GSON = new GsonBuilder().create();
     private final String channel;
     private final JedisPool pool;
     private final List<PacketListenerData> packetListeners;
@@ -36,9 +37,9 @@ public class Pidgin {
         this.setupPubSub();
     }
 
-    public void sendPacket(Packet packet) {
+    public void sendPacket(Object packet) {
         try(Jedis jedis = this.pool.getResource()) {
-            final JsonObject object = packet.serialize();
+            final String object = GSON.toJson(packet);
             if(object == null) {
                 throw new IllegalStateException("Packet cannot generate null serialized data");
             }
@@ -48,24 +49,10 @@ public class Pidgin {
                 throw new IllegalStateException("Packet does not have an id");
             }
 
-            jedis.publish(this.channel, id + ";" + object.toString());
+            jedis.publish(this.channel, id + ";" + object);
         } catch(Exception ex) {
             logger.error("[Pidgin] Failed to publish packet...", ex);
         }
-    }
-
-    public Packet buildPacket(String id) {
-        if(!idToType.containsKey(id)) {
-            throw new IllegalStateException("A packet with that ID does not exist");
-        }
-
-        try {
-            return (Packet) idToType.get(id).newInstance();
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-
-        throw new IllegalStateException("Could not create new instance of packet type");
     }
 
     public void registerPacket(Class clazz) {
@@ -88,9 +75,7 @@ public class Pidgin {
                 Class packetClass = null;
 
                 if(method.getParameters().length > 0) {
-                    if(Packet.class.isAssignableFrom(method.getParameters()[0].getType())) {
-                        packetClass = method.getParameters()[0].getType();
-                    }
+                    packetClass = method.getParameters()[0].getType();
                 }
 
                 if(packetClass != null) {
@@ -111,10 +96,12 @@ public class Pidgin {
                 try {
                     String[] args = message.split(";");
                     String id = args[0];
-                    Packet packet = buildPacket(id);
+                    if(!idToType.containsKey(id)) {
+                        throw new IllegalStateException("A packet with that ID does not exist");
+                    }
 
+                    Object packet = GSON.fromJson(args[1], idToType.get(id));
                     if(packet != null) {
-                        packet.deserialize(JsonParser.parseString(args[1]).getAsJsonObject());
                         for(PacketListenerData data : packetListeners) {
                             if(data.matches(packet)) {
                                 data.getMethod().invoke(data.getInstance(), packet);
@@ -122,7 +109,7 @@ public class Pidgin {
                         }
                     }
                 } catch(Exception e) {
-                    logger.info("[Pidgin] Failed to handle message");
+                    logger.error("[Pidgin] Failed to handle message", e);
                     e.printStackTrace();
                 }
             }
