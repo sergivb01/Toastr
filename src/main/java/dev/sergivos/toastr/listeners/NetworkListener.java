@@ -3,10 +3,11 @@ package dev.sergivos.toastr.listeners;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
-import com.velocitypowered.api.event.connection.PostLoginEvent;
+import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import dev.sergivos.toastr.ToastrPlugin;
 import dev.sergivos.toastr.backend.packets.handler.IncomingPacketHandler;
 import dev.sergivos.toastr.backend.packets.listener.PacketListener;
@@ -16,13 +17,19 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+
 public class NetworkListener implements PacketListener {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
+    private static final Set<Player> staff = new CopyOnWriteArraySet<>();
 
     @Subscribe(order = PostOrder.LAST)
-    public void onInitialServerSelect(PostLoginEvent event) {
+    public void onInitialServerSelect(PlayerChooseInitialServerEvent event) {
         final Player player = event.getPlayer();
-        final ServerConnection server = player.getCurrentServer().orElse(null);
+        final RegisteredServer server = event.getInitialServer().orElse(null);
+
+        staff.add(player);
 
         if(!player.hasPermission("toastr.utils.staff")) return;
 
@@ -34,6 +41,8 @@ public class NetworkListener implements PacketListener {
     public void onStaffQuit(DisconnectEvent event) {
         final Player player = event.getPlayer();
         final ServerConnection server = player.getCurrentServer().orElse(null);
+
+        staff.remove(player);
 
         if(!player.hasPermission("toastr.utils.staff")) return;
 
@@ -133,11 +142,7 @@ public class NetworkListener implements PacketListener {
 
     private void broadcastStaff(Component component) {
         instance.getProxy().getConsoleCommandSource().sendMessage(component);
-
-        instance.getProxy().getAllPlayers()
-                .parallelStream()
-                .filter(player -> player.hasPermission("toastr.utils.staff"))
-                .forEach(player -> player.sendMessage(component));
+        staff.forEach(player -> player.sendMessage(component));
     }
 
 }
