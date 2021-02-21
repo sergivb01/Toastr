@@ -1,5 +1,6 @@
 package dev.sergivos.toastr.backend.packets.listener;
 
+import dev.sergivos.toastr.backend.packets.Packet;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -17,7 +18,7 @@ public class PacketListenerData {
     private final Method method;
     private final Class packetClass;
 
-    public boolean matches(Object packet) {
+    public boolean matches(Packet packet) {
         return this.packetClass == packet.getClass();
     }
 

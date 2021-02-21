@@ -1,12 +1,13 @@
 package dev.sergivos.toastr.backend.packets.types;
 
 import dev.sergivos.toastr.ToastrPlugin;
+import dev.sergivos.toastr.backend.packets.Packet;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Getter
-public class GlobalMessagePacket {
+public class GlobalMessagePacket implements Packet {
     private String origin;
     private String sender;
     private String receiver;

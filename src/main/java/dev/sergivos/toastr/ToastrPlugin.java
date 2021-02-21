@@ -122,13 +122,15 @@ public class ToastrPlugin {
                 new PluginMessageListener(),
                 new RateLimitListener()
         ).forEach(listener -> proxy.getEventManager().register(this, listener));
+
+        redisManager.init();
     }
 
     @SneakyThrows
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent event) {
-        new Thread(() -> resolverManager.shutdown(), "Resolver shutdown").start();
-        new Thread(() -> redisManager.shutdown(), "Redis shutdown").start();
+        resolverManager.shutdown();
+        redisManager.shutdown();
 
         backendStorage.shutdown();
     }

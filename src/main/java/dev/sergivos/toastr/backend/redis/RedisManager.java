@@ -67,15 +67,18 @@ public class RedisManager {
         ).forEach(pidgin::registerPacket);
 
         final Scheduler scheduler = instance.getProxy().getScheduler();
-
-        scheduler.buildTask(instance, () -> pidgin.sendPacket(new NetworkStatusPacket(proxyName, true)))
-                .delay(1, TimeUnit.SECONDS).schedule();
-
         consistencyCheckTask = scheduler.buildTask(instance, this::checkInconsistency)
-                .delay(10, TimeUnit.SECONDS).repeat(1, TimeUnit.MINUTES).schedule();
+                .delay(10, TimeUnit.SECONDS)
+                .repeat(1, TimeUnit.MINUTES)
+                .schedule();
 
         updateTask = scheduler.buildTask(instance, this::updatePlayerCounts)
-                .repeat(1, TimeUnit.SECONDS).schedule();
+                .repeat(1, TimeUnit.SECONDS)
+                .schedule();
+    }
+
+    public void init() {
+        pidgin.sendPacket(new NetworkStatusPacket(proxyName, true));
     }
 
     /**

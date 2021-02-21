@@ -37,7 +37,7 @@ public class Pidgin {
         this.setupPubSub();
     }
 
-    public void sendPacket(Object packet) {
+    public void sendPacket(Packet packet) {
         try(Jedis jedis = this.pool.getResource()) {
             final String object = GSON.toJson(packet);
             if(object == null) {
@@ -75,7 +75,9 @@ public class Pidgin {
                 Class packetClass = null;
 
                 if(method.getParameters().length > 0) {
-                    packetClass = method.getParameters()[0].getType();
+                    if(Packet.class.isAssignableFrom(method.getParameters()[0].getType())) {
+                        packetClass = method.getParameters()[0].getType();
+                    }
                 }
 
                 if(packetClass != null) {
@@ -100,7 +102,8 @@ public class Pidgin {
                         throw new IllegalStateException("A packet with that ID does not exist");
                     }
 
-                    Object packet = GSON.fromJson(args[1], idToType.get(id));
+                    // TODO: replace casting
+                    Packet packet = (Packet) GSON.fromJson(args[1], idToType.get(id));
                     if(packet != null) {
                         for(PacketListenerData data : packetListeners) {
                             if(data.matches(packet)) {
