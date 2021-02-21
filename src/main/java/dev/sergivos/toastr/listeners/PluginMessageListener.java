@@ -10,8 +10,10 @@ import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import dev.sergivos.toastr.ToastrPlugin;
 import dev.sergivos.toastr.profile.PlayerData;
+import dev.sergivos.toastr.utils.StringUtils;
 
 import java.util.Arrays;
+import java.util.Set;
 
 public class PluginMessageListener {
 
@@ -19,6 +21,10 @@ public class PluginMessageListener {
 
     private static final LegacyChannelIdentifier LEGACY_CHANNEL = new LegacyChannelIdentifier("RedisBungee");
     private static final MinecraftChannelIdentifier MODERN_CHANNEL = MinecraftChannelIdentifier.create("redisbungee", "main");
+
+    public PluginMessageListener() {
+        instance.getProxy().getChannelRegistrar().register(LEGACY_CHANNEL, MODERN_CHANNEL);
+    }
 
     @Subscribe
     public void onPluginMessage(PluginMessageEvent event) {
@@ -42,7 +48,7 @@ public class PluginMessageListener {
                 if(server.equalsIgnoreCase("ALL"))
                     players = instance.getRedisManager().getOnlinePlayers().get();
                 else
-                    players = Math.toIntExact(instance.getRedisManager().getServerCount(server));
+                    players = instance.getRedisManager().getServerCount(server);
 
                 output.writeUTF("PlayerCount");
                 output.writeUTF(server);
@@ -56,7 +62,7 @@ public class PluginMessageListener {
 
                 output.writeUTF("LastOnline");
                 output.writeUTF(name);
-                output.writeLong(data.getLastOnline());
+                output.writeLong(data == null ? 0 : data.getLastOnline());
                 break;
             }
 
@@ -88,20 +94,18 @@ public class PluginMessageListener {
             }
 
             case "PLAYERLIST": {
-//                String server = input.readUTF();
-//                Set<UUID> players = instance.getRedisManager().getServerUUIDs(server);
-//                StringBuilder sb = new StringBuilder();
-//                for(UUID uuid : players)
-//                    sb.append(uuid).append(", ");
-//
-//                if(sb.length() != 0)
-//                    sb.setLength(sb.length() - 2);
-//
-//                output.writeUTF("PlayerList");
-//                output.writeUTF(server);
-//                output.writeUTF(sb.toString());
-                instance.getLogger().error(event.getSource().toString() + " tried to send a \"PlayerList\" plugin message, but feature is not implemented yet!");
-                instance.getLogger().error("Data: " + Arrays.toString(event.getData()));
+                String server = input.readUTF();
+
+                Set<String> players;
+                if(server.equalsIgnoreCase("ALL")) {
+                    players = instance.getRedisManager().getUsernamesOnline();
+                } else {
+                    players = instance.getRedisManager().getServerUsernames(server);
+                }
+
+                output.writeUTF("PlayerList");
+                output.writeUTF(server);
+                output.writeUTF(StringUtils.joinArray(players));
                 break;
             }
 
