@@ -23,7 +23,9 @@ public class PlayerListener {
     private static final ToastrPlugin instance = ToastrPlugin.getInstance();
 
     public PlayerListener() {
-        instance.getProxy().getScheduler().buildTask(instance, new UpdateTabTask()).repeat(3, TimeUnit.SECONDS).schedule();
+        instance.getProxy().getScheduler().buildTask(instance, new UpdateTabTask())
+                .repeat(1, TimeUnit.SECONDS)
+                .schedule();
     }
 
     @Subscribe

@@ -9,6 +9,7 @@ import net.kyori.adventure.text.minimessage.ParseException;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class CC {
+    public static final Component LINEBREAK = Component.newline();
     private static final MiniMessage fancy = MiniMessage.get();
     private static final LegacyComponentSerializer legacy = LegacyComponentSerializer.legacyAmpersand();
 
@@ -20,7 +21,11 @@ public class CC {
      * @return The translated component and with the replaced placeholders
      */
     @NonNull
-    public static Component translate(@NonNull String text, final String... placeholders) {
+    public static Component translate(String text, final String... placeholders) {
+        if(StringUtils.isNullOrEmpty(text)) {
+            return Component.empty();
+        }
+
         if(text.charAt(0) == '#' && text.length() > 1) {
             return fancy.parse(text.substring(1), placeholders);
         }

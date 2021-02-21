@@ -37,9 +37,16 @@ messages:
     line2: '&7Check us out on GitHub'
 
   tab:
-    header: '&3Sergi Services &8┃ &rCurrently connected to &b&l<proxy> &rProxy'
-    footer: >-
-      There are &l&3<online> &ronline users on the Network &8┃ &rConnected to &b&l<server>
+    header:
+      - ''
+      - '&3&lToastr Network'
+      - 'Currently connected to &b&l<proxy> &rProxy'
+      - ''
+    footer:
+      - ''
+      - 'There are &3&l<online> &ronline players playing!'
+      - 'Connected to &b&l<server>'
+      - ''
 
   alert: '&8[&4Alert&8] &r'
   server_id: '&2You are connected to <proxy>'

@@ -27,6 +27,7 @@ import dev.sergivos.toastr.utils.CC;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
@@ -188,6 +189,17 @@ public class ToastrPlugin {
         }
 
         return res;
+    }
+
+    public Component joinMessages(String name, String... placeholders) {
+        final TextComponent.Builder res = Component.text();
+
+        final List<String> messages = config.getStringList("messages." + name);
+        for(String msg : messages) {
+            res.append(CC.translate(msg, placeholders)).append(CC.LINEBREAK);
+        }
+
+        return res.build();
     }
 
 }
