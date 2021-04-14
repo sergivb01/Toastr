@@ -1,4 +1,4 @@
-package dev.sergivos.toastr.backend.redis;
+package dev.sergivos.toastr.backend;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;

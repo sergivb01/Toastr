@@ -1,3 +1,4 @@
+redis.replicate_commands()
 local call = redis.call
 
 local curr_time = tonumber(call("TIME")[1])
