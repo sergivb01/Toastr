@@ -1,8 +1,7 @@
-package dev.sergivos.toastr.backend;
+package dev.sergivos.toastr.backend.redis;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.velocitypowered.api.proxy.Player;
 import dev.sergivos.toastr.ToastrPlugin;
 import dev.sergivos.toastr.profile.PlayerData;
 import dev.sergivos.toastr.resolver.Resolver;
@@ -89,10 +88,6 @@ public class CacheManager {
      * @return The UUID, null if not found
      */
     private UUID getUUID(String username) {
-        final Player player = instance.getProxy().getPlayer(username).orElse(null);
-        if(player != null)
-            return player.getUniqueId();
-
         Resolver.Result result = getPlayerResult(username);
         if(result == null) {
             result = instance.getRedisManager().getPlayerResult(username);

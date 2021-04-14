@@ -200,10 +200,11 @@ public class RedisManager {
      * This method sets the server where a Player is
      *
      * @param uuid      The Player's UUID
+     * @param username  The Player's username
      * @param newServer The server
      */
-    public void setPlayerServer(UUID uuid, String newServer) {
-        executeScript(LuaScripts.SET_PLAYER_SERVER, null, Arrays.asList(uuid.toString(), newServer));
+    public void setPlayerServer(UUID uuid, String username, String newServer) {
+        executeScript(LuaScripts.SET_PLAYER_SERVER, null, Arrays.asList(uuid.toString(), username, newServer));
     }
 
     /**
@@ -235,7 +236,7 @@ public class RedisManager {
      * @param uuid The UUID of the Player
      */
     public void cleanPlayer(UUID uuid, String username) {
-        executeScript(LuaScripts.CLEAN_PLAYER, null, Collections.singletonList(uuid.toString()));
+        executeScript(LuaScripts.CLEAN_PLAYER, null, Collections.singletonList(username));
 
         // TODO: migrate to lua
         try(final Jedis jedis = getConnection(); final Pipeline pipe = jedis.pipelined()) {
