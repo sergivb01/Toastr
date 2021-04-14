@@ -34,7 +34,7 @@ public class Profile {
     public static Profile createProfile(Player player) {
         Profile profile = new Profile(player.getUniqueId(), player.getUsername());
 
-        profile.accountType = player.isOnlineMode() ? AccountType.PREMIUM : AccountType.CRACKED;
+        profile.accountType = AccountType.fromBool(player.isOnlineMode());
         profile.firstIP = player.getRemoteAddress().getAddress().getHostAddress();
         profile.lastIP = player.getRemoteAddress().getAddress().getHostAddress();
         profile.firstLogin = Timestamp.from(Instant.now());
@@ -46,7 +46,7 @@ public class Profile {
         CRACKED,
         PREMIUM;
 
-        public AccountType fromBool(boolean isPremium) {
+        public static AccountType fromBool(boolean isPremium) {
             return isPremium ? PREMIUM : CRACKED;
         }
     }
