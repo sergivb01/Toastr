@@ -11,7 +11,10 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 public class CC {
     public static final Component LINEBREAK = Component.newline();
     private static final MiniMessage fancy = MiniMessage.get();
-    private static final LegacyComponentSerializer legacy = LegacyComponentSerializer.legacyAmpersand();
+    private static final LegacyComponentSerializer legacy = LegacyComponentSerializer.builder()
+            .extractUrls()
+            .hexColors()
+            .build();
 
     /**
      * Translates a text replacing the pair of placeholders
