@@ -12,10 +12,10 @@ import dev.sergivos.toastr.ToastrPlugin;
 import dev.sergivos.toastr.backend.packets.handler.IncomingPacketHandler;
 import dev.sergivos.toastr.backend.packets.listener.PacketListener;
 import dev.sergivos.toastr.backend.packets.types.*;
+import dev.sergivos.toastr.utils.CC;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -64,7 +64,7 @@ public class NetworkListener implements PacketListener {
     @IncomingPacketHandler
     public void onAlert(AlertPacket packet) {
         final Component alert = instance.getMessage("alert")
-                .append(LegacyComponentSerializer.legacyAmpersand().deserialize(packet.getMessage()));
+                .append(CC.translate(packet.getMessage()));
         instance.getProxy().sendMessage(alert);
 
         instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Sent alert: " + packet.getMessage());
@@ -88,7 +88,7 @@ public class NetworkListener implements PacketListener {
     @IncomingPacketHandler
     public void onGlobalMessage(GlobalMessagePacket packet) {
         instance.getProxy().getPlayer(packet.getReceiver()).ifPresent(target -> {
-            final TextComponent message = LegacyComponentSerializer.legacyAmpersand().deserialize("&8[&b&l" + packet.getOrigin() + "&8] &3" + packet.getSender() + " &6-> &3You&r: ");
+            final Component message = CC.translate("&8[&b&l" + packet.getOrigin() + "&8] &3" + packet.getSender() + " &6-> &3You&r: ");
             target.sendMessage(message.append(Component.text(packet.getMessage())));
 
             instance.getLogger().info("[packet] [" + packet.getOrigin() + "] Sending message from " + packet.getSender() +
@@ -101,7 +101,7 @@ public class NetworkListener implements PacketListener {
         instance.getProxy().getPlayer(packet.getUsername()).ifPresent(player -> {
             final TextComponent reason = Component.text("Cross network kick requested from " + packet.getOrigin() + ":\n")
                     .color(NamedTextColor.RED)
-                    .append(LegacyComponentSerializer.legacyAmpersand().deserialize(packet.getReason()));
+                    .append(CC.translate(packet.getReason()));
             player.disconnect(reason);
         });
 

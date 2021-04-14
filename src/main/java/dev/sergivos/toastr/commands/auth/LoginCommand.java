@@ -5,6 +5,7 @@ import com.velocitypowered.api.proxy.Player;
 import dev.sergivos.toastr.ToastrPlugin;
 import dev.sergivos.toastr.listeners.AuthListener;
 import dev.sergivos.toastr.profile.Profile;
+import dev.sergivos.toastr.utils.CC;
 import dev.sergivos.toastr.utils.HashMethods;
 import dev.sergivos.toastr.utils.StringUtils;
 import net.kyori.adventure.text.Component;
@@ -24,12 +25,12 @@ public class LoginCommand implements SimpleCommand {
         Profile profile = Profile.getProfiles().get(player.getUniqueId());
 
         if(profile.isLoggedIn()) {
-            player.sendMessage(Component.text("Already logged in.").color(NamedTextColor.RED));
+            player.sendMessage(CC.translate("&7[&e⚠&7] &cYou are already logged in."));
             return;
         }
 
         if(StringUtils.isNullOrEmpty(profile.getPassword())) {
-            player.sendMessage(Component.text("register first...").color(NamedTextColor.RED));
+            player.sendMessage(CC.translate("&7[&e⚠&7] &cYou need to complete your registration prior login in."));
             return;
         }
 
@@ -39,12 +40,12 @@ public class LoginCommand implements SimpleCommand {
         }
 
         if(!profile.getPassword().equals(HashMethods.SHA512H(invocation.arguments()[0], profile.getSalt()))) {
-            player.sendMessage(Component.text("invalid password").color(NamedTextColor.RED));
+            player.sendMessage(CC.translate("&7[&e⚠&7] &cThe password you have entered does not match the one in the registration. Please try again or contact an administrator."));
             return;
         }
 
         AuthListener.pendingLogin.remove(player);
         profile.setLoggedIn(true);
-        player.sendMessage(Component.text("logged in success").color(NamedTextColor.DARK_AQUA));
+        player.sendMessage(CC.translate("&aYou have successfully logged in."));
     }
 }

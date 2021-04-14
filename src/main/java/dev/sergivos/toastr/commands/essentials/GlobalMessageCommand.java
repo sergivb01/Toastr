@@ -6,10 +6,10 @@ import com.velocitypowered.api.proxy.Player;
 import dev.sergivos.toastr.ToastrPlugin;
 import dev.sergivos.toastr.backend.packets.types.GlobalMessagePacket;
 import dev.sergivos.toastr.profile.PlayerData;
+import dev.sergivos.toastr.utils.CC;
 import dev.sergivos.toastr.utils.StringUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,7 +48,7 @@ public class GlobalMessageCommand implements SimpleCommand {
         String message = StringUtils.joinArray(args, " ", 2);
         instance.getRedisManager().getPidgin().sendPacket(new GlobalMessagePacket(sender, args[0], message));
 
-        source.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize("&8[&b&l" + instance.getRedisManager().getProxyName() + "&8] &3You &6-> &3" + args[0] + "&r: " + message));
+        source.sendMessage(CC.translate("&8[&b&l" + instance.getRedisManager().getProxyName() + "&8] &3You &6-> &3" + args[0] + "&r: " + message));
     }
 
     @Override

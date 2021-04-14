@@ -5,6 +5,7 @@ import com.velocitypowered.api.proxy.Player;
 import dev.sergivos.toastr.ToastrPlugin;
 import dev.sergivos.toastr.listeners.AuthListener;
 import dev.sergivos.toastr.profile.Profile;
+import dev.sergivos.toastr.utils.CC;
 import dev.sergivos.toastr.utils.HashMethods;
 import dev.sergivos.toastr.utils.SaltGenerator;
 import dev.sergivos.toastr.utils.StringUtils;
@@ -23,13 +24,13 @@ public class RegisterCommand implements SimpleCommand {
 
         Player player = (Player) invocation.source();
         if(player.isOnlineMode()) {
-            player.sendMessage(Component.text("You are a premium user.").color(NamedTextColor.RED));
+            player.sendMessage(CC.translate("&7[&e⚠&7] &cThis command is intended for players with a non-Premium account."));
             return;
         }
 
         Profile profile = Profile.getProfiles().get(player.getUniqueId());
         if(!StringUtils.isNullOrEmpty(profile.getPassword())) {
-            player.sendMessage(Component.text("already registered...").color(NamedTextColor.RED));
+            player.sendMessage(CC.translate("&7[&e⚠&7] &cYou are already registered. If you intended to change your account you may login and change your password."));
             return;
         }
 
@@ -39,13 +40,12 @@ public class RegisterCommand implements SimpleCommand {
         }
 
         if(!invocation.arguments()[0].equals(invocation.arguments()[1])) {
-            player.sendMessage(Component.text("Password and password confirmation are different!").color(NamedTextColor.RED));
+            player.sendMessage(CC.translate("&7[&e⚠&7] &cThe password you entered and the confirmation do not match. Please try again."));
             return;
         }
 
         String salt = SaltGenerator.generateString();
 
-        AuthListener.pendingRegister.remove(player);
         profile.setSalt(salt);
         profile.setPassword(HashMethods.SHA512H(invocation.arguments()[0], salt));
 
@@ -53,11 +53,12 @@ public class RegisterCommand implements SimpleCommand {
             instance.getBackendStorage().saveProfile(profile);
         } catch(Exception ex) {
             instance.getLogger().error("Error registering " + player.getUsername(), ex);
-            player.sendMessage(Component.text("Error registering. Contact admin").color(NamedTextColor.RED));
+            player.sendMessage(CC.translate("&7[&e⚠&7] &cAn error occurred while trying to register your account, please contact an administrator."));
             return;
         }
 
+        AuthListener.pendingRegister.remove(player);
         profile.setLoggedIn(true);
-        player.sendMessage(Component.text("Successfully registered! You're now logged in").color(NamedTextColor.DARK_AQUA));
+        player.sendMessage(CC.translate("&aYour account has been successfully registered. You are now logged in."));
     }
 }

@@ -5,7 +5,7 @@ import com.velocitypowered.api.proxy.Player;
 import dev.sergivos.toastr.ToastrPlugin;
 import dev.sergivos.toastr.listeners.AuthListener;
 import dev.sergivos.toastr.profile.Profile;
-import dev.sergivos.toastr.utils.StringUtils;
+import dev.sergivos.toastr.utils.CC;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
@@ -21,18 +21,13 @@ public class UnRegisterCommand implements SimpleCommand {
 
         Player player = (Player) invocation.source();
         if(player.isOnlineMode()) {
-            player.sendMessage(Component.text("You are a premium user.").color(NamedTextColor.RED));
+            player.sendMessage(CC.translate("&7[&e⚠&7] &cThis command is intended for players with a non-Premium account."));
             return;
         }
 
         Profile profile = Profile.getProfiles().get(player.getUniqueId());
         if(!profile.isLoggedIn()) {
-            player.sendMessage(Component.text("login first").color(NamedTextColor.RED));
-            return;
-        }
-
-        if(StringUtils.isNullOrEmpty(profile.getPassword())) {
-            player.sendMessage(Component.text("not registered...").color(NamedTextColor.RED));
+            player.sendMessage(CC.translate("&7[&e⚠&7] &cYou need to login into your account in order to unregister yourself."));
             return;
         }
 
@@ -43,11 +38,11 @@ public class UnRegisterCommand implements SimpleCommand {
             instance.getBackendStorage().saveProfile(profile);
         } catch(Exception ex) {
             instance.getLogger().error("Error un-registering " + player.getUsername(), ex);
-            player.sendMessage(Component.text("Error un-registering. Contact admin").color(NamedTextColor.RED));
+            player.sendMessage(CC.translate("&7[&e⚠&7] &cAn error occurred while trying to unregister your account, please contact an administrator."));
             return;
         }
 
         AuthListener.pendingRegister.put(player, System.currentTimeMillis());
-        player.sendMessage(Component.text("Successfully un-registered!").color(NamedTextColor.DARK_AQUA));
+        player.sendMessage(CC.translate("&aYour account has been successfully unregistered. You may now register again."));
     }
 }

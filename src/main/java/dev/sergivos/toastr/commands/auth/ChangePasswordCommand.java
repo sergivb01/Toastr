@@ -4,6 +4,7 @@ import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import dev.sergivos.toastr.ToastrPlugin;
 import dev.sergivos.toastr.profile.Profile;
+import dev.sergivos.toastr.utils.CC;
 import dev.sergivos.toastr.utils.HashMethods;
 import dev.sergivos.toastr.utils.SaltGenerator;
 import net.kyori.adventure.text.Component;
@@ -21,13 +22,13 @@ public class ChangePasswordCommand implements SimpleCommand {
 
         Player player = (Player) invocation.source();
         if(player.isOnlineMode()) {
-            player.sendMessage(Component.text("You are a premium user.").color(NamedTextColor.RED));
+            player.sendMessage(CC.translate("&7[&e⚠&7] &cThis command is intended for players with a non-Premium account."));
             return;
         }
 
         Profile profile = Profile.getProfiles().get(player.getUniqueId());
         if(!profile.isLoggedIn()) {
-            player.sendMessage(Component.text("login first").color(NamedTextColor.RED));
+            player.sendMessage(CC.translate("&7[&e⚠&7] &cYou need to be logged in in order to change your password."));
             return;
         }
 
@@ -45,10 +46,10 @@ public class ChangePasswordCommand implements SimpleCommand {
             instance.getBackendStorage().saveProfile(profile);
         } catch(Exception ex) {
             instance.getLogger().error("Error changing password for " + player.getUsername(), ex);
-            player.sendMessage(Component.text("Error changing password. Contact admin").color(NamedTextColor.RED));
+            player.sendMessage(CC.translate("&7[&e⚠&7] &cAn error occurred while trying to change your password, please contact an administrator."));
             return;
         }
 
-        player.sendMessage(Component.text("Successfully changed password!").color(NamedTextColor.DARK_AQUA));
+        player.sendMessage(CC.translate("&aYour password has been successfully updated."));
     }
 }
