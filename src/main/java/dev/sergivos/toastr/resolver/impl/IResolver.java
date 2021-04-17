@@ -1,6 +1,8 @@
 package dev.sergivos.toastr.resolver.impl;
 
-public interface IResolver {
+import java.util.concurrent.Callable;
+
+public interface IResolver<T> extends Callable<T> {
 
     String getSource();
 

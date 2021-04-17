@@ -14,10 +14,12 @@ public class PlayerDBResolver extends Resolver {
     private static final String PLAYERDB_URL = "https://playerdb.co/api/player/minecraft/";
     private final String rawUsername;
 
+    @Override
     public String getSource() {
         return "PlayerDB";
     }
 
+    @Override
     public Resolver.Result call() throws Exception {
         Request request = new Request.Builder()
                 .url(PLAYERDB_URL + rawUsername)

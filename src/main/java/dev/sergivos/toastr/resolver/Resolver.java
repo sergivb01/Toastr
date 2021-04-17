@@ -9,12 +9,11 @@ import lombok.ToString;
 import okhttp3.OkHttpClient;
 
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-public abstract class Resolver implements Callable<Resolver.Result>, IResolver {
-    protected static ToastrPlugin instance = ToastrPlugin.getInstance();
-    protected static OkHttpClient httpClient = new OkHttpClient.Builder()
+public abstract class Resolver implements IResolver<Resolver.Result> {
+    protected static final ToastrPlugin instance = ToastrPlugin.getInstance();
+    protected static final OkHttpClient httpClient = new OkHttpClient.Builder()
             .connectTimeout(1, TimeUnit.SECONDS)
             .readTimeout(1, TimeUnit.SECONDS)
             .build();

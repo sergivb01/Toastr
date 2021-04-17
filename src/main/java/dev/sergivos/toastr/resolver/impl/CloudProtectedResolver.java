@@ -14,6 +14,7 @@ public class CloudProtectedResolver extends Resolver {
     private static final String CLOUDPROTECTED_URL = "https://mcapi.cloudprotected.net/uuid/";
     private final String rawUsername;
 
+    @Override
     public String getSource() {
         return "CloudProtected";
     }

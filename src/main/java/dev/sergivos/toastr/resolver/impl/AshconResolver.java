@@ -15,10 +15,12 @@ public class AshconResolver extends Resolver {
     private static final String ASHCON_URL = "https://api.ashcon.app/mojang/v2/uuid/";
     private final String rawUsername;
 
+    @Override
     public String getSource() {
         return "Ashcon";
     }
 
+    @Override
     public Resolver.Result call() throws Exception {
         Request request = new Request.Builder()
                 .url(ASHCON_URL + rawUsername)
