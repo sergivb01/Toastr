@@ -179,9 +179,9 @@ public class ToastrPlugin {
     }
 
     public Collection<Component> getMessages(String name, String... placeholders) {
-        Collection<Component> res = new ArrayList<>();
-
         final List<String> messages = config.getStringList("messages." + name);
+
+        Collection<Component> res = new ArrayList<>(messages.size());
         for(String msg : messages) {
             res.add(CC.translate(msg, placeholders));
         }
