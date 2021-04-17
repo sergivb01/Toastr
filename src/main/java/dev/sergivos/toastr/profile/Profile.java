@@ -31,15 +31,17 @@ public class Profile {
 
     private boolean loggedIn = false;
 
-    public static Profile createProfile(Player player) {
-        Profile profile = new Profile(player.getUniqueId(), player.getUsername());
+    public Profile(final Player player) {
+        this.uniqueId = player.getUniqueId();
+        this.username = player.getUsername();
 
-        profile.accountType = AccountType.fromBool(player.isOnlineMode());
-        profile.firstIP = player.getRemoteAddress().getAddress().getHostAddress();
-        profile.lastIP = player.getRemoteAddress().getAddress().getHostAddress();
-        profile.firstLogin = Timestamp.from(Instant.now());
+        this.accountType = AccountType.fromBool(player.isOnlineMode());
 
-        return profile;
+        this.firstIP = player.getRemoteAddress().getAddress().getHostAddress();
+        this.lastIP = player.getRemoteAddress().getAddress().getHostAddress();
+
+        this.firstLogin = Timestamp.from(Instant.now());
+        this.lastLogin = Timestamp.from(Instant.now());
     }
 
     public enum AccountType {
