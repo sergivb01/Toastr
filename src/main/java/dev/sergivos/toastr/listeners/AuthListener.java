@@ -123,28 +123,28 @@ public class AuthListener {
             return;
         }
 
-
         if(!result.equals(Profile.CheckAccountResult.ALLOWED)) {
             player.disconnect(CC.translate("&cUnknown error #1\nContact admin"));
             return;
         }
 
+
         Profile profile;
         try {
-            profile = instance.getBackendStorage().getProfile(player.getUniqueId());
+            profile = instance.getBackendStorage().getProfile(player.getUniqueId()).orElse(null);
         } catch(Exception ex) {
             instance.getLogger().error("Error loading profile for " + player.getUsername(), ex);
             player.disconnect(Component.text("Error loading your profile!").color(NamedTextColor.RED));
             return;
         }
 
-        boolean autoLogin = player.isOnlineMode();
         if(profile == null) {
-            profile = Profile.createProfile(player);
-        } else if(!autoLogin) {
-            autoLogin = profile.getLastIP().equals(player.getRemoteAddress().getAddress().getHostAddress())
-                    && (System.currentTimeMillis() - profile.getLastLogin().getTime()) < TimeUnit.MINUTES.toMillis(15);
+            profile = new Profile(player);
         }
+
+        boolean autoLogin = player.isOnlineMode() ||
+                profile.getLastIP().equals(player.getRemoteAddress().getAddress().getHostAddress()) &&
+                        (System.currentTimeMillis() - profile.getLastLogin().getTime()) < TimeUnit.MINUTES.toMillis(15);
 
         profile.setLastLogin(Timestamp.from(Instant.now()));
         profile.setLastIP(player.getRemoteAddress().getAddress().getHostAddress());
@@ -229,7 +229,6 @@ public class AuthListener {
         if(instance.getConfig().getStringList("auth.allowed_commands").contains(args[0])) {
             return;
         }
-
 
         if(profile.isLoggedIn()) return;
 

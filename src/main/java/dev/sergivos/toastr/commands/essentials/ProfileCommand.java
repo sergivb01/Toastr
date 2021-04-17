@@ -45,7 +45,7 @@ public class ProfileCommand implements SimpleCommand {
             return;
         }
 
-        Profile profile = instance.getBackendStorage().getProfile(data.getUuid());
+        Profile profile = instance.getBackendStorage().getProfile(data.getUuid()).orElse(null);
         if(profile == null) {
             source.sendMessage(instance.getMessage("profile.player_not_found"));
             return;

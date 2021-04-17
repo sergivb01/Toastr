@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -120,7 +121,7 @@ public class BackendStorage {
      * @param playerUUID The UUID from the player. Can be an offline UUID
      * @return CompletableFuture<Profile> that can return a SQLException
      */
-    public Profile getProfile(UUID playerUUID) throws Exception {
+    public Optional<Profile> getProfile(UUID playerUUID) throws Exception {
         final long start = System.currentTimeMillis();
 
         try(Connection connection = this.hikari.getConnection();
@@ -130,10 +131,10 @@ public class BackendStorage {
 
             try(final ResultSet rs = query.executeQuery()) {
                 if(!rs.next()) {
-                    return null;
+                    return Optional.empty();
                 }
 
-                return createProfileFromRS(rs);
+                return Optional.of(createProfileFromRS(rs));
             }
         } finally {
             instance.getLogger().debug("[database] [GetProfile] " + playerUUID.toString() + " took " + (System.currentTimeMillis() - start) + "ms");
