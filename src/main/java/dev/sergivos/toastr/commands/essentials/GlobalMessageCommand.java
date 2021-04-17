@@ -29,7 +29,7 @@ public class GlobalMessageCommand implements SimpleCommand {
             return;
         }
 
-        PlayerData data = instance.getCacheManager().getPlayerData(args[0]);
+        PlayerData data = instance.getCacheManager().getPlayerData(args[0]).orElse(null);
         if(data == null) {
             source.sendMessage(instance.getMessage("profile.player_not_found"));
             return;

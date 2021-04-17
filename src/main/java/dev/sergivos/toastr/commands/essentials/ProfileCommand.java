@@ -35,9 +35,9 @@ public class ProfileCommand implements SimpleCommand {
 
         PlayerData data;
         if(UUID_PATTERN.matcher(args[0]).matches()) {
-            data = instance.getCacheManager().getPlayerData(UUID.fromString(args[0]));
+            data = instance.getCacheManager().getPlayerData(UUID.fromString(args[0])).orElse(null);
         } else {
-            data = instance.getCacheManager().getPlayerData(args[0]);
+            data = instance.getCacheManager().getPlayerData(args[0]).orElse(null);
         }
 
         if(data == null) {

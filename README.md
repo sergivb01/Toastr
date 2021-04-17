@@ -2,8 +2,6 @@
 
 Should probably make a good description
 
-* [ ] Replace "return null" to Optional
-
 # Redis docs:
 
 * Proxy list `toastr:proxies`. Contains a map of `<String, Long>(name, heartbeat)`.

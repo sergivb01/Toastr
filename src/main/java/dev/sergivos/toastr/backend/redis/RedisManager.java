@@ -213,20 +213,20 @@ public class RedisManager {
      * @param uuid The UUID of the Player
      * @return The PlayerData, null if not found
      */
-    public PlayerData getPlayer(UUID uuid) {
+    public Optional<PlayerData> getPlayer(UUID uuid) {
         try(final Jedis jedis = getConnection()) {
             Map<String, String> data = jedis.hgetAll(PREFIX + "player:" + uuid);
             if(data == null || data.isEmpty())
-                return null;
+                return Optional.empty();
 
-            return new PlayerData(
+            return Optional.of(new PlayerData(
                     uuid,
                     data.getOrDefault("username", ""),
                     Long.parseLong(data.get("lastOnline")),
                     data.getOrDefault("ip", null),
                     data.getOrDefault("proxy", null),
                     data.getOrDefault("server", null)
-            );
+            ));
         }
     }
 
@@ -313,16 +313,16 @@ public class RedisManager {
         }
     }
 
-    public Resolver.Result getPlayerResult(String username) {
+    public Optional<Resolver.Result> getPlayerResult(String username) {
         try(final Jedis jedis = getConnection()) {
             final Map<String, String> result = jedis.hgetAll(PREFIX + "resolver:" + username.toLowerCase());
 
             if(result == null || result.isEmpty()) {
-                return null;
+                return Optional.empty();
             }
 
-            return new Resolver.Result(result.get("username"), UUID.fromString(result.get("uuid")),
-                    Boolean.parseBoolean(result.get("premium")), result.get("source"));
+            return Optional.of(new Resolver.Result(result.get("username"), UUID.fromString(result.get("uuid")),
+                    Boolean.parseBoolean(result.get("premium")), result.get("source")));
         }
     }
 

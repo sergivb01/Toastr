@@ -27,7 +27,7 @@ public class ResolverManager {
     public Resolver.Result resolveUsername(String username) throws Exception {
         long start = System.currentTimeMillis();
 
-        Resolver.Result result = instance.getCacheManager().getPlayerResult(username);
+        Resolver.Result result = instance.getCacheManager().getPlayerResult(username).orElse(null);
         if(result != null) {
             instance.getLogger().debug("[resolver] [cache/" + result.getSource() + "] Lookup for " + username + " took " + (System.currentTimeMillis() - start) + " ms. User is " + (result.isPremium() ? "premium" : "cracked"));
             return result;

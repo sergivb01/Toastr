@@ -58,7 +58,7 @@ public class PluginMessageListener {
 
             case "LASTONLINE": {
                 String name = input.readUTF();
-                PlayerData data = instance.getCacheManager().getPlayerData(name);
+                PlayerData data = instance.getCacheManager().getPlayerData(name).orElse(null);
 
                 output.writeUTF("LastOnline");
                 output.writeUTF(name);
@@ -81,7 +81,7 @@ public class PluginMessageListener {
                 if(instance.getProxy().getPlayer(username).isPresent())
                     output.writeUTF(instance.getRedisManager().getProxyName());
                 else {
-                    final PlayerData playerData = instance.getCacheManager().getPlayerData(username);
+                    final PlayerData playerData = instance.getCacheManager().getPlayerData(username).orElse(null);
                     output.writeUTF(playerData == null ? "unknown" : playerData.getProxy());
                 }
                 break;

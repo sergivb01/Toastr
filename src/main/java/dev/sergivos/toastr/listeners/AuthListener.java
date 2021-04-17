@@ -80,7 +80,7 @@ public class AuthListener {
     public void onGameProfileRequest(GameProfileRequestEvent event) {
         final Optional<Player> player = instance.getProxy().getPlayer(event.getOriginalProfile().getId());
 
-        final Resolver.Result result = instance.getCacheManager().getPlayerResult(event.getUsername());
+        final Resolver.Result result = instance.getCacheManager().getPlayerResult(event.getUsername()).orElse(null);
         if(result == null) {
             player.ifPresent(target -> target.disconnect(Component.text("Internal Toastr error #1").color(NamedTextColor.RED)));
             instance.getLogger().warn("Tried to check for spoof #2 and #3 for " + event.getUsername() + ", ResolverResult is null");

@@ -7,6 +7,7 @@ import dev.sergivos.toastr.ToastrPlugin;
 import dev.sergivos.toastr.profile.PlayerData;
 import dev.sergivos.toastr.resolver.Resolver;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -45,17 +46,17 @@ public class CacheManager {
      * @param username The username of the Player
      * @return the Resolver.Result, null if not found
      */
-    public Resolver.Result getPlayerResult(String username) {
+    public Optional<Resolver.Result> getPlayerResult(String username) {
         Resolver.Result result = resolver.getIfPresent(username.toLowerCase());
         if(result == null) {
-            result = instance.getRedisManager().getPlayerResult(username.toLowerCase());
+            result = instance.getRedisManager().getPlayerResult(username.toLowerCase()).orElse(null);
             if(result == null)
-                return null;
+                return Optional.empty();
 
             resolver.put(username.toLowerCase(), result);
         }
 
-        return result;
+        return Optional.of(result);
     }
 
     /**
@@ -64,10 +65,10 @@ public class CacheManager {
      * @param username The username of the Player
      * @return The PlayerData, null if not found
      */
-    public PlayerData getPlayerData(String username) {
-        UUID uuid = getUUID(username);
+    public Optional<PlayerData> getPlayerData(String username) {
+        UUID uuid = getUUID(username).orElse(null);
         if(uuid == null)
-            return null;
+            return Optional.empty();
 
         return instance.getRedisManager().getPlayer(uuid);
     }
@@ -78,7 +79,7 @@ public class CacheManager {
      * @param playerUUID The name of the Player
      * @return The PlayerData, null if not found
      */
-    public PlayerData getPlayerData(UUID playerUUID) {
+    public Optional<PlayerData> getPlayerData(UUID playerUUID) {
         return instance.getRedisManager().getPlayer(playerUUID);
     }
 
@@ -88,19 +89,19 @@ public class CacheManager {
      * @param username The username of the Player
      * @return The UUID, null if not found
      */
-    private UUID getUUID(String username) {
+    private Optional<UUID> getUUID(String username) {
         final Player player = instance.getProxy().getPlayer(username).orElse(null);
         if(player != null)
-            return player.getUniqueId();
+            return Optional.of(player.getUniqueId());
 
-        Resolver.Result result = getPlayerResult(username);
+        Resolver.Result result = getPlayerResult(username).orElse(null);
         if(result == null) {
-            result = instance.getRedisManager().getPlayerResult(username);
+            result = instance.getRedisManager().getPlayerResult(username).orElse(null);
             if(result == null)
-                return null;
+                return Optional.empty();
         }
 
-        return result.getUniqueId();
+        return Optional.of(result.getUniqueId());
     }
 
     public void clearCache(String username) {
