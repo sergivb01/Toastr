@@ -21,11 +21,15 @@ import java.util.concurrent.ForkJoinPool;
 public class Pidgin {
     private static final Logger logger = ToastrPlugin.getInstance().getLogger();
     private static final Gson GSON = new GsonBuilder().create();
+
     private final String channel;
     private final JedisPool pool;
+
     private final List<PacketListenerData> packetListeners;
-    private final Map<String, Class> idToType = new HashMap<>();
-    private final Map<Class, String> typeToId = new HashMap<>();
+
+    private final Map<String, Class<? extends Packet>> idToType = new HashMap<>();
+    private final Map<Class<? extends Packet>, String> typeToId = new HashMap<>();
+
     private JedisPubSub jedisPubSub;
 
     public Pidgin(String channel, final JedisPool pool) {
@@ -55,7 +59,7 @@ public class Pidgin {
         }
     }
 
-    public void registerPacket(Class clazz) {
+    public void registerPacket(Class<? extends Packet> clazz) {
         try {
             final String id = clazz.getSimpleName();
             if(idToType.containsKey(id) || typeToId.containsKey(clazz)) {
@@ -102,8 +106,7 @@ public class Pidgin {
                         throw new IllegalStateException("A packet with that ID does not exist");
                     }
 
-                    // TODO: replace casting
-                    Packet packet = (Packet) GSON.fromJson(args[1], idToType.get(id));
+                    Packet packet = GSON.fromJson(args[1], idToType.get(id));
                     if(packet != null) {
                         for(PacketListenerData data : packetListeners) {
                             if(data.matches(packet)) {
