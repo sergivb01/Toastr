@@ -76,11 +76,12 @@ public class Pidgin {
     public void registerListener(PacketListener packetListener) {
         for(Method method : packetListener.getClass().getDeclaredMethods()) {
             if(method.getDeclaredAnnotation(IncomingPacketHandler.class) != null) {
-                Class packetClass = null;
+                Class<? extends Packet> packetClass = null;
 
                 if(method.getParameters().length > 0) {
-                    if(Packet.class.isAssignableFrom(method.getParameters()[0].getType())) {
-                        packetClass = method.getParameters()[0].getType();
+                    final Class<?> type = method.getParameters()[0].getType();
+                    if(Packet.class.isAssignableFrom(type)) {
+                        packetClass = (Class<? extends Packet>) type;
                     }
                 }
 

@@ -16,7 +16,7 @@ public class PacketListenerData {
 
     private final Object instance;
     private final Method method;
-    private final Class packetClass;
+    private final Class<? extends Packet> packetClass;
 
     public boolean matches(Packet packet) {
         return this.packetClass == packet.getClass();
